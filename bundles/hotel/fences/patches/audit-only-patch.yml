@@ -1,0 +1,94 @@
+# 客群级 Patch：质检模式（Audit-Only · 只读体检期）
+# 定位：新客户接入的「第 0 阶段」——系统只读扫描、只出报告与建议，不写回任何 PMS/OTA/IoT。
+# 叠加于 hotel-baseline/v3 之上，只可收紧不可放宽（F2.3 单调守卫）。
+# 纪律：本 patch 生效期间，一切写类动作物理阻断（block）——调价/退款/排房排班/差评回复/对外承诺全部熔断；
+#   客户确认整改项时由人类在 PMS/OTA 侧执行，系统只跟踪闭环。
+#   体检期结束（通常 1–2 周）后，客户切换为影子模式 → 正式托管客群（low_star_single/homestay/unmanned）。
+version: hotel-patch-audit-only/v1
+applies_to: audit_only
+base: hotel-baseline/v3
+default_level: block          # 写类动作无任何规则命中 → 按 block（默认即拒，宁可错杀；排房 room.reassign 等未列名写动作由此兜底）
+patches:
+  - rule_id: R1
+    tighten: { level: block }
+    note: 调价一律阻断（质检期系统不直接改价，只产出《价格健康报告》：倒挂/低于保底价/促销失误清单）
+
+  - rule_id: R2
+    tighten: { level: block }
+    note: 保底价熔断维持 block（基线纪律，不得放宽）
+
+  - rule_id: R3
+    tighten: { level: block }
+    note: 新渠道改价/内容发布一律阻断（只记录渠道健康发现）
+
+  - rule_id: R4
+    tighten: { level: block }
+    note: 退款一律阻断（只统计退款率与 SLA 风险，不代客操作）
+
+  - rule_id: R5
+    tighten: { level: block }
+    note: 担保订单异常维持 block（只写「需介入」事件，安全与合规线重点检项）
+
+  - rule_id: R6
+    tighten: { level: block }
+    note: 差评回复一律阻断（只生成候选草稿进《口碑健康清单》，客户人工决定是否发出）
+
+  - rule_id: R7
+    tighten: { level: block }
+    note: 夜班窗口调价微调一律阻断（体检期无自动调价，含夜班）
+
+  - rule_id: R8
+    tighten: { level: block }
+    note: 夜班窗口调价越线维持阻断（由 review 收紧为 block）
+
+  - rule_id: R9
+    tighten: { level: block }
+    note: 客户触达合规维持 block（私域触达体检期整体暂停，只盘点存量触达频次风险）
+
+  - rule_id: R10
+    tighten: { level: block }
+    note: 安全禁区维持 block（基线最高纪律：AI 只告警+联动报警，绝不自行处置）
+
+  - rule_id: R11
+    tighten: { level: block }
+    note: 采购单一律阻断（只产出采购/布草损耗建议单）
+
+  - rule_id: R12
+    tighten: { level: block }
+    note: 排班一律阻断（只盘点排班合规与人力缺口，不代客排班）
+
+  - rule_id: R13
+    tighten: { level: block }
+    note: 涉费用客服承诺一律阻断（质检期客服线只读监控：响应时长/涉费话术/升级关键词）
+
+  - rule_id: R14
+    tighten: { level: block }
+    note: 赔偿类事项一律阻断（只统计赔偿发生率与口径风险）
+
+  - rule_id: R15
+    tighten: { level: block }
+    note: 直播/新渠道内容首发一律阻断（只读扫描已发布内容的合规与一致性）
+
+  - rule_id: R16
+    tighten: { level: block }
+    note: 夜班高危动作维持 block（基线纪律，不得放宽）
+
+  - rule_id: R17
+    tighten: { level: block }
+    note: 价格倒挂只告警不处置（倒挂清单进《价格健康报告》，含每间夜损失估算）
+
+  - rule_id: R18
+    tighten: { level: block }
+    note: 超售漏售只告警不处置（体检期不代客同步库存/确认订单，只产出超售漏售风险清单）
+
+  - rule_id: R20
+    tighten: { level: block }
+    note: 布草损耗登记阻断（只读测算损耗率并出异常清单，由 review 收紧为 block）
+
+# R19（差评响应 SLA 升级）维持基线 review：alert.escalate 是面向店长的内部升级通知而非平台写操作，
+#   体检期保留——存量未回差评的 P0/P1 告警必须能触达人。
+# 体检期允许的唯一"写"：向系统自身事件库写入巡检发现/报告/建议（五元事件，不落任何 PMS/OTA/IoT）。
+# 巡检五线检项（inspection 域，只读工具集裁剪保证）：
+#   价格健康（多 OTA 倒挂/低于保底价/促销失误）· 房态库存健康（超售漏售/问题房）· 渠道健康（佣金错算/对账差异）
+#   口碑健康（存量未回差评/SLA）· 安全与合规（担保订单异常/断点高频项）
+# 产出物：一店一份《酒店体检报告》+ 多店总览 + 整改建议单（按 P0/P1/P2 分级，估算年化挽回金额）。

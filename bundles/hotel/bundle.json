@@ -4,7 +4,7 @@
   "workloom": {
     "industry": "hotel",
     "displayName": "WorkLoom 酒店行业版",
-    "description": "酒店行业版差异资产包 v2.1：11 个 Agent preset（+语音前台 phone-agent/业主驾驶舱 owner-cockpit）+ 基线围栏包 R1–R20（v3：+倒挂/超售/差评SLA/布草损耗）+ 三类客群客户级 Patch 模板+ 20 类对象/16 阶段枚举 + 一店一档五类档案 20 字段组（+布草/断点/FAQ）+ 25 个官方技能（+phone-concierge/overbooking-parity-guard/incident-postmortem），覆盖七大业务域 67 个经营环节（低星单体酒店/民宿/无人酒店，segment-defaults 三客群默认安装清单）",
+    "description": "酒店行业版差异资产包 v3.3：11 个 Agent preset（+语音前台 phone-agent/业主驾驶舱 owner-cockpit）+ 基线围栏包 R1–R20（v3：+倒挂/超售/差评SLA/布草损耗）+ 四类客群客户级 Patch 模板（+audit-only 质检模式：一切写操作物理 block）+ 20 类对象/16 阶段枚举 + 一店一档五类档案 20 字段组（+布草/断点/FAQ）+ 26 个官方技能（+fast-scan 快照快扫：15-30 分钟出《酒店快速体检报告》），覆盖七大业务域 67 个经营环节（先体检再托管：audit_only → 影子模式 → 低星单体酒店/民宿/无人酒店，segment-defaults 四客群默认安装清单）",
     "provides": {
       "presets": [
         "presets/pricing-agent.yml",
@@ -21,11 +21,13 @@
       ],
       "fences": [
         "fences/hotel-baseline.yml",
+        "fences/patches/audit-only-patch.yml",
         "fences/patches/low-star-single-patch.yml",
         "fences/patches/homestay-patch.yml",
         "fences/patches/unmanned-patch.yml"
       ],
       "skills": [
+        "skills/fast-scan/SKILL.md",
         "skills/revenue-manager/SKILL.md",
         "skills/review-crisis/SKILL.md",
         "skills/channel-reconciler/SKILL.md",

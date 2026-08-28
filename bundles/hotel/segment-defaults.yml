@@ -1,8 +1,32 @@
-# 三客群默认安装清单（v2.1 新增；§2.2 槽⑤班组装配的客群化默认配置）
+# 四客群默认安装清单（v2.1 新增；§2.2 槽⑤班组装配的客群化默认配置；v3.3 新增 audit_only 质检客群）
 # 用途：新工作区按客群一键初始化——预装技能（ordered：首屏展示顺序=销售叙事顺序）、启用 preset、默认触发器、围栏 patch。
 # 纪律：清单只决定「默认装什么、什么前置」，运行时仍全量过围栏瀑布（L8.3）；客户后续可自助加装技能市场任意技能。
-version: hotel-segment-defaults/v1
+# 客户旅程：audit_only（只读体检 1-2 周）→ 影子模式（3 天）→ 正式托管（low_star_single / homestay / unmanned）。
+version: hotel-segment-defaults/v2
 segments:
+
+  # ========== 质检模式（Audit-Only · 只读体检期）· 零风险先行 ==========
+  audit_only:
+    label: 质检模式（只读体检期）
+    pitch: 先体检，再托管——PMS/OTA 只读扫描，系统不动一根手指，15-30 分钟出《酒店快速体检报告》，1-2 周出完整体检
+    fence_patch: fences/patches/audit-only-patch.yml
+    # 只读/分析岗：inspection-agent/competitor-agent/owner-cockpit 为 readonly: true 纯只读岗；
+    # reconcile-agent/review-agent 本体含写工具，但 audit-only patch default_level=block 物理熔断一切写动作，
+    # 体检期仅其只读工具子集生效（只读对账/只读评价分析），写回通道由围栏强制关闭。
+    presets: [inspection-agent, competitor-agent, owner-cockpit, reconcile-agent, review-agent]
+    skills_ordered:  # 首屏顺序 = 五线巡检叙事：快扫当场见效→持续巡检→倒挂超售→对账→口碑
+      - fast-scan  # 旗舰：快照快扫，15-30 分钟当场出《酒店快速体检报告》（售前验货与接入基线）
+      - inspection-suite  # 持续：五线巡检套件（价格/房态库存/渠道/口碑/安全合规）
+      - overbooking-parity-guard  # 价格健康+房态库存健康：多 OTA 倒挂/超售漏售只读监测
+      - channel-reconciler  # 渠道健康：OTA 账单×PMS 订单只读勾稽，佣金错算/对账差异
+      - review-crisis  # 口碑健康：存量未回差评盘点与处置草稿（只出草稿不发布）
+      - review-asset-mining  # 口碑健康：好评资产盘点（可引用卖点挖掘）
+      - pricing-matrix  # 价格健康：价格矩阵只读测算（保底价/促销失误分析）
+      - finance-reporting  # 只读报表：经营数据归集支撑体检估算
+      - safety-compliance  # 安全与合规：担保异常/断点高频项/安全记录核查（R10 禁区不触碰）
+      - morning-briefing  # 每日体检晨报（只读版决策包：发现/建议/风险三栏）
+      - incident-postmortem  # 断点根因复盘（历史断点高频项归因）
+    triggers_enabled: [tg-inspection-0700, tg-review-sla-30min, tg-parity-15min]
 
   # ========== 低星单体酒店（20–50 间）· 卖 ROI ==========
   low_star_single:
