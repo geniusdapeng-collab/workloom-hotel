@@ -1,7 +1,7 @@
 {
  "repo": "workloom-hotel",
  "description": "WorkLoom 酒店智能经营系统 · AI 前厅/客房/收益一体化（酒店垂直版）",
- "generatedAt": "2026-08-27T01:23:55.141Z",
+ "generatedAt": "2026-08-29T08:24:06.632Z",
  "demoPages": [
   "service-front-b-mobile.html",
   "service-front-b-pc.html",
@@ -40,7 +40,7 @@
     {
      "name": "bundles/hotel/",
      "how": "见 bundles/hotel/ 目录",
-     "desc": "围栏/技能/员工/对象/管线一键装配"
+     "desc": "11 数字员工 presets · 26 个官方技能 · 4 客群装配（audit_only/low_star_single/homestay/unmanned） · 含 fast-scan 快照快扫（15–30 分钟当场出体检报告）"
     }
    ]
   },
