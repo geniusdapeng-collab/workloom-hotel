@@ -144,7 +144,7 @@ for (const [text, mode] of [
 for (const text of ["逐步生成三版文案，每一步给我审", "一步步来，先草稿给我看", "我们商量着调价", "先采集再让我确认每一步", "每一步都要我点头", "先出个初稿给我看再定"]) {
   a(`agent 句式「${text.slice(0, 10)}」→ agent`, () => eq(ruleBasedRoute(text).mode, "agent", "路由"));
 }
-for (const text of ["把周五雅致大床房调价 5%", "回复携程那条 2 分差评", "今晚夜班跑一遍对账", "把竞对价格拉一遍", "生成下周小红书文案", "把 812 房间关房", "退款给订单 1001", "调价到 ¥468", "帮我把差评都回了", "跑一轮巡检"]) {
+for (const text of ["把周五雅致大床房调价 5%", "回复携程那条 2 分差评", "今晚夜班跑一遍对账", "把竞对价格拉一遍", "生成下周连住优惠方案", "把 812 房间关房", "退款给订单 1001", "调价到 ¥468", "帮我把差评都回了", "跑一轮巡检"]) {
   a(`quest 句式「${text.slice(0, 10)}」→ quest`, () => eq(ruleBasedRoute(text).mode, "quest", "路由"));
 }
 for (const text of ["帮我看看", "看看", "在吗？", "你好", "怎么处理？", "怎么样了？", "嗯", "？？？"]) {
@@ -2166,7 +2166,7 @@ async function runCases(list: Case[], label: string): Promise<number> {
 const e2eCases: Case[] = [];
 const h2 = (name: string, run: Case["run"]) => { const n = e2eCases.length + 1; e2eCases.push({ id: `H-${String(n).padStart(2, "0")}`, name, run }); };
 
-const PORT = 8787;
+const PORT = Number(process.env.SUITE_PORT ?? 8787);
 const BASE = `http://localhost:${PORT}`;
 
 async function api<T = unknown>(path: string, opts: { method?: string; token?: string; body?: unknown } = {}): Promise<{ status: number; data: T }> {

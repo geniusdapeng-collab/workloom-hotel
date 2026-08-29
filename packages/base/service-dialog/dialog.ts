@@ -248,7 +248,7 @@ export async function handleMessage(
     } else {
       mock = true;
       degraded = true;
-      answer = `[mock] 您好，我是云栖酒店智能客服。您说的「${input.text.slice(0, 20)}」我已收到，可继续咨询住店问题。`;
+      answer = `[mock] 您好，我是智能客服。您说的「${input.text.slice(0, 20)}」我已收到，可继续咨询。`;
       confidence = 0.3;
     }
   }

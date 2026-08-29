@@ -127,16 +127,6 @@ export function planQuest(goal: string, preset: AssembledPreset): QuestStep[] {
       { stepId: "s2", action: "order.reconcile", objectType: "order", tool: "order.reconcile", params: { guarantee_anomaly: false }, label: "三轮对账核验" },
     ];
   }
-  // 内容域（ai-video / geo-growth）：测评片/短视频/GEO 内容目标 → 生产链拆解（README §三承诺口径）
-  if (/测评片|短视频|视频|小红书|抖音|TikTok|内容|选题|宣传片|图文|发布|拍摄|GEO/i.test(goal)) {
-    return [
-      { stepId: "s1", action: "intel.collect", objectType: "intel_card", tool: "intel.collect", params: {}, label: "情报采集：热榜/评论/AI 问答选题扫描" },
-      { stepId: "s2", action: "script.draft", objectType: "script_package", tool: "script.draft", params: {}, label: "脚本成套起草（脚本+标题+文案+标签+分镜，预留 AI 答案适配版位）" },
-      { stepId: "s3", action: "content.submit", objectType: "script_package", tool: "content.submit", params: {}, context: { fact_check_passed: true }, label: "脚本提交人审（G-GEO2 事实红线已过）" },
-      { stepId: "s4", action: "publish.execute", objectType: "publish_task", tool: "publish.execute", params: {}, context: { account_daily_published: 0, platform_first_use: false }, label: "双域分发执行（G9/G-GEO1 必审门）" },
-      { stepId: "s5", action: "metrics.collect", objectType: "account_metric", tool: "metrics.collect", params: {}, label: "发布后数据回收与阈值巡检" },
-    ];
-  }
   // 默认：只读巡检式单步
   return [
     { stepId: "s1", action: "inspection.scan", objectType: "store", tool: "order.list", params: {}, label: "只读巡检一遍" },
@@ -165,7 +155,7 @@ async function loadActiveRules(app: pg.Pool, scope: { tenantId: string; workspac
         is_baseline: row.is_baseline, objectTypes: row.match_spec.object_types,
         actions: row.match_spec.actions, when: row.match_spec.when,
       })),
-      defaultLevel: "review", // hotel-baseline default_level
+      defaultLevel: "review", // 行业基线 default_level
     };
   } catch (err) {
     await client.query("ROLLBACK").catch(() => undefined);
@@ -407,7 +397,7 @@ export async function runQuest(
         },
         rule_impact: verdict.impacts,
         receipt: verified ? out.receipt : undefined, // 无回执=未核实（E3.7），不写 receipt 位
-        model_trace: { model_id: "mock-hotel-001", tier: "standard", window: undefined, credits: 1 },
+        model_trace: { model_id: "mock-agent-001", tier: "standard", window: undefined, credits: 1 },
       });
       await c.query(
         `UPDATE threads SET progress_done=$3, updated_at=now() WHERE id=$1 AND workspace_id=$2`,
