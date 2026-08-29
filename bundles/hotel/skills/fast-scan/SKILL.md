@@ -60,3 +60,17 @@ description: 快速体检（快照快扫）。售前/接入当场见效模式：
 - 接入含已知倒挂房型的演示门店，30 分钟内产出报告且该房型出现在价格健康清单（含渠道/价差/建议价）。
 - 报告中每条估算金额均带口径标注；任一数据源缺失时报告正常产出且对应线标注"未覆盖"。
 - 全程事件库无任何 PMS/OTA 写操作记录（RuleImpact 全为只读动作）。
+
+## 七、引擎锚点映射表（packages/audit-engine）
+
+本技能的工程实现为 `@workloom/audit-engine`（`packages/audit-engine`）：纯函数分析器 + `runFastScan` 编排 + `pnpm audit:scan` CLI（`scripts/audit-scan.ts`）。技能叙述与代码事实源的逐条锚点如下——改阈值先改围栏/本表，再改代码常量，三者必须同源。
+
+| 技能线（步骤） | 分析器 | 关键阈值常量（src/analyzers/*） | 围栏/口径锚点 |
+| --- | --- | --- | --- |
+| 价格健康（步骤2） | `analyzers/price.ts` | `PARITY_GAP_THRESHOLD=0.08`（倒挂告警）/ `PARITY_GAP_P0=0.15` / `HOLIDAY_UPLIFT_MIN=1.05` / `WEEKDAY_HIGH_RATIO=1.5` / `WEEKDAY_LOW_RATIO=0.6` | R17 倒挂防护；R2 保底价熔断（一店一档 `business.floor_price`，缺失回退 `DEFAULT_FLOOR_PRICE=380`）；R1 涨幅 8% 同源 |
+| 房态库存健康（步骤3） | `analyzers/inventory.ts` | `MAINTENANCE_RATIO_REDLINE=0.1`（问题房占比） | R18 超售漏售防护（可售为负/关房未售） |
+| 渠道健康（步骤4） | `analyzers/channel.ts` | `COMMISSION_TOLERANCE_PP=0.005`（0.5pp）/ `COMMISSION_DIFF_P1_AMOUNT=500` / `CHANNEL_DEPENDENCE_REDLINE=0.6` / `CHANNEL_DEPENDENCE_P0=0.8` | 渠道账单逐笔勾稽（应提 vs 实提）；单渠道依赖度红线 |
+| 口碑健康（步骤5） | `analyzers/reputation.ts` | `BAD_RATING_MAX=3` / `UNREPLIED_HOURS=24` / `UNREPLIED_HOURS_P0=72` / `LOW_RATING=4.2` / `RATING_DROP_REDLINE=0.3` / `CLUSTER_MIN_BAD=3`（30天同关键词） | R19 差评 24h SLA；R6 差评 ≤3 分口径；关键词表 `BAD_KEYWORDS`（卫生/隔音/热水/前台/早餐/空调/异味/安全） |
+| 安全与断点（步骤6） | `analyzers/safety.ts` | `BREAKPOINT_WINDOW_DAYS=7` / `BREAKPOINT_MIN_COUNT=2` / `BREAKPOINT_P0_COUNT=4` / `PREAUTH_OVER_RATIO=1.5` | R5 担保异常介入；R10 安全禁区（只告警不处置）；断点资产根因闭环（`BREAKPOINT_PLAYBOOK`） |
+
+报告口径：一店一份 + 集团总览 + Top10 按**年化**挽回金额降序（monthly ×12 折算）；所有 Finding 带 `calculation`（可复算）与 `estimatedImpact.confidence`（exact/baseline/estimate）；数据源缺失 → 该线 `not-covered`/`partial` 降级出部分报告（30 分钟软预算，`FastScanOptions.timeBudgetMinutes`）。
