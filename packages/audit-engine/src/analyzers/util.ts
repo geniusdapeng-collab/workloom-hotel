@@ -1,20 +1,18 @@
 /**
- * 分析器公共工具：时间窗、数值修约、分析器上下文。
+ * 分析器公共工具：与内核（@workloom/audit-core）重复的函数直接 re-export，
+ * 只保留酒店特有辅助（pp 修约 / ISO 串时间窗 / 日期平移 / 分析器上下文 / Finding 构造）。
  * 所有分析器为纯函数：同一份快照 + 同一个 now 必得同一份发现（确定性纪律，可复算）。
  */
+import type { AnalyzerContext as CoreAnalyzerContext } from "../../../base/audit-core/index.js";
 import type { Finding } from "../types.js";
 
+// 与内核重复的工具：re-export 内核实现，不再本包重复定义
+export { round2, median } from "../../../base/audit-core/index.js";
+
 /** 分析器上下文：锚定时间与可调阈值（由 engine 注入，分析器不读系统时钟） */
-export interface AnalyzerContext {
-  /** 报告锚定时间（差评 24h SLA、近 30 天窗口、断点 7 天窗口以此为界） */
-  now: Date;
+export interface AnalyzerContext extends Omit<CoreAnalyzerContext, "line"> {
   /** 默认保底价（一店一档缺失时回退，R2 口径 ¥380） */
   floorPriceDefault: number;
-}
-
-/** 两位小数修约（金额口径统一） */
-export function round2(n: number): number {
-  return Math.round(n * 100) / 100;
 }
 
 /** 百分比修约（pp 判定展示用） */
@@ -42,13 +40,6 @@ export function shiftDate(date: string, days: number): string {
   const d = new Date(`${date}T00:00:00Z`);
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
-}
-
-/** 中位数（已过滤空序列调用方保证非空） */
-export function median(values: number[]): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 1 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
 }
 
 /** 构造发现时统一收口：占位 id（由 engine 统一编号 FND-<line>-<n>） */

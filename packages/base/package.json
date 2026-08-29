@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./audit-core": "./audit-core/index.ts",
     "./bundles": "./bundles/index.ts",
     "./workdata": "./workdata/index.ts",
     "./im-channels": "./im-channels/index.ts",

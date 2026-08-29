@@ -1,17 +1,18 @@
 /**
- * 引擎编排：runFastScan（酒店版）
- * 纪律（fast-scan SKILL.md 四）：
- *  - 时间纪律：软预算默认 30 分钟，逐线检查耗时，超时后剩余线标注 not-covered 出部分报告；
- *  - 降级纪律：某数据源缺失 → 该线标注 not-covered / partial，不阻塞整体；
- *  - 估算透明：所有 Finding 金额必须带 confidence 与计算口径（分析器层已强制）。
+ * 引擎编排（行业薄封装）：LINE_ORDER + precheckLine 组装 LineDef[]，逐线执行/软预算/降级/
+ * 编号/排序纪律全部交给 @workloom/audit-core 内核 runFastScan，本层只做：
+ *  1) 酒店五线的检线定义（precheck 数据源覆盖度预判）；
+ *  2) 对外 API 适配——行业报告视图（一店一份 + 集团总览 + Top10）形状保持不变。
  * 输出：一店一份 + 集团总览 + 按年化挽回金额降序 Top10。
  */
+import { runFastScan as runCoreFastScan, yearlyFactor } from "../../base/audit-core/index.js";
+import type { Finding as CoreFinding, LineDef } from "../../base/audit-core/index.js";
 import { analyzeChannel } from "./analyzers/channel.js";
 import { analyzeInventory } from "./analyzers/inventory.js";
 import { analyzePrice } from "./analyzers/price.js";
 import { analyzeReputation } from "./analyzers/reputation.js";
 import { analyzeSafety } from "./analyzers/safety.js";
-import type { AnalyzerContext } from "./analyzers/util.js";
+import { round2, type AnalyzerContext } from "./analyzers/util.js";
 import type {
   AuditLine,
   AuditReport,
@@ -19,7 +20,6 @@ import type {
   FastScanOptions,
   Finding,
   HotelReport,
-  ImpactPeriod,
   LineCoverage,
   Severity,
 } from "./types.js";
@@ -85,21 +85,49 @@ function countBySeverity(findings: Finding[]): Record<Severity, number> {
   return c;
 }
 
-/** 年化折算系数（Top10 按年化挽回金额排序：monthly ×12，one-off/yearly 原值） */
-const ANNUALIZE: Record<ImpactPeriod, number> = { "one-off": 1, monthly: 12, yearly: 1 };
-
+/** 发现的年化归一值（Top10 与店级排序口径：内核 yearlyFactor，无金额按 0 排最后） */
 function annualized(f: Finding): number {
   const i = f.estimatedImpact;
-  return i ? i.amount * ANNUALIZE[i.period] : 0;
+  return i ? i.amount * yearlyFactor(i.period) : 0;
+}
+
+/**
+ * 酒店发现 → 内核发现（仅供内核编排：软预算/降级/编号留痕；
+ * 报告层仍使用酒店 Finding 原对象，对外形状不变）。
+ */
+function toCoreFinding(f: Finding): CoreFinding {
+  return {
+    id: f.id,
+    line: f.line,
+    severity: f.severity,
+    title: f.title,
+    detail: f.description,
+    evidence: f.evidence,
+    suggestion: f.suggestion,
+    shopId: f.hotelId,
+    calculation: `${f.calculation.formula}；结果：${f.calculation.result}`,
+    ...(f.estimatedImpact
+      ? {
+          impact: {
+            amount: f.estimatedImpact.amount,
+            unit: f.estimatedImpact.currency,
+            period: f.estimatedImpact.period,
+            confidence: f.estimatedImpact.confidence,
+            basis: f.estimatedImpact.basis,
+          },
+        }
+      : {}),
+  };
 }
 
 /**
  * 快速体检主入口：快照 → 五线 → 报告。
+ * 行业薄封装：检线定义交给内核 runFastScan 执行，报告视图在本层适配。
  * 纯函数（除耗时计量）：同一快照 + 同一 now 必得同一报告正文。
  */
 export function runFastScan(snapshot: AuditSnapshot, opts: FastScanOptions = {}): AuditReport {
   const startedAt = Date.now();
-  const budgetMs = (opts.timeBudgetMinutes ?? 30) * 60_000;
+  const timeBudgetMinutes = opts.timeBudgetMinutes ?? 30;
   const ctx: AnalyzerContext = {
     now: opts.now ?? new Date(snapshot.generatedAt),
     floorPriceDefault: opts.floorPriceDefault ?? DEFAULT_FLOOR_PRICE,
@@ -109,22 +137,44 @@ export function runFastScan(snapshot: AuditSnapshot, opts: FastScanOptions = {})
   const coverageNotes: string[] = [];
   const allFindings: Finding[] = [];
 
-  for (const line of LINE_ORDER) {
-    // 时间纪律：逐线检查软预算，超时后剩余线 not-covered（部分报告仍是有效交付）
-    if (Date.now() - startedAt >= budgetMs) {
+  if (timeBudgetMinutes * 60_000 <= 0) {
+    /* 时间预算 ≤0 边界：内核软预算在逐线完成后才检查（0 预算下首线仍会执行），
+     * 本层在入口适配原始纪律——逐线标注 not-covered 出空报告，保持对外语义不变。 */
+    for (const line of LINE_ORDER) {
       coverage[line] = "not-covered";
-      coverageNotes.push(`时间预算耗尽（${opts.timeBudgetMinutes ?? 30} 分钟），${line} 线未执行`);
-      continue;
+      coverageNotes.push(`时间预算耗尽（${timeBudgetMinutes} 分钟），${line} 线未执行`);
     }
-    const pre = precheckLine(line, snapshot);
-    coverage[line] = pre.coverage;
-    if (pre.note) coverageNotes.push(pre.note);
-    if (pre.coverage === "not-covered") continue;
-    const findings = ANALYZERS[line](snapshot, ctx);
-    // 统一编号：FND-<LINE>-<全局序号>（报告可回溯）
-    for (const f of findings) {
-      f.id = `FND-${line.toUpperCase()}-${String(allFindings.length + 1).padStart(3, "0")}`;
-      allFindings.push(f);
+  } else {
+    // 检线定义：precheck 数据源预判 + 行业分析器（阈值经闭包注入，分析器签名不变）
+    const hotelFindings = new Map<AuditLine, Finding[]>();
+    const lines: LineDef<AuditSnapshot>[] = LINE_ORDER.map((line) => ({
+      line,
+      precheck: (s) => precheckLine(line, s),
+      analyze: (s) => {
+        const found = ANALYZERS[line](s, ctx);
+        hotelFindings.set(line, found);
+        return found.map(toCoreFinding);
+      },
+    }));
+
+    const core = runCoreFastScan(snapshot, lines, {
+      now: ctx.now,
+      softBudgetMs: timeBudgetMinutes * 60_000,
+      topN: 10,
+    });
+
+    /* ---------- 适配层：内核逐线结果 → 行业覆盖度视图 ---------- */
+    for (const lr of core.lineResults) {
+      coverage[lr.line as AuditLine] = lr.coverage;
+      if (lr.note) coverageNotes.push(lr.note);
+    }
+
+    // 统一编号：FND-<LINE>-<全局序号>（按 LINE_ORDER 收口，覆盖内核线内序号，保持对外编号纪律不变）
+    for (const lr of core.lineResults) {
+      for (const f of hotelFindings.get(lr.line as AuditLine) ?? []) {
+        f.id = `FND-${lr.line.toUpperCase()}-${String(allFindings.length + 1).padStart(3, "0")}`;
+        allFindings.push(f);
+      }
     }
   }
 
@@ -190,10 +240,6 @@ export function runFastScan(snapshot: AuditSnapshot, opts: FastScanOptions = {})
     },
     top10,
     elapsedMs: Date.now() - startedAt,
-    timeBudgetMinutes: opts.timeBudgetMinutes ?? 30,
+    timeBudgetMinutes,
   };
-}
-
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
 }
