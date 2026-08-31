@@ -7,7 +7,7 @@
 [![Bundle](https://img.shields.io/badge/hotel%20bundle-v2.3.1-1B2A4E)](https://github.com/geniusdapeng-collab/workloom/releases)
 [![Fence](https://img.shields.io/badge/围栏基线-R1--R20%20v3-9A7B2D)](bundles/hotel/fences/hotel-baseline.yml)
 [![Skills](https://img.shields.io/badge/官方技能-25%20个套件-4C6FFF)](bundles/hotel/skills)
-[![Tests](https://img.shields.io/badge/门禁-suite%20392%2F392%20%C2%B7%20demo%2043%2F43-green)](docs/DEMO-TWIN.md)
+[![Tests](https://img.shields.io/badge/门禁-suite%20443%2F443%20%C2%B7%20demo%2044%2F44-green)](docs/DEMO-TWIN.md)
 [![License](https://img.shields.io/badge/license-Apache--2.0-lightgrey)](LICENSE)
 
 </div>
@@ -26,6 +26,18 @@
 
 > 📖 完整能力导览（含截图与体验路径）：[docs/capabilities.auto.md](docs/capabilities.auto.md) ｜ 🤖 AI Agent 入口：[AGENTS.md](AGENTS.md) ｜ 🎯 首启必跑：`pnpm preview:all`
 <!-- CAPABILITIES:END -->
+
+---
+
+## 🧠 通用模型路由系统（v3.0 · 酒店版接入）
+
+酒店版全面接入底座 v3.0 通用模型路由（详见 [workloom-im](https://github.com/geniusdapeng-collab/workloom-im)）：**每一个 AI 调用点都按场景路由到最合适的模型——高频轻量用小模型又快又省，深度决策用旗舰模型质量拉满，每一次消耗逐事件计量可审计。**
+
+- **酒店场景路由表**（`bundles/hotel/model-policy.yml`）：C 端客服 / AI 语音前台走 L1 轻量档（2.8s 体感红线，KB 命中低置信自动升档）；Quest 规划 / 差评回复 / 晨报合成走 L2 中坚档；CEO 六步深度分析 / 汰换诊断 / 断点根因走 L3 旗舰档（noDowngrade 质量红线）；夜班批量任务谷时 ×0.2
+- **体检报告 = 平台成本**：售前 fast-scan 强制 L3 效果拉满，`bill_to: platform` 不扣客户积分——获客补贴，不是运营成本
+- **👍/👎 一键升级重答**：Ask 应答卡（StarRing）与 P15 差评回复草稿常驻反馈钮——点踩即换更强大脑重答并对比展示，首次免费；反馈数据回流驱动路由调表（升级率 >15% 场景自动建议升档，进 CEO 晨报风险栏）
+- **积分三池账本 + 加油包**：P1 工作台「💎 积分账本」面板——赠送/加油包/本金三池余额、消耗流水、五档加油包（450→13,800 元）一站购齐
+- **工资锚定**：全月消耗 ≈ 一个阿姨的月薪（≈3,000 元），换来夜班班组 + 24h 客服 + 收益经理 + 数字CEO 的完整编制
 
 ---
 
@@ -212,7 +224,7 @@ pnpm db:verify-chain          # 现场验证：全库哈希链逐条重算
 
 **开箱即运行态**：`demo:twin:restore` 完成即进入「云栖酒店」高频重度使用的全模拟运行态——经营剧场（默认首页 `/`，**职场/舞台双视图**：等距 2.5D「云栖前厅」里前台接待/客房巡检/夜班对账各就各位，员工打字/踱步/举手/庆祝全由事件实时驱动，点举手员工原地批准驳回）有数字CEO 晨报、员工卫星群、待决策请示、实况字幕流，全部为演示数据 + 内置确定性模型（零外部依赖）。页面顶部**常显琥珀色横幅**提示「当前为全模拟运行态」，点击「接入真实数据 →」进入**落地向导**（`/onboarding`）：① 环境自检（自动）→ ② 真实大模型（DeepSeek/Kimi/智谱/OpenAI 预设一键填，**真实试调通过才落盘**，保存即全链生效免重启）→ ③ 经营主体 → ④ 启用真实模式（横幅熄灭，全程五元事件留痕；此后即可在此运行态上接入真实 PMS/OTA 数据源）。ask 问询另支持联网实时检索事实面（`ASK_WEB_SEARCH=1`，Bing RSS，keyless），与库内实时数据合并供模型合成——比如晨会前直接问「杭州明天天气对周末房价的影响」。
 
-**质量门禁**：typecheck 全绿 · base 174/174 · runtime 12/12 · suite 392/392 · demo 43/43 · 哈希链逐条一致（每版实测）。
+**质量门禁**：typecheck 全绿 · base 408/408 · runtime 9/9 · suite 443/443 · demo 44/44 · 哈希链逐条一致（每版实测）。
 
 ---
 
