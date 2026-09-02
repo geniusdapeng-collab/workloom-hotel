@@ -1,7 +1,7 @@
 {
  "repo": "workloom-hotel",
  "description": "WorkLoom 酒店智能经营系统 · AI 前厅/客房/收益一体化（酒店垂直版）",
- "generatedAt": "2026-08-29T08:24:06.632Z",
+ "generatedAt": "2026-09-02T08:44:40.844Z",
  "demoPages": [
   "service-front-b-mobile.html",
   "service-front-b-pc.html",
@@ -162,9 +162,9 @@
      "desc": "对外产品故事"
     },
     {
-     "name": "自带技能 ×3",
+     "name": "自带技能 ×4",
      "how": "skills/official/",
-     "desc": "industry-entry / product-feedback / release-gate"
+     "desc": "component-integration / industry-entry / product-feedback / release-gate"
     },
     {
      "name": "能力导览 PPT",
