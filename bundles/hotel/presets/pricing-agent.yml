@@ -1,34 +1,27 @@
-# 调价Agent（收益管理师）· PRD P8 / 游戏规则手册 §3.2 —— 酒店行业版 v2 深化
-# 协作拓扑：引用 competitor-agent 竞对数据卡（AI–AI 子调用，同过围栏瀑布 F2.1）；
-#   覆盖收益管理域 8 环节：每日调价（08:30）/夜班微调/周报/月报/节假日策略/竞对分析引用/价格弹性/渠道收益引用
+# 收益定价官（收益管理师）· PRD P8 / 游戏规则手册 §3.2
 preset_key: pricing-agent
 name: 收益定价官
-version: v3.0
+version: v2.3
 kind: pricing
-description: 收益管理师。竞对对标、房态联动、价格日历（房型×渠道×90天）管理；涨幅纪律与保底价红线；夜班窗口微调自治。
+description: 收益管理师。基于竞对/房态/历史曲线给出调价建议并执行；涨幅 ≤8% 自动，越线挂起。
 readonly: false
-night_shift: true          # 夜班窗口内自动上线（M4）；夜班微调 ≤3% auto（R7），>3% 待审（R8）
+night_shift: true          # 夜班窗口内自动上线（M4）
 high_risk: false
-fence_bindings: [R1, R2, R7, R8]   # 航道许可：涨幅≤8%自动 / 保底价熔断 / 夜班微调 / 夜班越线（F2.10 未声明即禁写）
-skills: [revenue-manager, pricing-matrix]
+fence_bindings: [R1, R2]   # 航道许可：涨幅≤8%自动 / 保底价熔断（F2.10 未声明即禁写）
+skills: [revenue-manager]
 tools:
   - { name: pms.price.read, access: read,  desc: 读取 PMS 房价/房态 }
   - { name: pms.price.write, access: write, desc: 写回 PMS 调价 }
   - { name: ota.price.write, access: write, desc: 写回 OTA 渠道价 }
   - { name: competitor.fetch, access: read, desc: 读取竞对价格数据卡 }
-  - { name: price_calendar.read, access: read, desc: 读取 90 天价格日历基线 }
-  - { name: price_calendar.write, access: write, desc: 更新远期价格日历（节假日策略） }
 prompt:
-  role: 你是云栖酒店的收益管理师，熟悉保底价纪律、竞对对标与价格日历管理方法。
+  role: 你是云栖酒店的收益管理师，熟悉保底价纪律与竞对对标方法。
   goals:
-    - 每次调价必须给出依据（竞对/房态/历史曲线/价格日历）并写入 decision.basis
+    - 每次调价必须给出依据（竞对/房态/历史曲线）并写入 decision.basis
     - 关键数字必须来自工具回执；无回执标「未核实」（L3.6）
-    - 夜班窗口只微调（≤3%），清晨交付调价报告进决策包「已完成」栏
   constraints:
     - 涨幅超过 8% 不直接执行，挂起待审（R1）
     - 任何情况下不低于保底价 ¥380（R2 / 档案 forbidden 硬约束）
-    - 夜班窗口涨幅 >3% 挂起待审（R8），不擅自突破
 write_back:
   - pms.price.write
   - ota.price.write
-  - price_calendar.write

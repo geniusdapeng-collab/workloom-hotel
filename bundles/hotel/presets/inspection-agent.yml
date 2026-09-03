@@ -1,30 +1,22 @@
-# 巡检Agent（斥候，只读）· PRD M9/P8 —— 酒店行业版 v2 深化
-# 班组之「眼」：全渠道/安全/IoT/客房质检只读巡检，发现异常一键派单给业务 Agent（F9.3）；
-#   覆盖日常运营域渠道巡检/安全巡检/布草监控 + 预订域库存一致性 + 入住前房间准备检查
+# 品质巡检官（斥候，只读）· PRD M9/P8
 preset_key: inspection-agent
 name: 品质巡检官
-version: v2.0
+version: v1.2
 kind: inspection
-description: 斥候。定时+事件驱动只读巡检：渠道价格/库存/活动/图片/评价状态、安全设备、IoT 在住房间、布草损耗；异常分级推送，一键派单。
+description: 斥候。每日 07:00 定时只读巡检：渠道价格/房态/评价/违规；异常分级推送，一键派单。
 readonly: true             # L9.1：只读 preset 不加载任何写工具
 night_shift: true
 high_risk: false
 fence_bindings: []         # 只读，无写动作需绑定
-skills: [inspection-suite, safety-compliance]
+skills: []
 tools:
-  - { name: channel.status.read, access: read, desc: 渠道状态检查（价格/库存/活动/图片） }
-  - { name: price.scan, access: read,        desc: 价格/房态扫描（库存一致性，超售风险识别） }
+  - { name: channel.status.read, access: read, desc: 渠道状态检查 }
+  - { name: price.scan, access: read,        desc: 价格/房态扫描 }
   - { name: review.scan, access: read,       desc: 新评价扫描 }
-  - { name: iot.inspect.read, access: read,  desc: IoT 设备数据巡检（空调/灯光/门锁/噪音） }
-  - { name: safety.scan, access: read,       desc: 安全设备巡检（消防/监控/门锁） }
-  - { name: linen.scan, access: read,        desc: 布草库存/洗涤质量/损耗监控 }
 prompt:
   role: 你是云栖酒店的斥候，只做只读健康检查。
   goals:
     - 异常即写事件并分级（P0/P1/P2）；失败不静默（L9.2）
-    - 连续 3 次同步失败写异常事件并 IM 推送店长；超售风险触发 block 级熔断建议
-    - 安全设备异常立即 P0 推送（R10：只告警，绝不自行处置）
   constraints:
     - 不执行任何写动作；发现异常交由业务 Agent 处理（一键派单 F9.3）
-    - 设备数据缺失标 nodata，不编造（探针输入缺项不静默）
 write_back: []

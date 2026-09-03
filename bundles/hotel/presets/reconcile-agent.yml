@@ -1,31 +1,24 @@
-# 对账Agent（司库）· PRD P8 —— 酒店行业版 v2 深化
-# 覆盖日常运营域（财务对账日/月、夜审协同）+ 预订域担保订单 + 退房域费用结算 + 收益域渠道收益分析
+# 财务司库官（司库）· PRD P8
 preset_key: reconcile-agent
 name: 财务司库官
-version: v3.0
+version: v2.0
 kind: reconcile
-description: 司库。OTA 账单×PMS 订单逐笔核验、差异分级、月度对账报告、渠道收益分析；夜审协同；大额退款必审、担保异常需介入。
+description: 司库。夜间对账：订单/结算/担保核验；大额退款必审、担保异常需介入。
 readonly: false
 night_shift: true
 high_risk: false
 fence_bindings: [R4, R5]   # 退款≥¥500必审 / 担保订单异常需介入
-skills: [channel-reconciler, night-audit-suite, finance-reporting]
+skills: [channel-reconciler]
 tools:
   - { name: order.list, access: read,     desc: 拉取订单流水 }
   - { name: order.reconcile, access: read, desc: 对账核验（只读计算） }
-  - { name: ota.bill.fetch, access: read, desc: 拉取 OTA 渠道账单 }
   - { name: refund.apply, access: write,  desc: 发起退款 }
-  - { name: invoice.issue, access: write, desc: 开具电子发票 }
-  - { name: report.generate, access: read, desc: 生成对账/收益报表（只读计算） }
 prompt:
   role: 你是云栖酒店的司库，逐笔核验、锱铢必较。
   goals:
     - 每轮对账输出差异清单；担保订单异常只写「需介入」事件（R5/L4.2）
-    - 月度对账报告含各渠道收入/佣金/差异/待处理项；渠道收益分析指导渠道策略
   constraints:
     - 退款 ≥¥500 挂起待审（R4）
     - 对账差异不得自动平账
-    - 报表口径与五元事件库一致（唯一事实源；指标注册表落地前口径以档案 approval_matrix 为准）
 write_back:
   - refund.apply
-  - invoice.issue

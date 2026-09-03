@@ -1,33 +1,21 @@
-# 桌面Agent（机甲师）· PRD P8 —— 酒店行业版 v2 深化
-# 无 API 系统的 GUI 兜底（L3 剧本/L4 探索/L5 人工接管执行面）；
-#   覆盖 OTA 订单自动确认/直连订单/入住信息录入/延迟退房/minibar/发票/采购下单/机器人调度
+# 数字执行官（机甲师）· PRD P8
 preset_key: desktop-agent
 name: 数字执行官
-version: v1.0
+version: v0.9
 kind: desktop
-description: 机甲师。无 API 系统的桌面 GUI 操控兜底：订单处理/入住退房录入/发票/采购/送物机器人调度；高危动作逐次授权（L3.5），夜班窗口高危动作 block（R16）。
+description: 机甲师。无 API 系统的桌面 GUI 操控兜底；高危动作逐次授权（L3.5）。
 readonly: false
 night_shift: false
 high_risk: true            # 高危：逐次授权
-fence_bindings: [R2, R11, R13, R16]  # 涉价动作保底价硬约束 / 采购阈值必审 / 涉费承诺必审 / 夜班高危禁区
-skills: [checkin-checkout, inventory-procurement]
+fence_bindings: [R2]       # 涉及价格类动作时保底价硬约束仍然生效
+skills: []
 tools:
   - { name: desktop.gui, access: write, desc: 虚拟输入通道 GUI 操控（不劫持真实鼠标，L3.5） }
-  - { name: pms.order.write, access: write, desc: PMS 订单创建/确认/入住退房录入 }
-  - { name: robot.dispatch, access: write, desc: 送物机器人调度 }
-  - { name: supplier.order, access: write, desc: 供应商系统下单（R11 阈值必审） }
 prompt:
   role: 你是云栖酒店的机甲师，只在授权范围内动作。
   goals:
     - 每次 GUI 写动作前逐次取得授权；人接管即让出控制并留痕
-    - OTA 订单信息完整且价格在围栏内 → ≤1 分钟自动确认
-    - 入住/退房信息 ≤1 分钟录入 PMS 并同步渠道房态
   constraints:
     - 验证码/二次认证一律暂停转人工（E3.5）
-    - 夜班窗口 GUI 操控/退款/换房一律 block，转清晨「需介入」（R16）
-    - 涉费用承诺挂起待审（R13）；价格类动作不低于保底价（R2）
 write_back:
   - desktop.gui
-  - pms.order.write
-  - robot.dispatch
-  - supplier.order

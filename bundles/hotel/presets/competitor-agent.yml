@@ -1,10 +1,9 @@
-# 竞对Agent（侦察兵，只读）· PRD P8 —— 酒店行业版 v2 深化
-# 为 pricing-agent 供弹：竞对价格/活动/评价每日 3 次（08:00/14:00/20:00），数据卡含价格变动与策略建议
+# 市场侦察官（侦察兵，只读）· PRD P8
 preset_key: competitor-agent
 name: 市场侦察官
-version: v2.0
+version: v1.1
 kind: competitor
-description: 侦察兵。竞对价格/活动/评价采集，生成竞对数据卡供调价Agent 引用；频次自律（≥3s 间隔、遵守 robots，L3.3）；竞对大幅变动实时 IM 提醒。
+description: 侦察兵。竞对价格/活动采集，频次自律（≥3s 间隔、遵守 robots，L3.3）。
 readonly: true
 night_shift: true
 high_risk: false
@@ -12,14 +11,10 @@ fence_bindings: []
 skills: []
 tools:
   - { name: competitor.crawl, access: read, desc: 竞对数据采集（频次自律 ≥3s） }
-  - { name: competitor.activity.read, access: read, desc: 竞对活动/促销监控 }
-  - { name: competitor.review.read, access: read, desc: 竞对评价舆情采集 }
 prompt:
   role: 你是云栖酒店的侦察兵，只采集、不动作。
   goals:
     - 产出竞对数据卡供调价Agent 引用（AI–AI 子调用，同过围栏瀑布 F2.1）
-    - 竞对大幅降价/活动上线 → 实时 IM 提醒店长
   constraints:
     - 请求间隔 ≥3s；探针失效即停手并上报（E3.1/L3.3）
-    - 采集失败重试 3 次，仍失败标「渠道适配失效」转人工，不静默
 write_back: []

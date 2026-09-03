@@ -276,31 +276,31 @@ const D={
 ws:{name:"云栖酒店",slug:"yunqi-hotel",city:"杭州",rooms:86,star:"四钻"},
 members:[{id:"MEM-001",name:"王店长",role:"经营者"},{id:"MEM-002",name:"陈经理",role:"经理"},{id:"MEM-003",name:"李前台",role:"只读"}],
 agents:[
- {key:"frontdesk-agent",name:"前台Agent",v:"v1.0",grade:"正常",fences:["R5","R9"]},
- {key:"pricing-agent",name:"调价Agent",v:"v3.0",grade:"表扬",fences:["R1","R2","R7","R8"]},
- {key:"review-agent",name:"评价Agent",v:"v2.0",grade:"关注",fences:["R6","R19"]},
- {key:"content-agent",name:"内容Agent",v:"v2.0",grade:"正常",fences:["R15"]},
- {key:"reconcile-agent",name:"对账Agent",v:"v3.0",grade:"正常",fences:["R4"]},
- {key:"competitor-agent",name:"竞对Agent",v:"v2.0",grade:"正常",fences:["R17","R18"],ro:true},
- {key:"inspection-agent",name:"巡检Agent",v:"v2.0",grade:"正常",fences:["R3"],ro:true},
- {key:"housekeeper-agent",name:"客房Agent",v:"v1.0",grade:"正常",fences:["R12","R20"]},
- {key:"phone-agent",name:"语音前台Agent",v:"v1.0",grade:"表扬",fences:["R9","R13"]},
- {key:"desktop-agent",name:"桌面Agent",v:"v1.0",grade:"辅导",fences:["R10","R16"]},
+ {key:"frontdesk-agent",name:"前台接待官",v:"v1.0",grade:"正常",fences:["R5","R9"]},
+ {key:"pricing-agent",name:"收益定价官",v:"v3.0",grade:"表扬",fences:["R1","R2","R7","R8"]},
+ {key:"review-agent",name:"口碑公关官",v:"v2.0",grade:"关注",fences:["R6","R19"]},
+ {key:"content-agent",name:"内容主笔官",v:"v2.0",grade:"正常",fences:["R15"]},
+ {key:"reconcile-agent",name:"财务司库官",v:"v3.0",grade:"正常",fences:["R4"]},
+ {key:"competitor-agent",name:"市场侦察官",v:"v2.0",grade:"正常",fences:["R17","R18"],ro:true},
+ {key:"inspection-agent",name:"品质巡检官",v:"v2.0",grade:"正常",fences:["R3"],ro:true},
+ {key:"housekeeper-agent",name:"客房管家官",v:"v1.0",grade:"正常",fences:["R12","R20"]},
+ {key:"phone-agent",name:"语音前台接待官",v:"v1.0",grade:"表扬",fences:["R9","R13"]},
+ {key:"desktop-agent",name:"数字执行官",v:"v1.0",grade:"辅导",fences:["R10","R16"]},
  {key:"owner-cockpit",name:"业主驾驶舱Agent",v:"v1.0",grade:"正常",fences:[],ro:true}],
 threads:[
- {id:"线程 101",title:"周五旺季调价（大床房/双床房）",mode:"quest",status:"completed",done:6,total:6,agent:"调价Agent"},
- {id:"线程 102",title:"差评应急回复（携程 2 分评价）",mode:"quest",status:"pending_review",done:3,total:5,agent:"评价Agent"},
- {id:"线程 103",title:"飞猪渠道新客首图发布",mode:"agent",status:"running",done:1,total:4,agent:"内容Agent"}],
+ {id:"线程 101",title:"周五旺季调价（大床房/双床房）",mode:"quest",status:"completed",done:6,total:6,agent:"收益定价官"},
+ {id:"线程 102",title:"差评应急回复（携程 2 分评价）",mode:"quest",status:"pending_review",done:3,total:5,agent:"口碑公关官"},
+ {id:"线程 103",title:"飞猪渠道新客首图发布",mode:"agent",status:"running",done:1,total:4,agent:"内容主笔官"}],
 night:{done:9,pending:3,need_human:2,credits:96,est:118,fence:"hotel-baseline/v3",pkg:"08:30"},
 briefing:"董事长，早报已备：昨夜班组完成 14 项作业（评论/巡检/对账各线正常），1 件差评处置请您拍板；本周 OCC 与 RevPAR 趋势见节拍控制台。试用期边界降一档执行中。",
 approvals:[
- {id:"···8871",ev:"E-SEED-8871",action:"回复点评",title:"差评应急回复（携程 2 分评价）",tier:"l4_chairman",rule:"R6 差评必审",who:"评价Agent",
+ {id:"···8871",ev:"E-SEED-8871",action:"回复点评",title:"差评应急回复（携程 2 分评价）",tier:"l4_chairman",rule:"R6 差评必审",who:"口碑公关官",
   rationale:"建议致歉→核实→说明已采取检修措施→改进承诺四段式；不承诺档案外补偿（品牌口径）。",
   before:"（未回复）",after:"非常抱歉给您带来不好的体验，我们已核实空调异响问题并安排检修……",status:"pending",risk:false},
- {id:"···9064",ev:"事件 ···9064",action:"订单退款",title:"担保订单退款 ¥1,180（超 ¥500 阈值）",tier:"l3_fleet",rule:"R4 大额退款必审",who:"对账Agent",
+ {id:"···9064",ev:"事件 ···9064",action:"订单退款",title:"担保订单退款 ¥1,180（超 ¥500 阈值）",tier:"l3_fleet",rule:"R4 大额退款必审",who:"财务司库官",
   rationale:"客人 18:00 后取消担保订单，按退款政策应收取首晚；客人称航班取消，建议全额退款维护口碑。",
   before:"待退款 ¥1,180",after:"全额退款 + 致歉券 ¥50",status:"pending",risk:false},
- {id:"···8820",ev:"E-SEED-8820",action:"调整房价",title:"周五亲子双床房调价 ¥588 → ¥628",tier:"l2_captain",rule:"R1 涨幅自动上限",who:"调价Agent",
+ {id:"···8820",ev:"E-SEED-8820",action:"调整房价",title:"周五亲子双床房调价 ¥588 → ¥628",tier:"l2_captain",rule:"R1 涨幅自动上限",who:"收益定价官",
   rationale:"周五晚亲子需求弹性高，18:00 前提价转化损失最小（组织记忆「周五弹性规律」）。",
   before:"¥588",after:"¥628（+6.8%，≤8% 上限）",status:"approved",risk:false}],
 triggers:[
@@ -315,10 +315,10 @@ triggers:[
  {id:"tg-ceo-deviation",name:"公司CEO 目标偏差扫描",cron:"15 */4 * * *"},
  {id:"tg-ceo-breaker",name:"公司CEO 自治熔断巡检",cron:"45 23 * * *"}],
 ticker:[
- {a:"确认订单",w:"前台Agent"},{a:"调整房价",w:"调价Agent"},{a:"回复点评",w:"评价Agent"},
- {a:"同步库存",w:"对账Agent"},{a:"语音前台接听",w:"语音前台Agent"},{a:"智能排房",w:"前台Agent"},
- {a:"创建工单",w:"AI 员工"},{a:"夜班记录",w:"夜班班组"},{a:"channel.parity.fixed",w:"竞对Agent"},
- {a:"检索知识库",w:"AI 员工"},{a:"room.inspect",w:"客房Agent"},{a:"CEO 晨报",w:"公司CEO"}],
+ {a:"确认订单",w:"前台接待官"},{a:"调整房价",w:"收益定价官"},{a:"回复点评",w:"口碑公关官"},
+ {a:"同步库存",w:"财务司库官"},{a:"语音前台接听",w:"语音前台接待官"},{a:"智能排房",w:"前台接待官"},
+ {a:"创建工单",w:"AI 员工"},{a:"夜班记录",w:"夜班班组"},{a:"channel.parity.fixed",w:"市场侦察官"},
+ {a:"检索知识库",w:"AI 员工"},{a:"room.inspect",w:"客房管家官"},{a:"CEO 晨报",w:"公司CEO"}],
 fences:[
  ["R1","房价单日涨幅自动上限","auto"],["R2","保底价熔断","block"],["R3","新渠道首次改价/发布必审","review"],
  ["R4","大额退款必审","review"],["R5","担保订单异常需介入","block"],["R6","差评必审","review"],
@@ -338,28 +338,28 @@ kbSite:{url:"https://www.yunqi-hotel.example",fp:"fp-a91c",cron:"0 3 * * *"},
 orders:[
  {id:"o-8821",guest:"张伟 · 金卡会员",room:"雅致大床房 1208",amount:"¥528",st:"在住",steps:[
   ["下单","住客 · 携程","2 分钟前","自动放行","携程直连下单，担保支付成功"],
-  ["确认订单","前台Agent","8 秒","自动放行","房态校验通过，确认号 C8821 回传渠道"],
-  ["智能排房","前台Agent","12 秒","自动放行","同房型高楼层偏好命中 → 1208"],
+  ["确认订单","前台接待官","8 秒","自动放行","房态校验通过，确认号 C8821 回传渠道"],
+  ["智能排房","前台接待官","12 秒","自动放行","同房型高楼层偏好命中 → 1208"],
   ["入住","李前台（人工）","14:06","自动放行","身份证核验 + 人脸比对通过"],
   ["服务","AI 员工","进行中","自动放行","会话 ···001 · 知识问答 ×2（退房时间/早餐）"],
   ["退房","—","待发生","—","预离 明日 12:00 前"],
   ["发票","—","待发生","—","客人未申请"]]},
  {id:"o-8820",guest:"住客小李",room:"商旅大床房 8306",amount:"¥458",st:"在住",steps:[
   ["下单","住客 · 美团","昨天 21:12","自动放行","美团直连下单"],
-  ["确认订单","前台Agent","9 秒","自动放行","确认号 M8820 回传渠道"],
-  ["智能排房","前台Agent","11 秒","自动放行","安静房偏好 → 8306"],
+  ["确认订单","前台接待官","9 秒","自动放行","确认号 M8820 回传渠道"],
+  ["智能排房","前台接待官","11 秒","自动放行","安静房偏好 → 8306"],
   ["入住","李前台（人工）","昨天 22:03","自动放行","核验通过"],
   ["服务","AI 员工","进行中","自动放行","维修工单 ···001（8306 空调不制冷）处理中"],
   ["退房","—","待发生","—","预离 明日 12:00 前"],
   ["发票","—","待发生","—","客人未申请"]]},
  {id:"o-8795",guest:"王女士 · 亲子",room:"亲子双床房 8502",amount:"¥1,256",st:"已退房",steps:[
   ["下单","住客 · 飞猪","3 天前","自动放行","飞猪直连下单"],
-  ["确认订单","前台Agent","7 秒","自动放行","确认号 F8795 回传渠道"],
-  ["智能排房","前台Agent","10 秒","自动放行","亲子房邻近布草间 → 8502"],
+  ["确认订单","前台接待官","7 秒","自动放行","确认号 F8795 回传渠道"],
+  ["智能排房","前台接待官","10 秒","自动放行","亲子房邻近布草间 → 8502"],
   ["入住","李前台（人工）","周五 15:20","自动放行","核验通过，儿童用品已备"],
-  ["服务","客房Agent","已完成","自动放行","送物 ×2 · 质检 1 次通过"],
+  ["服务","客房管家官","已完成","自动放行","送物 ×2 · 质检 1 次通过"],
   ["退房","李前台（人工）","昨日 11:48","自动放行","查房 6 分钟，无损耗"],
-  ["发票","对账Agent","已完成","自动放行","电子普票已开具并推送"]]}],
+  ["发票","财务司库官","已完成","自动放行","电子普票已开具并推送"]]}],
 stores:[
  {name:"云栖酒店（旗舰）",rooms:86,occ:0.78,adr:496,revpar:387,night:{done:9,pending:3,escalate:2}},
  {name:"云栖·西湖店",rooms:64,occ:0.83,adr:512,revpar:425,night:{done:11,pending:2,escalate:1}},
@@ -382,7 +382,7 @@ rooms:{arrive:18,inhouse:61,departed:12,cleaning:7,
 reports:{
   channel_revenue:[["美团","¥41,040","38%","186 单"],["携程","¥36,720","34%","152 单"],["飞猪","¥17,280","16%","71 单"],["直连","¥12,960","12%","54 单"]],
   occ_trend:[["2026-06","71%","¥468","¥332"],["2026-07","83%","¥512","¥425"],["2026-08","78%","¥496","¥387"]],
-  price_attribution:[["调价Agent","周五旺季调价 ¥588→¥628","竞对西湖云舍同档 ¥640 · 组织记忆「周五弹性规律」","+6.8%"],["竞对Agent","飞猪倒挂修复 ¥438→¥458","R17 倒挂防护 · 检出价差 4.4%","已修复"],["调价Agent","夜班微调 ¥458→¥462","R7 夜班微调自动上限 ≤2%","+0.9%"]]},
+  price_attribution:[["收益定价官","周五旺季调价 ¥588→¥628","竞对西湖云舍同档 ¥640 · 组织记忆「周五弹性规律」","+6.8%"],["市场侦察官","飞猪倒挂修复 ¥438→¥458","R17 倒挂防护 · 检出价差 4.4%","已修复"],["收益定价官","夜班微调 ¥458→¥462","R7 夜班微调自动上限 ≤2%","+0.9%"]]},
 };
 
 /* ================= 工具 ================= */
@@ -508,16 +508,16 @@ VIEWS.floor=()=>`
  </div>
 </div>`;
 const FLOOR_AGENTS=[
- {key:"frontdesk-agent",name:"前台Agent",st:"工作中",x:2,y:2},
- {key:"pricing-agent",name:"调价Agent",st:"工作中",x:4,y:2},
- {key:"review-agent",name:"评价Agent",st:"asking",x:4.8,y:4.5,apr:"···8871",line:"差评应急回复请您拍板（R6 差评必审）"},
- {key:"reconcile-agent",name:"对账Agent",st:"asking",x:6.7,y:4.9,apr:"···9064",line:"大额退款 ¥1,180 请您审批（R4）"},
- {key:"content-agent",name:"内容Agent",st:"工作中",x:6.5,y:2},
- {key:"housekeeper-agent",name:"客房Agent",st:"工作中",x:8,y:2.4},
- {key:"phone-agent",name:"语音前台Agent",st:"庆功",x:2.4,y:5},
- {key:"inspection-agent",name:"巡检Agent",st:"工作中",x:8.2,y:5},
- {key:"competitor-agent",name:"竞对Agent",st:"工作中",x:4,y:6},
- {key:"desktop-agent",name:"桌面Agent",st:"待命",x:1.2,y:6.4},
+ {key:"frontdesk-agent",name:"前台接待官",st:"工作中",x:2,y:2},
+ {key:"pricing-agent",name:"收益定价官",st:"工作中",x:4,y:2},
+ {key:"review-agent",name:"口碑公关官",st:"asking",x:4.8,y:4.5,apr:"···8871",line:"差评应急回复请您拍板（R6 差评必审）"},
+ {key:"reconcile-agent",name:"财务司库官",st:"asking",x:6.7,y:4.9,apr:"···9064",line:"大额退款 ¥1,180 请您审批（R4）"},
+ {key:"content-agent",name:"内容主笔官",st:"工作中",x:6.5,y:2},
+ {key:"housekeeper-agent",name:"客房管家官",st:"工作中",x:8,y:2.4},
+ {key:"phone-agent",name:"语音前台接待官",st:"庆功",x:2.4,y:5},
+ {key:"inspection-agent",name:"品质巡检官",st:"工作中",x:8.2,y:5},
+ {key:"competitor-agent",name:"市场侦察官",st:"工作中",x:4,y:6},
+ {key:"desktop-agent",name:"数字执行官",st:"待命",x:1.2,y:6.4},
  {key:"owner-cockpit",name:"业主驾驶舱Agent",st:"待命",x:2,y:6.8}];
 function drawFloor(){const cv=$("#floorcv");if(!cv)return;const ctx=cv.getContext("2d");
  const W=cv.width=cv.offsetWidth*2,H=cv.height=cv.offsetHeight*2;ctx.scale(2,2);
@@ -586,7 +586,7 @@ VIEWS.p1=()=>shell(
    <div class="row" style="justify-content:space-around">${gauge(.78,"OCC")}${gauge(.62,"ADR ¥496")}${gauge(.48,"RevPAR ¥387")}</div></div>
   <div class="card panel tint-amber" style="border-color:rgba(255,77,109,.4)"><div class="ptitle" style="color:var(--warn)">巡检雷达推送 · 07:00 检出</div>
    <div class="card" style="margin-bottom:8px;border-color:rgba(255,77,109,.35)"><b style="color:var(--warn)">高危</b> · 携程 2 分差评已 26 小时未回复（R19 SLA 升级）
-    <div class="row" style="margin-top:6px"><button class="btn warn sm" data-flip="已派单 ✓|差评处置已派单 → 评价Agent，SLA 计时中">一键派单</button></div></div>
+    <div class="row" style="margin-top:6px"><button class="btn warn sm" data-flip="已派单 ✓|差评处置已派单 → 口碑公关官，SLA 计时中">一键派单</button></div></div>
    <div class="card" style="border-color:rgba(255,170,51,.35)"><b style="color:var(--amberdk)">中危</b> · 飞猪渠道价格倒挂 4.4%（R17）· 亲子房库存未同步（R18）
     <div class="row" style="margin-top:6px"><button class="btn sm" onclick="location.hash='p11'">看价格健康（/p11）</button></div></div></div>
   <div class="card"><div class="ptitle">航线设定台</div>
@@ -595,16 +595,16 @@ VIEWS.p1=()=>shell(
  `<div class="glabel">上下文 · CONTEXT</div>
   <div class="card" style="margin-bottom:10px"><div class="ptitle">档案</div>${["杭州 · 86 间 · 四钻","保底价 ¥380","目标 OCC 80%","品牌：真诚克制"].map(c=>`<span class="tag" style="margin:0 4px 6px 0">${c}</span>`).join("")}</div>
   <div class="card" style="margin-bottom:10px"><div class="ptitle">夜班班组</div>
-   ${["巡检Agent","评价Agent","对账Agent","竞对Agent","语音前台Agent","内容Agent","前台Agent"].map(n=>`<div class="row" style="margin:5px 0"><span style="width:7px;height:7px;border-radius:50%;background:var(--holo);box-shadow:0 0 6px var(--holo)"></span><span style="color:var(--ink2)">${n}</span><span class="mono" style="margin-left:auto">在线</span></div>`).join("")}</div>
+   ${["品质巡检官","口碑公关官","财务司库官","市场侦察官","语音前台接待官","内容主笔官","前台接待官"].map(n=>`<div class="row" style="margin:5px 0"><span style="width:7px;height:7px;border-radius:50%;background:var(--holo);box-shadow:0 0 6px var(--holo)"></span><span style="color:var(--ink2)">${n}</span><span class="mono" style="margin-left:auto">在线</span></div>`).join("")}</div>
   <div class="card"><div class="ptitle">渠道巡检状态</div>
    ${D.channels.map(c=>`<div class="row" style="margin:5px 0"><span style="color:var(--ink2)">${c.name}</span>${c.isNew?'<span class="tag holo">新渠道</span>':""}<span class="mono" style="margin-left:auto">${c.price?`¥${c.price}`:"—"} ${c.parity===false?'<span style="color:var(--warn)">倒挂</span>':c.parity?'<span style="color:var(--go)">平价</span>':""}</span></div>`).join("")}</div>`);
 
 /* ---- P2 任务中心线程 ---- */
 VIEWS.p2=()=>shell(navLeft("p2"),
- `${pageHead("/p2/线程 102","任务中心 · 差评应急回复（携程 2 分评价）","主线任务 · 评价Agent · 进度 3/5 · 状态：待审查")}
+ `${pageHead("/p2/线程 102","任务中心 · 差评应急回复（携程 2 分评价）","主线任务 · 口碑公关官 · 进度 3/5 · 状态：待审查")}
   <div class="flow">
    <div class="step"><div class="ic">系</div><div class="bd"><span class="mono">E-SEED-8846 · 系统</span><div style="margin-top:4px;color:var(--ink2)">巡检检出：携程新增 2 分差评「空调半夜异响，叫醒两次没人来处理」（事件 ${shortId("E-SEED-8846")}）</div></div></div>
-   <div class="step"><div class="ic">评</div><div class="bd"><span class="mono">E-SEED-8852 · 评价Agent</span><div style="margin-top:4px;color:var(--ink2)">已调取订单 o-8820 与维修工单 ···001，核实：8306 空调异响属实，工程部已检修。</div></div></div>
+   <div class="step"><div class="ic">评</div><div class="bd"><span class="mono">E-SEED-8852 · 口碑公关官</span><div style="margin-top:4px;color:var(--ink2)">已调取订单 o-8820 与维修工单 ···001，核实：8306 空调异响属实，工程部已检修。</div></div></div>
    <div class="step"><div class="ic">围</div><div class="bd"><span class="mono">围栏判定</span><div style="margin-top:4px"><span class="tag amber">R6 差评必审 → 人工复核</span> <span class="tag amber">R19 差评响应 SLA 升级（已 26 小时）</span></div></div></div>
    <div class="step"><div class="ic">草</div><div class="bd tint-amber"><span class="mono">E-SEED-8871 · 回复草稿（待您审批）</span>
     <div style="margin-top:6px;font-size:12px;line-height:1.8">
@@ -613,7 +613,7 @@ VIEWS.p2=()=>shell(navLeft("p2"),
     </div>
     <div style="font-size:11px;color:var(--ink3);margin-top:6px">依据：品牌口径「真诚克制，不承诺档案外补偿」· 组织记忆 组织记忆「差评回复 SOP」（致歉→核实→措施→承诺）</div>
     <div class="row" style="margin-top:10px" data-apr="···8871"><button class="btn ok sm" onclick="decide('···8871','approve')">✓ 采纳（权重 1）</button>
-    <button class="btn sm" data-flip="已改派 ✓|编辑后采纳已写回（权重 2），评价Agent 重新生成">✎ 编辑后采纳</button>
+    <button class="btn sm" data-flip="已改派 ✓|编辑后采纳已写回（权重 2），口碑公关官 重新生成">✎ 编辑后采纳</button>
     <button class="btn warn sm" onclick="decide('···8871','reject')">✕ 驳回（权重 3）</button><span class="apr-st tag amber" style="margin-left:auto">待审批</span></div></div></div>
   </div>`,
  `<div class="glabel">线程上下文</div>
@@ -726,7 +726,7 @@ VIEWS.p6=()=>shell(navLeft("p6"),
   </div>`,
  `<div class="glabel">已装给谁</div>
   <div class="card" style="font-size:12px;line-height:2.2;color:var(--ink2)">
-   价格日历技能 → 调价Agent<br>差评危机公关 → 评价Agent<br>超售与价格倒挂看门狗技能 → 竞对Agent<br>AI 语音前台技能 → 语音前台Agent<br>全域巡检技能 → 巡检Agent
+   价格日历技能 → 收益定价官<br>差评危机公关 → 口碑公关官<br>超售与价格倒挂看门狗技能 → 市场侦察官<br>AI 语音前台技能 → 语音前台接待官<br>全域巡检技能 → 品质巡检官
    <hr style="border-color:var(--line);margin:8px 0"><a class="holo-tag" href="#p8">团队对账 →/p8</a></div>`);
 
 /* ---- P8 团队 ---- */
@@ -760,12 +760,12 @@ VIEWS.p9=()=>shell(navLeft("p9"),
    <div class="row" style="margin-top:8px"><button class="btn warn sm" data-flip="已派单 ✓|已派单 → 值班经理，G5 计时留痕">一键派单</button>
    <button class="btn sm" data-toast="已转远程店长视频核身（二级兜底）">远程视频核身</button></div></div>
   <div class="flow">
-   ${[["E-SEED-8901","巡检Agent","巡检快照回写：3 渠道在线，飞猪倒挂检出（转 R17）","receipt"],
-     ["E-SEED-8907","竞对Agent","倒挂防护触发：飞猪 ¥438 低于携程/美团 ¥458，已自动下架该渠道报价","fence"],
-     ["E-SEED-8915","评价Agent","差评应急回复草稿已生成 → 待审批（未生效）","pending"],
-     ["E-SEED-8922","对账Agent","夜间对账三轮比对完成，差异 0 笔","receipt"],
-     ["E-SEED-8931","语音前台Agent","夜间来电 9 通：知识问答 6 · 转值班手机 3","receipt"],
-     ["E-SEED-8940","内容Agent","飞猪首图定时发布已排期 06:00（R15 已审）","receipt"]].map(m=>`
+   ${[["E-SEED-8901","品质巡检官","巡检快照回写：3 渠道在线，飞猪倒挂检出（转 R17）","receipt"],
+     ["E-SEED-8907","市场侦察官","倒挂防护触发：飞猪 ¥438 低于携程/美团 ¥458，已自动下架该渠道报价","fence"],
+     ["E-SEED-8915","口碑公关官","差评应急回复草稿已生成 → 待审批（未生效）","pending"],
+     ["E-SEED-8922","财务司库官","夜间对账三轮比对完成，差异 0 笔","receipt"],
+     ["E-SEED-8931","语音前台接待官","夜间来电 9 通：知识问答 6 · 转值班手机 3","receipt"],
+     ["E-SEED-8940","内容主笔官","飞猪首图定时发布已排期 06:00（R15 已审）","receipt"]].map(m=>`
    <div class="step"><div class="ic">${m[1][0]}</div><div class="bd tint-mint">
     <div class="row"><span class="mono">${shortId(m[0])} · ${m[1]}</span>
     ${m[3]==="pending"?'<span class="tag amber" style="margin-left:auto">未生效 · 待审批</span>':m[3]==="fence"?'<span class="tag warn" style="margin-left:auto">围栏动作 · 回执已留痕</span>':'<span class="tag ok" style="margin-left:auto">回执 ✓</span>'}</div>
@@ -774,7 +774,7 @@ VIEWS.p9=()=>shell(navLeft("p9"),
   <div class="card"><div class="row"><input class="inp" placeholder="给班组留言（五元事件留痕）" onkeydown="if(event.key==='Enter'){toast('留言已写入夜班频道事件流');this.value=''}"><button class="btn warn" id="brake3">⛔ 一键暂停</button></div></div>`,
  `<div class="glabel">班组状态</div>
   <div class="card" style="margin-bottom:10px"><div class="ptitle">成员 · 7 Agent 在线</div>
-   ${["巡检Agent","评价Agent","对账Agent","竞对Agent","语音前台Agent","内容Agent","前台Agent"].map(n=>`<div class="row" style="margin:5px 0"><span style="width:7px;height:7px;border-radius:50%;background:var(--holo);box-shadow:0 0 6px var(--holo);animation:pl 2s infinite"></span><span style="color:var(--ink2)">${n}</span><span class="mono" style="margin-left:auto">夜班窗口内</span></div>`).join("")}</div>
+   ${["品质巡检官","口碑公关官","财务司库官","市场侦察官","语音前台接待官","内容主笔官","前台接待官"].map(n=>`<div class="row" style="margin:5px 0"><span style="width:7px;height:7px;border-radius:50%;background:var(--holo);box-shadow:0 0 6px var(--holo);animation:pl 2s infinite"></span><span style="color:var(--ink2)">${n}</span><span class="mono" style="margin-left:auto">夜班窗口内</span></div>`).join("")}</div>
   <div class="card tint-blue" style="margin-bottom:10px"><div class="ptitle">峰谷计量</div>${hbar("积分消耗",81,"96 / 118 估")}${hbar("已完成",64,"9 / 14 项")}</div>
   <div class="card"><div class="ptitle">围栏快照</div><div style="font-size:12px;color:var(--ink2)">hotel-baseline/v3（当晚版本可回溯）</div>
   <div class="ptitle" style="margin-top:10px">交接班预告</div><div style="font-size:12px;color:var(--ink2)">每天 08:30 → 掌上日报（/p3）</div></div>`);
@@ -804,18 +804,18 @@ VIEWS.p11=()=>shell(navLeft("p11"),
   <div class="grid2 panel">
    <div class="card tint-amber" style="border-color:rgba(255,77,109,.45)"><div class="ptitle" style="color:var(--warn)">倒挂熔断 · R17</div>
     <div style="font-size:12px;line-height:2;color:var(--ink2)">检出：飞猪 <b style="color:var(--warn)">¥438</b> 低于携程/美团 <b>¥458</b>（价差 4.4%）<br>
-    处置：硬阻断 → 飞猪渠道报价自动下架<br>结果：竞对Agent 修复 <span class="diff-add">¥438 → ¥458</span>，已恢复上架（回执 ${shortId("E-SEED-8908")}）</div>
+    处置：硬阻断 → 飞猪渠道报价自动下架<br>结果：市场侦察官 修复 <span class="diff-add">¥438 → ¥458</span>，已恢复上架（回执 ${shortId("E-SEED-8908")}）</div>
     <div class="row" style="margin-top:8px"><button class="btn sm" data-flip="已恢复 ✓|恢复库存上架：飞猪报价 ¥458 已重新上架">恢复上架</button></div></div>
    <div class="card tint-amber" style="border-color:rgba(255,170,51,.4)"><div class="ptitle" style="color:var(--amberdk)">超售·同步失败防护 · R18</div>
     <div style="font-size:12px;line-height:2;color:var(--ink2)">检出：亲子房 PMS 同步失败，可售数存疑<br>
-    处置：亲子房全渠道临时关房（防超售）<br>结果：对账Agent 重试同步成功，已自动开房（回执 ${shortId("E-SEED-8911")}）</div>
+    处置：亲子房全渠道临时关房（防超售）<br>结果：财务司库官 重试同步成功，已自动开房（回执 ${shortId("E-SEED-8911")}）</div>
     <div class="row" style="margin-top:8px"><button class="btn sm" data-flip="已同步 ✓|同步库存：亲子房可售 6 间已回写全渠道">手动重试同步</button></div></div></div>
   <div class="card tint-blue"><div class="ptitle">连续调价事件流（白班 R1 / 夜班 R7，含前后值与依据）</div>
    <table class="dt"><tr><th>时间</th><th>动作</th><th>执行者</th><th>前 → 后</th><th>命中规则</th><th>依据</th></tr>
-   <tr><td class="mono">昨日 16:40</td><td>${actionText("调整房价")}</td><td>调价Agent</td><td>¥588 → <b class="diff-add">¥628</b></td><td><span class="tag ok">R1 自动放行</span></td><td>竞对西湖云舍 ¥640 · 组织记忆「周五弹性规律」</td></tr>
-   <tr><td class="mono">昨夜 23:12</td><td>${actionText("调整房价")}</td><td>调价Agent（夜班）</td><td>¥458 → <b class="diff-add">¥462</b></td><td><span class="tag ok">R7 微调上限内</span></td><td>夜班窗口微调 ≤2%</td></tr>
-   <tr><td class="mono">昨夜 02:05</td><td>${actionText("发布价格")}</td><td>竞对Agent</td><td>¥438 → <b class="diff-add">¥458</b></td><td><span class="tag warn">R17 硬阻断后修复</span></td><td>倒挂检出价差 4.4%</td></tr>
-   <tr><td class="mono">今晨 07:00</td><td>${actionText("同步库存")}</td><td>对账Agent</td><td>亲子房 关房 → <b class="diff-add">开房</b></td><td><span class="tag amber">R18 复核通过</span></td><td>PMS 同步重试成功</td></tr></table></div>`,
+   <tr><td class="mono">昨日 16:40</td><td>${actionText("调整房价")}</td><td>收益定价官</td><td>¥588 → <b class="diff-add">¥628</b></td><td><span class="tag ok">R1 自动放行</span></td><td>竞对西湖云舍 ¥640 · 组织记忆「周五弹性规律」</td></tr>
+   <tr><td class="mono">昨夜 23:12</td><td>${actionText("调整房价")}</td><td>收益定价官（夜班）</td><td>¥458 → <b class="diff-add">¥462</b></td><td><span class="tag ok">R7 微调上限内</span></td><td>夜班窗口微调 ≤2%</td></tr>
+   <tr><td class="mono">昨夜 02:05</td><td>${actionText("发布价格")}</td><td>市场侦察官</td><td>¥438 → <b class="diff-add">¥458</b></td><td><span class="tag warn">R17 硬阻断后修复</span></td><td>倒挂检出价差 4.4%</td></tr>
+   <tr><td class="mono">今晨 07:00</td><td>${actionText("同步库存")}</td><td>财务司库官</td><td>亲子房 关房 → <b class="diff-add">开房</b></td><td><span class="tag amber">R18 复核通过</span></td><td>PMS 同步重试成功</td></tr></table></div>`,
  `<div class="glabel">价格治理</div>
   <div class="card" style="font-size:12px;line-height:2.2;color:var(--ink2)">
    保底价 <b>¥380</b>（R2 硬阻断）<br>单日涨幅上限 <b>8%</b>（R1）<br>夜班微调上限 <b>2%</b>（R7）<br>倒挂/超售看门狗 <b>每 15 分钟</b><hr style="border-color:var(--line);margin:8px 0">
@@ -879,7 +879,7 @@ VIEWS.p15=()=>shell(navLeft("p15"),
     <div class="mono" style="margin-top:4px">已 ${r.age} · ${r.rule}</div>
     ${r.score<=2?`<div class="row" style="margin-top:8px"><button class="btn g sm" onclick="location.hash='p2'">看处置线程（/p2）</button><button class="btn warn sm" data-flip="已升级 ✓|告警升级：已通知店长并计入 SLA 看板">升级店长</button></div>`:""}</div>`).join("")}</div>
   <div class="card"><div class="ptitle">好评挖矿 · 反哺素材库</div>
-   <div style="font-size:12px;color:var(--ink2);line-height:2">「前台小姑娘很贴心，免费升级了高楼层」→ 已提取卖点「主动升级/高楼层视野」进内容素材库，供内容Agent 复用（好评素材入库事件 ${shortId("E-SEED-8862")}）。</div>
+   <div style="font-size:12px;color:var(--ink2);line-height:2">「前台小姑娘很贴心，免费升级了高楼层」→ 已提取卖点「主动升级/高楼层视野」进内容素材库，供内容主笔官 复用（好评素材入库事件 ${shortId("E-SEED-8862")}）。</div>
    ${hbar("响应时效达标",75,"18h / 24h")}${hbar("差评闭环率",88,"22 / 25")}${hbar("好评素材转化",44,"11 条入库","c")}</div>`,
  `<div class="glabel">口碑防线 · REVIEW</div>
   <div class="card" style="font-size:12px;line-height:2.2;color:var(--ink2)">
@@ -982,7 +982,7 @@ VIEWS.p20=()=>shell(navLeft("p20"),
      <tr><th style="width:90px">SOP</th><td>差评 24h 内响应 / 调价须附竞对依据 / 夜间对账三轮比对</td></tr>
      <tr><th>硬约束</th><td><span class="tag warn">升级承诺禁止</span> <span class="tag warn">安全事件禁区</span> <span class="tag warn">夜班高危禁区</span></td></tr>
      <tr><th>审批矩阵</th><td>退款 &gt;¥500 必审 · 采购 &gt;¥1000 必审 · 赔偿仅复核 · 夜班高危阻断</td></tr>
-     <tr><th>赔偿政策</th><td>善意补偿上限 ¥200 · 退款走对账Agent 通道</td></tr></table></div>
+     <tr><th>赔偿政策</th><td>善意补偿上限 ¥200 · 退款走财务司库官 通道</td></tr></table></div>
    <div class="card tint-blue"><div class="ptitle">业务类</div>
     <table class="dt">
      <tr><th style="width:90px">保底价</th><td>¥380；区间：雅致大床 398–688 / 亲子双床 468–788 / 商旅大床 358–588</td></tr>
@@ -1048,12 +1048,12 @@ const P22_DOCS=[
  ["维修报修指引（56 项）","手工录入",1,5,"cat"]];
 /* 工单 ×8（含 SLA 超时样例 ···007；状态经 TICKET_STATUS_TEXT 中文化） */
 const P22_TK=[
- {id:"···001",st:"处理中",kind:"维修报修",pri:"加急",title:"8306 空调不制冷",dept:"工程部",who:"王师傅",sla:"今天 14:00",overdue:false,tl:[["创建工单","住客 · 住客小李","用户对话中建单"],["分派工单","AI 员工 · 服务台Agent","智能分派 → 工程部"],["推进工单","员工 · 王师傅","已接单，携带工具前往 8306"]]},
- {id:"···002",st:"已分派",kind:"送物服务",pri:"",title:"送两瓶矿泉水到 1208",dept:"客房部",who:"",sla:"今天 14:00",overdue:false,tl:[["创建工单","住客 · 张伟","服务台自助提交"],["分派工单","AI 员工 · 服务台Agent","智能分派 → 客房部"]]},
+ {id:"···001",st:"处理中",kind:"维修报修",pri:"加急",title:"8306 空调不制冷",dept:"工程部",who:"王师傅",sla:"今天 14:00",overdue:false,tl:[["创建工单","住客 · 住客小李","用户对话中建单"],["分派工单","AI 员工 · 服务台官","智能分派 → 工程部"],["推进工单","员工 · 王师傅","已接单，携带工具前往 8306"]]},
+ {id:"···002",st:"已分派",kind:"送物服务",pri:"",title:"送两瓶矿泉水到 1208",dept:"客房部",who:"",sla:"今天 14:00",overdue:false,tl:[["创建工单","住客 · 张伟","服务台自助提交"],["分派工单","AI 员工 · 服务台官","智能分派 → 客房部"]]},
  {id:"···003",st:"已完成",kind:"投诉建议",pri:"加急",title:"隔壁房间深夜噪音扰民",dept:"值班经理",who:"刘经理",sla:"—",overdue:false,rate:5,tl:[["创建工单","住客 · 住客小李","投诉类必建单"],["办结工单","员工 · 刘经理","已沟通提醒并赠果盘致歉"],["工单满意度评价","住客 · 住客小李","满意度 5 星"]]},
  {id:"···004",st:"已完成",kind:"送物服务",pri:"",title:"送矿泉水×2 + 牙刷套装到 2508",dept:"客房部",who:"配送机器人·小云",sla:"—",overdue:false,rate:5,tl:[["创建工单","住客 · 王总","对话中确认送物"],["办结工单","员工 · 配送机器人·小云","已送达 2508 并电话确认"]]},
  {id:"···005",st:"处理中",kind:"维修报修",pri:"加急",title:"1832 房空调不制冷",dept:"工程部",who:"王师傅",sla:"今天 13:30",overdue:false,tl:[["创建工单","住客 · Mr. Smith","对话中建单（加急）"],["推进工单","员工 · 王师傅","已携检测设备前往 1832"]]},
- {id:"···006",st:"已分派",kind:"送物服务",pri:"",title:"儿童餐椅 + 温奶器送到 1208",dept:"客房部",who:"",sla:"今天 15:00",overdue:false,tl:[["创建工单","住客 · 李女士","服务台自助提交"],["分派工单","AI 员工 · 服务台Agent","智能分派 → 客房部"]]},
+ {id:"···006",st:"已分派",kind:"送物服务",pri:"",title:"儿童餐椅 + 温奶器送到 1208",dept:"客房部",who:"",sla:"今天 15:00",overdue:false,tl:[["创建工单","住客 · 李女士","服务台自助提交"],["分派工单","AI 员工 · 服务台官","智能分派 → 客房部"]]},
  {id:"···007",st:"已受理",kind:"维修报修",pri:"",title:"2021 房 WiFi 频繁掉线",dept:"",who:"",sla:"已超时",overdue:true,tl:[["创建工单","住客 · 张先生","支付宝小程序提交"],["工单超时升级","系统","受理超时已升级为加急，值班经理介入督办"]]},
  {id:"···008",st:"已完成",kind:"其他需求",pri:"加急",title:"预约 08-26 06:30 送机（萧山 T3，7 座商务）",dept:"前厅部",who:"礼宾-小周",sla:"—",overdue:false,rate:5,tl:[["创建工单","住客 · 王总","电话登记转入"],["办结工单","员工 · 礼宾-小周","送机完成，行程单已推送"]]}];
 /* 今日会话 ×6（多客群：金卡/白金/游客/外籍） */
@@ -1233,7 +1233,7 @@ VIEWS.ask=()=>`<div style="padding:18px 20px 8px">
    ["② 可收起为 56px 图标条","头部「⇥」收起：金色场记板圆钮 + 竖排 ASK·AI 助手 + 待批红 badge，主区同步回弹；点圆钮或「⇤」随时展开——是收起，不是隐藏。"],
    ["③ 移动端底部首 Tab 即对话","B 端移动壳底部 Tab 第一个就是「对话」，与 PC 通栏同一消息流、同一分流口径（demo 移动版已镜像）。"],
    ["④ ⌘K 全局唤起","⌘K / Ctrl+K 任意页面聚焦输入框（收起态自动展开）；输入上限 500 字；Esc 不做强制退出，通栏始终在场。"],
-   ["⑤ 输入分流 ask · quest","问句走 ask（threads.dispatch 意图路由 → AI 助手即时应答，带引用事件号与回执）；明确任务走 quest（前厅 Agent 自动立项 → P2 任务中心）；含糊指令反问澄清，不直接建任务。"],
+   ["⑤ 输入分流 ask · quest","问句走 ask（threads.dispatch 意图路由 → AI 助手即时应答，带引用事件号与回执）；明确任务走 quest（前厅接待官 自动立项 → P2 任务中心）；含糊指令反问澄清，不直接建任务。"],
    ["⑥ 情境感知 + 待批 badge","useLocation 读当前路由预置情境 chips（/p22 服务前台、/p13 订单、/p4 审批…）；红点 badge = approvals 待批数，10s 轮询，断线保留上次计数。"]
   ].map(c=>`<div class="card tint-blue"><b style="color:var(--goldhi);font-size:13px">${c[0]}</b><div style="font-size:12px;color:var(--ink2);line-height:1.9;margin-top:6px">${c[1]}</div></div>`).join("")}
  </div>
@@ -1250,7 +1250,7 @@ VIEWS.ask=()=>`<div style="padding:18px 20px 8px">
      </div>
      <div style="padding:12px;display:flex;flex-direction:column;gap:12px">
       ${arHuman("汇总本周差评给我")}
-      ${arAgent({sender:"前厅 Agent",action:"前厅 Agent 已接单",refId:"线程 ···9106",receipt:"unverified",text:"明确任务已自动立项（quest）。",extra:arQuestCard("本周差评汇总","···9106","评价Agent")})}
+      ${arAgent({sender:"前厅接待官",action:"前厅接待官 已接单",refId:"线程 ···9106",receipt:"unverified",text:"明确任务已自动立项（quest）。",extra:arQuestCard("本周差评汇总","···9106","口碑公关官")})}
      </div>
      <div class="ar-chips"><button class="kbd-chip" data-toast="情境快捷问：随当前路由预置">⚡ 试试知识库检索</button><button class="kbd-chip" data-toast="情境快捷问：随当前路由预置">⚡ 今天工单有什么超时风险</button></div>
      <div class="ar-input"><input placeholder="问点什么，或派个任务…（⌘K 唤起）" readonly><button class="ar-send" data-toast="金色发送钮：问句走 ask · 任务走 quest">发送</button></div>
@@ -1310,11 +1310,11 @@ function arCiteCard(){return `<div class="ar-cite">
 AR_MSGS.push(
  {role:"human",html:arHuman("有新增差评吗")},
  {role:"agent",html:arAgent({action:"AI 助手 · 应答",refId:"事件 ···8846",receipt:"synced",
-  text:"有，1 件新增：携程 2 分差评「空调半夜异响，叫醒两次没人来处理」已 26 小时未回复（引用事件 ···8846，R19 SLA 已升级店长）。评价Agent 已生成致歉→核实→措施→承诺四段式回复草稿，待您审批（审批 ···8871 · R6 差评必审）。"})},
+  text:"有，1 件新增：携程 2 分差评「空调半夜异响，叫醒两次没人来处理」已 26 小时未回复（引用事件 ···8846，R19 SLA 已升级店长）。口碑公关官 已生成致歉→核实→措施→承诺四段式回复草稿，待您审批（审批 ···8871 · R6 差评必审）。"})},
  {role:"human",html:arHuman("汇总本周差评给我")},
- {role:"agent",html:arAgent({sender:"前厅 Agent",action:"前厅 Agent 已接单",refId:"线程 ···9106",receipt:"unverified",
+ {role:"agent",html:arAgent({sender:"前厅接待官",action:"前厅接待官 已接单",refId:"线程 ···9106",receipt:"unverified",
   text:"明确任务已自动立项（quest），进展我会主动汇报。",
-  extra:arQuestCard("本周差评汇总","···9106","评价Agent")})},
+  extra:arQuestCard("本周差评汇总","···9106","口碑公关官")})},
  {role:"human",html:arHuman("试试知识库检索")},
  {role:"agent",html:arAgent({action:"AI 助手 · 应答",refId:"事件 ···9104",receipt:"synced",
   text:"已检索知识库（混合检索投影），「早餐在哪里吃」命中 3 块，Top1 如下：",extra:arCiteCard()})});
@@ -1369,11 +1369,11 @@ function arAnswer(q){
  if(/检索|知识库/.test(q))return arAgent({action:"AI 助手 · 应答",refId:"事件 ···9104",receipt:"synced",text:`已检索知识库，「${esc(q.slice(0,20))}」命中 3 块，Top1 如下：`,extra:arCiteCard()});
  if(/超时/.test(q))return arAgent({action:"AI 助手 · 应答",refId:"事件 ···9105",receipt:"synced",text:"今日工单侧 1 起 SLA 超时：工单 ···007「2021 房 WiFi 频繁掉线」受理超时，系统已自动升级为加急并通知值班经理介入督办（引用事件 ···9105）。其余 7 单 SLA 正常，可去工单台跟进（/p22）。"});
  if(/差评|口碑/.test(q))return arAgent({action:"AI 助手 · 应答",refId:"事件 ···8846",receipt:"synced",text:"本周差评 2 件：① 携程 2 分「空调异响」已 26 小时未回复，回复草稿待您审批（审批 ···8871 · R6）；② 美团 4 分「电梯等得久」已回复闭环。差评响应 SLA 达标率 75%（18h / 24h）。"});
- if(/汇总|报告|总结/.test(q))return arAgent({sender:"前厅 Agent",action:"前厅 Agent 已接单",refId:"线程 ···9107",receipt:"unverified",text:"明确任务已自动立项（quest），产出将投递掌上日报（/p3）。",extra:arQuestCard(esc(q.slice(0,14)),"···9107","评价Agent")});
+ if(/汇总|报告|总结/.test(q))return arAgent({sender:"前厅接待官",action:"前厅接待官 已接单",refId:"线程 ···9107",receipt:"unverified",text:"明确任务已自动立项（quest），产出将投递掌上日报（/p3）。",extra:arQuestCard(esc(q.slice(0,14)),"···9107","口碑公关官")});
  if(/订单/.test(q))return arAgent({action:"AI 助手 · 应答",refId:"事件 ···8911",receipt:"synced",text:"今日订单侧 2 起异常均已收口：① 飞猪倒挂 4.4%——R17 硬阻断后已修复回 ¥458（回执 ···8908）；② 亲子房 PMS 同步失败——临时关房防超售，重试成功已开房（回执 ···8911）。另有大额退款 ¥1,180 待您审批（审批 ···9064）。"});
  if(/审批|高危|审批|待审/.test(q))return arAgent({action:"AI 助手 · 应答",refId:"事件 ···8871",receipt:"synced",text:"当前待您审批 2 件：① L4 董事长级 · 差评应急回复（R6 差评必审 · 审批 ···8871）；② L3 集团CEO级 · 大额退款 ¥1,180（R4 · 审批 ···9064）。无越围栏高危项，可去审批中心逐条审（/p4）。"});
  if(/概况|怎么样|经营/.test(q))return arAgent({action:"AI 助手 · 应答",refId:"事件 ···8999",receipt:"synced",text:"当前经营概况：OCC 78% · ADR ¥496 · RevPAR ¥387；昨夜班组 9 完成 / 3 待审 / 2 需介入；携程 2 分差评处置请您拍板，其余各线正常（晨报事件 ···8999）。"});
- return arAgent({sender:"前厅 Agent",action:"前厅 Agent 已接单",refId:"线程 ···9108",receipt:"unverified",text:`已立项执行：「${esc(q.slice(0,24))}」，每一步先请您确认再动手。`,extra:arQuestCard(esc(q.slice(0,14)),"···9108","公司CEO")});
+ return arAgent({sender:"前厅接待官",action:"前厅接待官 已接单",refId:"线程 ···9108",receipt:"unverified",text:`已立项执行：「${esc(q.slice(0,24))}」，每一步先请您确认再动手。`,extra:arQuestCard(esc(q.slice(0,14)),"···9108","公司CEO")});
 }
 function arSend(raw){
  const q=String(raw||"").trim();if(!q||arSending)return;
