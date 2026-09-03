@@ -2,7 +2,7 @@
 # 班组之「眼」：全渠道/安全/IoT/客房质检只读巡检，发现异常一键派单给业务 Agent（F9.3）；
 #   覆盖日常运营域渠道巡检/安全巡检/布草监控 + 预订域库存一致性 + 入住前房间准备检查
 preset_key: inspection-agent
-name: 巡检Agent
+name: 品质巡检官
 version: v2.0
 kind: inspection
 description: 斥候。定时+事件驱动只读巡检：渠道价格/库存/活动/图片/评价状态、安全设备、IoT 在住房间、布草损耗；异常分级推送，一键派单。

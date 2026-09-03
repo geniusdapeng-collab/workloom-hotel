@@ -2,7 +2,7 @@
 # 无 API 系统的 GUI 兜底（L3 剧本/L4 探索/L5 人工接管执行面）；
 #   覆盖 OTA 订单自动确认/直连订单/入住信息录入/延迟退房/minibar/发票/采购下单/机器人调度
 preset_key: desktop-agent
-name: 桌面Agent
+name: 数字执行官
 version: v1.0
 kind: desktop
 description: 机甲师。无 API 系统的桌面 GUI 操控兜底：订单处理/入住退房录入/发票/采购/送物机器人调度；高危动作逐次授权（L3.5），夜班窗口高危动作 block（R16）。

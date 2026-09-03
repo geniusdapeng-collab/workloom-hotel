@@ -2,7 +2,7 @@
 # 覆盖日常运营域内容营销 + 离店后域复购唤醒/沉睡唤醒/流失分析 + 预订域到店前关怀 + 入住问候 + AI 直播；
 #   私域运营主通道（微信/企微通道落地前走 inapp/短信降级，触达频率受 R9 硬约束）
 preset_key: content-agent
-name: 内容Agent
+name: 内容主笔官
 version: v2.0
 kind: content
 description: 文书。小红书/抖音内容生产、AI 直播脚本与排期、OTA 活动报名建议、客户触达（到店关怀/复购/沉睡唤醒）；新渠道首发与直播必审、触达频率 block 级合规。

@@ -2,7 +2,7 @@
 # 协作拓扑：引用 competitor-agent 竞对数据卡（AI–AI 子调用，同过围栏瀑布 F2.1）；
 #   覆盖收益管理域 8 环节：每日调价（08:30）/夜班微调/周报/月报/节假日策略/竞对分析引用/价格弹性/渠道收益引用
 preset_key: pricing-agent
-name: 调价Agent
+name: 收益定价官
 version: v3.0
 kind: pricing
 description: 收益管理师。竞对对标、房态联动、价格日历（房型×渠道×90天）管理；涨幅纪律与保底价红线；夜班窗口微调自治。

@@ -1,7 +1,7 @@
 # 客房Agent（客房主管）· 酒店行业版 v2 新增（一线调研：清洁质量不稳定/查房返工/耗材遗漏/布草损耗难追踪/维修发现滞后）
 # 定位：客房作业的调度中枢——接 inspection-agent 派单，管清洁/查房/布草/耗材/报修闭环
 preset_key: housekeeper-agent
-name: 客房Agent
+name: 客房管家官
 version: v1.0
 kind: housekeeper
 description: 客房主管。清洁派单与顺序优化（先赶住房）、自动查房与质检、布草损耗追踪、耗材补货提醒、报修分派闭环；赔偿事项与采购超阈值必审。

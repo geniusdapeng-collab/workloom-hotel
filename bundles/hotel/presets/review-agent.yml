@@ -2,7 +2,7 @@
 # 覆盖离店后域（评价监控/好评回复/中性互动/差评危机/整改追踪回链）+ 在住域客服应答与投诉处理；
 #   好评双向资产化：好评进内容选题（供 content-agent 引用），差评进整改流程（派单 inspection/housekeeper）
 preset_key: review-agent
-name: 评价Agent
+name: 口碑公关官
 version: v2.0
 kind: review
 description: 公关专员。全渠道评价监控与回复、差评分级处置、好评资产化；7×24 客服应答辅助；涉费承诺与赔偿事项挂起待审。
