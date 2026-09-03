@@ -50,7 +50,9 @@
     "computer:smoke": "tsx packages/base/computer-use/smoke.ts",
     "setup": "bash scripts/bootstrap.sh",
     "setup:full": "bash scripts/bootstrap.sh --with-computer",
-    "skill:forge": "tsx scripts/skill-forge.mts"
+    "skill:forge": "tsx scripts/skill-forge.mts",
+    "app": "tsx scripts/desktop-app.mts",
+    "app:dev": "tsx scripts/desktop-app.mts --dev"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -63,7 +65,8 @@
     "tsx": "^4.23.12",
     "typescript": "^7.0.2",
     "vitest": "^4.1.11",
-    "yaml": "2.9.0"
+    "yaml": "2.9.0",
+    "electron": "^44.1.1"
   },
   "description": "WorkLoom 酒店智能经营系统 · AI 前厅/客房/收益一体化（酒店垂直版）"
 }
