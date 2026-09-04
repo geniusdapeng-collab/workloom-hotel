@@ -42,7 +42,7 @@ button{font-family:inherit;cursor:pointer;background:none;border:0;color:inherit
 #statusbar .sp{flex:1}
 #statusbar svg{display:inline-block;vertical-align:-2px}
 #wxcaps{position:absolute;top:8px;right:14px;z-index:30;height:26px;border:1px solid rgba(51,38,43,.22);border-radius:13px;
- display:flex;align-items:center;gap:8px;padding:0 10px;background:rgba(255,255,255,.72)}
+ display:flex;align-items:center;gap:8px;padding:0 10px;background:rgba(28,32,37,.78)}
 #wxcaps i{width:4px;height:4px;border-radius:50%;background:var(--ink2);display:inline-block}
 #wxcaps .dot3{display:flex;gap:2px}
 #wxcaps .sep{width:1px;height:14px;background:rgba(51,38,43,.18)}
@@ -74,13 +74,13 @@ button{font-family:inherit;cursor:pointer;background:none;border:0;color:inherit
 .li{display:flex;align-items:center;gap:8px;height:44px;border-bottom:1px solid rgba(255,36,66,.08)}
 .li:last-child{border-bottom:0}
 .li .t{flex:1;min-width:0;font-size:12px;color:var(--ink2)}
-.btn{display:inline-flex;align-items:center;justify-content:center;height:30px;border:1px solid var(--line);border-radius:999px;background:#fff;padding:0 12px;font-size:11px;color:var(--ink2);white-space:nowrap}
+.btn{display:inline-flex;align-items:center;justify-content:center;height:30px;border:1px solid var(--line);border-radius:999px;background:#1c2025;padding:0 12px;font-size:11px;color:var(--ink2);white-space:nowrap}
 .btn.g{border:0;color:var(--ongold);background:linear-gradient(135deg,var(--gold),var(--gold2))}
 .btn.ok{border-color:rgba(34,200,138,.55);color:var(--go-t)}
 .btn.warn{border-color:rgba(255,77,109,.5);color:var(--warn)}
 .btn.big{height:40px;border-radius:999px;font-size:12px;width:100%}
 .btn.done{opacity:.5;pointer-events:none}
-input.inp{flex:1;min-width:0;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--ink);padding:8px 14px;font-size:12px;outline:none;font-family:inherit;height:34px}
+input.inp{flex:1;min-width:0;border:1px solid var(--line);border-radius:999px;background:#1c2025;color:var(--ink);padding:8px 14px;font-size:12px;outline:none;font-family:inherit;height:34px}
 input.inp:focus{border-color:var(--gline)}
 input.inp::placeholder{color:var(--ink3)}
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -92,18 +92,18 @@ input.inp::placeholder{color:var(--ink3)}
 .diff-del{text-decoration:line-through;color:var(--warn);opacity:.8}
 .diff-add{color:var(--go-t)}
 /* 底部 Tab */
-#tabbar{position:absolute;left:0;right:0;bottom:0;height:58px;z-index:25;display:flex;border-top:1px solid var(--line);background:rgba(255,255,255,.96);padding-bottom:6px}
+#tabbar{position:absolute;left:0;right:0;bottom:0;height:58px;z-index:25;display:flex;border-top:1px solid var(--line);background:rgba(21,24,28,.96);padding-bottom:6px}
 #tabbar button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:9px;color:var(--ink2);position:relative}
 #tabbar button .ic{width:22px;height:22px;border:1px solid var(--line);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--ink2)}
 #tabbar button.on{color:var(--gold)}
 #tabbar button.on .ic{border-color:var(--gline);color:var(--gold);box-shadow:0 0 8px rgba(255,36,66,.25)}
-#tabbar button .bdg{position:absolute;top:6px;margin-left:22px;min-width:14px;height:14px;border-radius:7px;background:var(--warn);color:#fff;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px}
+#tabbar button .bdg{position:absolute;top:6px;margin-left:22px;min-width:14px;height:14px;border-radius:7px;background:var(--warn);color:#1c2025;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 3px}
 /* Ask 屏底部固定输入栏（对话主屏 · 非悬浮球） */
-#askbar{position:absolute;left:0;right:0;bottom:58px;z-index:26;display:none;border-top:1px solid var(--line);background:rgba(255,255,255,.97);padding:8px 12px 10px}
+#askbar{position:absolute;left:0;right:0;bottom:58px;z-index:26;display:none;border-top:1px solid var(--line);background:rgba(21,24,28,.97);padding:8px 12px 10px}
 #askbar .chips{display:flex;gap:6px;overflow-x:auto;margin-bottom:8px;white-space:nowrap}
 #askbar .chips::-webkit-scrollbar{display:none}
 /* toast */
-#toast{position:absolute;left:50%;bottom:140px;transform:translateX(-50%);z-index:60;max-width:320px;background:#fff;border:1px solid var(--gline);
+#toast{position:absolute;left:50%;bottom:140px;transform:translateX(-50%);z-index:60;max-width:320px;background:#1c2025;border:1px solid var(--gline);
  color:var(--goldhi);border-radius:10px;padding:8px 14px;font-size:11px;line-height:1.6;box-shadow:0 8px 30px rgba(51,38,43,.18);opacity:0;transition:opacity .25s;pointer-events:none;text-align:center}
 #toast.show{opacity:1}
 /* 底部弹层（工单详情） */
@@ -111,10 +111,10 @@ input.inp::placeholder{color:var(--ink3)}
 #sheet.open{display:block}
 #sheet .mask{position:absolute;inset:0;background:rgba(51,38,43,.35)}
 #sheet .box{position:absolute;left:0;right:0;bottom:0;max-height:78%;overflow-y:auto;border-top:1px solid var(--gline);border-radius:16px 16px 0 0;background:var(--bg);padding:14px 14px 20px}
-#sheet .grab{width:36px;height:4px;border-radius:2px;background:#e9cfd8;margin:0 auto 10px}
+#sheet .grab{width:36px;height:4px;border-radius:2px;background:#3a424c;margin:0 auto 10px}
 /* 经营主页 */
-.holo-wrap{position:relative;width:100%;height:190px;overflow:hidden;border:1px solid #ebdde0;border-radius:16px;
- background:radial-gradient(70% 85% at 50% 46%,#fff0f4 0%,rgba(255,240,244,.7) 60%,#fff8fa 100%)}
+.holo-wrap{position:relative;width:100%;height:190px;overflow:hidden;border:1px solid #2c333b;border-radius:16px;
+ background:radial-gradient(70% 85% at 50% 46%,#1c2025 0%,rgba(255,240,244,.7) 60%,#1c2025 100%)}
 .holobody{position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);width:130px;height:130px}
 .holobody .or{position:absolute;border-radius:50%;border:1px solid;transform:rotateX(68deg)}
 @keyframes hspin{to{transform:rotateX(68deg) rotate(360deg)}}
@@ -131,16 +131,16 @@ input.inp::placeholder{color:var(--ink3)}
 .tl .nd{position:relative;padding-bottom:12px}
 .tl .nd:last-child{padding-bottom:0}
 .tl .nd::before{content:"";position:absolute;left:-16px;top:5px;width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px rgba(255,36,66,.35)}
-.tl .nd.fut::before{background:#e9cfd8;box-shadow:none}
+.tl .nd.fut::before{background:#3a424c;box-shadow:none}
 .tl .nd .a{font-size:11px;color:var(--ink);font-weight:600}
 .tl .nd .d{font-size:11px;color:var(--ink2);margin-top:2px;line-height:1.6}
 .tl .nd .m{font-size:10px;color:var(--ink2);font-family:ui-monospace,monospace;margin-top:2px}
 /* 模块色块分区（淡色晕染 · 仅背景不做功能色 · 16px 圆角 + 同色深 8% 极浅描边） */
-.tint-peach{background:#fff0f4;border:1px solid #ebdde0;border-radius:16px}
-.tint-blue{background:#f0f7ff;border:1px solid #dce3ea;border-radius:16px}
+.tint-peach{background:#1c2025;border:1px solid #2c333b;border-radius:16px}
+.tint-blue{background:#1a222e;border:1px solid #3a424c;border-radius:16px}
 .tint-mint{background:#f0fbf6;border:1px solid #dce7e2;border-radius:16px}
-.tint-amber{background:#fff6ec;border:1px solid #ebe2d8;border-radius:16px}
-.tint-grape{background:#f7f2ff;border:1px solid #e3deea;border-radius:16px}
+.tint-amber{background:#252a30;border:1px solid #ebe2d8;border-radius:16px}
+.tint-grape{background:#201d2b;border:1px solid #e3deea;border-radius:16px}
 /* 矮视口适配：视口偏矮时手机壳等比缩小顶对齐，保证底 Tab 完整可见 */
 
 </style>
@@ -152,9 +152,9 @@ input.inp::placeholder{color:var(--ink3)}
  <div id="phone">
   <div id="statusbar">
    <span class="tm">08:30</span><span class="sp"></span>
-   <svg width="15" height="11" viewBox="0 0 15 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="#8a757d"/><rect x="4" y="5" width="3" height="6" rx="1" fill="#8a757d"/><rect x="8" y="2.5" width="3" height="8.5" rx="1" fill="#8a757d"/><rect x="12" y="0" width="3" height="11" rx="1" fill="#8a757d" opacity=".4"/></svg>
-   <svg width="15" height="11" viewBox="0 0 16 12" style="margin-left:5px"><path d="M8 8.6a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2zM8 4.4c1.9 0 3.6.7 4.9 1.9l-1.5 1.6A4.9 4.9 0 0 0 8 6.6c-1.3 0-2.5.5-3.4 1.3L3.1 6.3A6.9 6.9 0 0 1 8 4.4zM8 0c2.9 0 5.6 1.1 7.6 3l-1.5 1.6A8.4 8.4 0 0 0 8 2.2C5.7 2.2 3.5 3.1 1.9 4.6L.4 3A11.4 11.4 0 0 1 8 0z" fill="#8a757d"/></svg>
-   <svg width="23" height="11" viewBox="0 0 25 12" style="margin-left:5px"><rect x="0.5" y="0.5" width="21" height="11" rx="3" fill="none" stroke="#8a757d" opacity=".5"/><rect x="2" y="2" width="15" height="8" rx="1.6" fill="#22c88a"/><rect x="23" y="4" width="2" height="4" rx="1" fill="#8a757d" opacity=".5"/></svg>
+   <svg width="15" height="11" viewBox="0 0 15 11"><rect x="0" y="7" width="3" height="4" rx="1" fill="#9aa2ac"/><rect x="4" y="5" width="3" height="6" rx="1" fill="#9aa2ac"/><rect x="8" y="2.5" width="3" height="8.5" rx="1" fill="#9aa2ac"/><rect x="12" y="0" width="3" height="11" rx="1" fill="#9aa2ac" opacity=".4"/></svg>
+   <svg width="15" height="11" viewBox="0 0 16 12" style="margin-left:5px"><path d="M8 8.6a1.6 1.6 0 1 1 0 3.2 1.6 1.6 0 0 1 0-3.2zM8 4.4c1.9 0 3.6.7 4.9 1.9l-1.5 1.6A4.9 4.9 0 0 0 8 6.6c-1.3 0-2.5.5-3.4 1.3L3.1 6.3A6.9 6.9 0 0 1 8 4.4zM8 0c2.9 0 5.6 1.1 7.6 3l-1.5 1.6A8.4 8.4 0 0 0 8 2.2C5.7 2.2 3.5 3.1 1.9 4.6L.4 3A11.4 11.4 0 0 1 8 0z" fill="#9aa2ac"/></svg>
+   <svg width="23" height="11" viewBox="0 0 25 12" style="margin-left:5px"><rect x="0.5" y="0.5" width="21" height="11" rx="3" fill="none" stroke="#9aa2ac" opacity=".5"/><rect x="2" y="2" width="15" height="8" rx="1.6" fill="#46b190"/><rect x="23" y="4" width="2" height="4" rx="1" fill="#9aa2ac" opacity=".5"/></svg>
   </div>
   <div id="wxcaps"><span class="dot3"><i></i><i></i><i></i></span><span class="sep"></span><span class="ring"></span></div>
   <div id="view"></div>
@@ -270,7 +270,7 @@ function toast(m){const t=$("#toast");t.textContent=m;t.classList.add("show");cl
 function openSheet(html){$("#sheetbox").innerHTML=`<div class="grab"></div>`+html;$("#sheet").classList.add("open")}
 function closeSheet(){$("#sheet").classList.remove("open")}
 function tkTag(st){const c=st==="已完成"?"ok":st==="处理中"?"holo":st==="已分派"?"g":st==="已受理"?"amber":"";return `<span class="chip ${c}">${st}</span>`}
-function gradeColor(g){return g==="表扬"?"#22c88a":g==="辅导"?"#ff4d6d":g==="关注"?"#ffaa33":"#4d96ff"}
+function gradeColor(g){return g==="表扬"?"#46b190":g==="辅导"?"#e05a6b":g==="关注"?"#d9a045":"#4d96ff"}
 function tierText(t){return t==="l4_chairman"?"L4 董事长级":t==="l3_fleet"?"L3 集团CEO级":"L2 公司CEO级"}
 function shead(title,route,chip){return `<div class="shead"><div><div class="tt">${title}</div><div class="rt">真实路由 ${route}</div></div>${chip||""}</div>`}
 function stat(v,k){return `<div class="stat"><div class="v">${v}</div><div class="k">${k}</div></div>`}
@@ -316,9 +316,9 @@ VIEWS.theater=()=>{
    <div class="or" style="inset:12px;border-color:rgba(255,36,66,.22);animation:hspin 7s linear infinite reverse"></div>
    <div class="or" style="inset:24px;border-color:rgba(255,36,66,.12);animation:hspin 5s linear infinite"></div>
    <svg viewBox="0 0 120 160" style="position:absolute;inset:0;margin:auto;width:86px;height:108px">
-    <defs><radialGradient id="core" cx="50%" cy="42%" r="55%"><stop offset="0%" stop-color="#ff7a9e" stop-opacity=".95"/><stop offset="60%" stop-color="#ff2442" stop-opacity=".3"/><stop offset="100%" stop-color="#ff2442" stop-opacity="0"/></radialGradient></defs>
-    <ellipse cx="60" cy="26" rx="14" ry="16" fill="none" stroke="#ff2442" stroke-opacity=".8" stroke-width="1.4"/>
-    <path d="M42 52 Q60 42 78 52 L86 108 Q60 122 34 108 Z" fill="none" stroke="#ff2442" stroke-opacity=".65" stroke-width="1.4"/>
+    <defs><radialGradient id="core" cx="50%" cy="42%" r="55%"><stop offset="0%" stop-color="#f0f4f9" stop-opacity=".95"/><stop offset="60%" stop-color="#d6dce4" stop-opacity=".3"/><stop offset="100%" stop-color="#d6dce4" stop-opacity="0"/></radialGradient></defs>
+    <ellipse cx="60" cy="26" rx="14" ry="16" fill="none" stroke="#d6dce4" stroke-opacity=".8" stroke-width="1.4"/>
+    <path d="M42 52 Q60 42 78 52 L86 108 Q60 122 34 108 Z" fill="none" stroke="#d6dce4" stroke-opacity=".65" stroke-width="1.4"/>
     <ellipse cx="60" cy="72" rx="17" ry="22" fill="url(#core)"/></svg>
   </div>
   ${sats.map((a,i)=>{const ang=i/sats.length*Math.PI*2-Math.PI/2;const rx=150,ry=72;
@@ -335,8 +335,8 @@ VIEWS.theater=()=>{
 </div>`};
 
 /* ---- 2. #ask Ask 对话主屏（默认落地屏 · 全局常驻 · 真实对话而非展开态展示） ---- */
-function askU(t){return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><div style="max-width:82%;border:0;border-radius:14px;border-top-right-radius:4px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;padding:8px 11px;font-size:12px;line-height:1.6">${t}</div></div>`}
-function askA(inner){return `<div style="display:flex;margin-bottom:10px"><div style="max-width:94%;border:1px solid #dce3ea;border-radius:14px;border-top-left-radius:4px;background:#f0f7ff;padding:8px 11px">${inner}</div></div>`}
+function askU(t){return `<div style="display:flex;justify-content:flex-end;margin-bottom:10px"><div style="max-width:82%;border:0;border-radius:14px;border-top-right-radius:4px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1c2025;padding:8px 11px;font-size:12px;line-height:1.6">${t}</div></div>`}
+function askA(inner){return `<div style="display:flex;margin-bottom:10px"><div style="max-width:94%;border:1px solid #3a424c;border-radius:14px;border-top-left-radius:4px;background:#1a222e;padding:8px 11px">${inner}</div></div>`}
 /* AI 助手 · 差评应答（带引用/回执） */
 function askAiReview(){return `
  <div class="row" style="gap:6px;margin-bottom:4px"><b style="font-size:11px">AI 助手</b><span class="mono">线程 ···9101</span><span class="chip ok" style="height:18px;font-size:9px">✓ 回执 · 已生效</span></div>
@@ -558,7 +558,7 @@ VIEWS.p8=()=>`<div class="scr">
  <div class="sect">人类成员<span class="n">${D.members.length} 人 · 三端权限一致</span></div>
  <div class="card tint-grape" style="padding:0 12px">
   ${D.members.map(m=>`<div class="li">
-   <span style="width:30px;height:30px;flex:none;border-radius:50%;background:linear-gradient(135deg,#ffe0ec,#ffd0de);display:flex;align-items:center;justify-content:center;border:1px solid var(--line);font-size:12px;color:var(--gold)">${m.name[0]}</span>
+   <span style="width:30px;height:30px;flex:none;border-radius:50%;background:linear-gradient(135deg,#252a30,#2c333b);display:flex;align-items:center;justify-content:center;border:1px solid var(--line);font-size:12px;color:var(--gold)">${m.name[0]}</span>
    <div class="t"><div style="font-size:12px;color:var(--ink)">${m.name}</div><div class="mono">${m.id}</div></div>
    <span class="chip ${m.role==="只读"?"":"g"}">${m.role}</span></div>`).join("")}</div>
  <div class="sect">Agent 成员<span class="n">${D.agents.length} 员 · 绩效态色点</span></div>
@@ -596,7 +596,7 @@ VIEWS.p9=()=>`<div class="scr">
 VIEWS.me=()=>`<div class="scr">
  ${shead("我的","/me","<span class=\"chip amber\">试用期 · 第 2 天</span>")}
  <div class="card" style="border-color:var(--gline)">
-  <div class="row"><span style="width:40px;height:40px;flex:none;border-radius:50%;background:linear-gradient(135deg,#ffe0ec,#ffd0de);display:flex;align-items:center;justify-content:center;border:1px solid var(--gline);font-size:15px;color:var(--gold)">王</span>
+  <div class="row"><span style="width:40px;height:40px;flex:none;border-radius:50%;background:linear-gradient(135deg,#252a30,#2c333b);display:flex;align-items:center;justify-content:center;border:1px solid var(--gline);font-size:15px;color:var(--gold)">王</span>
    <div style="flex:1;min-width:0"><b style="font-size:14px">王店长</b><div class="mono" style="margin-top:2px">MEM-001 · 经营者 · 云栖酒店（杭州 · 86 间 · 四钻）</div></div></div></div>
  <div class="sect">夜班状态<span class="n">与班组</span></div>
  <div class="card tint-mint" onclick="location.hash='p9'" style="cursor:pointer">
