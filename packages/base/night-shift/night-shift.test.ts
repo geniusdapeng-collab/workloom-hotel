@@ -101,7 +101,7 @@ d("PG 集成夜班闭环（种子库）", async () => {
     try {
       await c.query("SELECT set_config('app.workspace_id', $1, false)", [scope.workspaceId]);
       const r = await c.query(`SELECT status, fence_snapshot_version, candidate_count FROM night_runs WHERE id=$1`, [runId]);
-      expect(r.rows[0]).toMatchObject({ status: "running", fence_snapshot_version: "hotel-baseline/v3", candidate_count: 2 });
+      expect(r.rows[0]).toMatchObject({ status: "running", fence_snapshot_version: "hotel-baseline/v1", candidate_count: 2 });
     } finally { c.release(); }
   });
 

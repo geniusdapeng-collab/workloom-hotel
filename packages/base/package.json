@@ -4,7 +4,6 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./audit-core": "./audit-core/index.ts",
     "./bundles": "./bundles/index.ts",
     "./workdata": "./workdata/index.ts",
     "./im-channels": "./im-channels/index.ts",
@@ -26,6 +25,7 @@
       "types": "./captain/index.ts",
       "default": "./captain/index.ts"
     },
+    "./audit-core": "./audit-core/index.ts",
     "./evolve": "./evolve/index.ts",
     "./eval-core": "./eval-core/index.ts",
     "./dev-bridge": "./dev-bridge/index.ts"
@@ -37,7 +37,7 @@
   "dependencies": {
     "@workloom/db": "workspace:*",
     "@workloom/shared": "workspace:*",
-    "jose": "6.2.9",
+    "jose": "6.2.10",
     "pg": "8.23.0",
     "yaml": "2.9.0",
     "zod": "^4.4.3"

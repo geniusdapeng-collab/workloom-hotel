@@ -140,9 +140,7 @@ describe.runIf(RUN_DB)("技能/意识 PG 集成（M8 铁律）", async () => {
     await uninstallSkill(app, gw, scope, { skillId: revenue!.id, by: "MEM-001" }).catch(() => undefined);
 
     const i1 = await installSkill(app, gw, scope, { skillId: revenue!.id, by: "MEM-001" });
-    expect(i1.installed).toBe(true);
-    expect(i1.deduped).toBe(false);
-    expect(i1.bindings).toEqual(expect.arrayContaining(["R1", "R2"])); // hotel v3 技能绑定含追加项
+    expect(i1).toMatchObject({ installed: true, deduped: false, bindings: ["R1", "R2"] });
 
     const agent = await qApp<{ id: string }>(`SELECT id FROM agents WHERE workspace_id=$1 AND preset_key='pricing-agent'`, [scope.workspaceId]);
     const bindings = await resolveAgentFenceBindings(app, scope, agent.rows[0]!.id);
@@ -153,7 +151,7 @@ describe.runIf(RUN_DB)("技能/意识 PG 集成（M8 铁律）", async () => {
     expect(i2.deduped).toBe(true); // 重复安装不报错不重复留痕
 
     const u = await uninstallSkill(app, gw, scope, { skillId: revenue!.id, by: "MEM-001" });
-    expect(u.revokedBindings).toEqual(expect.arrayContaining(["R1", "R2"])); // L8.3 卸载即撤销（含追加绑定）
+    expect(u.revokedBindings).toEqual(["R1", "R2"]); // L8.3 卸载即撤销
     const installs = await listInstalls(app, scope);
     expect(installs.find((x) => x.skill_id === revenue!.id)).toBeUndefined();
     const bindingsAfter = await resolveAgentFenceBindings(app, scope, agent.rows[0]!.id);
@@ -205,8 +203,8 @@ describe.runIf(RUN_DB)("技能/意识 PG 集成（M8 铁律）", async () => {
 
     await qApp(
       `INSERT INTO skills (id, level, bundle, name, version, description, fence_bindings, body, desensitized)
-       VALUES ('skill-conflict','official','hotel','conflict-skill','1.0.0','', '["R1","R99"]', '', false)
-       ON CONFLICT (id) DO UPDATE SET fence_bindings='["R1","R99"]'`,
+       VALUES ('skill-conflict','official','hotel','conflict-skill','1.0.0','', '["R1","R9"]', '', false)
+       ON CONFLICT (id) DO UPDATE SET fence_bindings='["R1","R9"]'`,
     );
     await expect(installSkill(app, gw, scope, { skillId: "skill-conflict", by: "MEM-001" }))
       .rejects.toMatchObject({ code: "FENCE_CONFLICT" });

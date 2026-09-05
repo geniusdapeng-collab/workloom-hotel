@@ -50,14 +50,14 @@ describe("判定器（F2.1/E2.1/E2.2，真实基线包）", () => {
 
   it("R1 涨幅 ≤8% → auto 放行；>8% 无命中 → default review", () => {
     const ok = judge(
-      { object: { type: "room_price" }, action: "price.adjust", before: { price: 400 }, after: { price: 420 }, context: { channel_new: false, night_shift: false } },
+      { object: { type: "room_price" }, action: "price.adjust", before: { price: 400 }, after: { price: 420 }, context: { channel_new: false } },
       pack.rules, pack.defaultLevel,
     );
     expect(ok.level).toBe("auto");
     expect(ok.impacts[0]).toMatchObject({ rule_id: "R1", result: "pass" });
 
     const over = judge(
-      { object: { type: "room_price" }, action: "price.adjust", before: { price: 400 }, after: { price: 460 }, context: { channel_new: false, night_shift: false } },
+      { object: { type: "room_price" }, action: "price.adjust", before: { price: 400 }, after: { price: 460 }, context: { channel_new: false } },
       pack.rules, pack.defaultLevel,
     );
     expect(over.level).toBe("review"); // default_level
@@ -95,7 +95,6 @@ describe("判定器（F2.1/E2.1/E2.2，真实基线包）", () => {
     const input = {
       object: { type: "order" }, action: "order.refund",
       params: { amount: 800 },
-      context: { night_shift: false }, // v2 契约：R16 夜班高危引用 night_shift，调用方须显式供给
     };
     const a = judge(input, pack.rules, pack.defaultLevel);
     const b = judgeSubCall(input, pack.rules, pack.defaultLevel);
