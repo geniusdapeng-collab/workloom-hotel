@@ -120,7 +120,8 @@ const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 /* ---------- 场景 ---------- */
 const W = 1600, H = 1000;
-const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+const CAPTURE = location.search.includes("capture");
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: CAPTURE });
 renderer.setSize(W, H);
 renderer.setPixelRatio(1);
 renderer.shadowMap.enabled = false;
@@ -241,25 +242,19 @@ function confettiBurst(n) {
 const clock = new THREE.Clock();
 let dancing = false;
 let camPush = 0;
+let virtualT = 0;
 
-(async () => {
-  // 布阵：CEO 中央前，7 人弧形后排
-  await spawn(MODELS.ceo, 0, 0.6);
-  const xs = [-4.6, -3.1, -1.55, 0, 1.55, 3.1, 4.6];
-  for (let i = 0; i < 7; i++) {
-    const z = Math.abs(xs[i]) < 0.1 ? -1.4 : -0.9 - Math.abs(xs[i]) * 0.06;
-    await spawn(MODELS.staff[i], xs[i], z);
-  }
-  // 入场：Walking_A + 聚光灯渐亮
-  for (const a of actors) a.actions.Walking_A?.play();
-  spots.forEach((sp, i) => setTimeout(() => {
-    const t0 = performance.now();
-    const fade = () => { sp.intensity = Math.min(i === 2 ? 90 : 55, sp.intensity + 2); if (sp.intensity < (i === 2 ? 90 : 55)) requestAnimationFrame(fade); };
-    fade();
-  }, 200 + i * 120));
+/* 虚拟时间轴事件表（capture 模式按虚拟时钟触发；正常模式走 setTimeout 等价物） */
+let actorsReady = false;
+const timelineEvents = [
+  { t: 1.6, fn: () => { startDance(); confettiBurst(60); } },
+  { t: 3.4, fn: () => confettiBurst(40) },
+  { t: 7.0, fn: () => { stopDance(); document.getElementById("ribbon").classList.add("show"); } },
+  { t: 7.7, fn: () => { document.getElementById("ribbon").classList.add("cut"); document.getElementById("flash").classList.add("go"); } },
+  { t: 8.4, fn: () => document.getElementById("modal").classList.add("show") },
+];
 
-  await sleep(1600);                       // 入场完毕
-  // 慢半拍担当：随机 1-2 名员工节奏慢、起拍晚（正式版按日期种子轮换——每日悬念）
+function startDance() {
   const staffOnly = actors.slice(1);
   const slowIdx = new Set();
   while (slowIdx.size < 2) slowIdx.add(Math.floor(Math.random() * staffOnly.length));
@@ -269,56 +264,99 @@ let camPush = 0;
     if (cheer) {
       const isSlow = i > 0 && slowIdx.has(i - 1);
       cheer.reset();
-      cheer.timeScale = isSlow ? 0.82 : 1.15;     // 慢 29%
-      cheer.time = isSlow ? -0.35 : 0;            // 相位慢半拍
+      cheer.timeScale = isSlow ? 0.82 : 1.15;
+      cheer.time = isSlow ? -0.35 : 0;
       cheer.fadeIn(0.2).play();
     }
   });
   dancing = true; camPush = 1;
-  confettiBurst(60);
-  await sleep(1800);
-  confettiBurst(40);
-  await sleep(3600);                       // 舞满 5.4s
+}
+function stopDance() {
   dancing = false;
   for (const a of actors) {
     a.actions.Cheer?.fadeOut(0.3);
-    a.actions.Idle ? (a.actions.Idle.reset().fadeIn(0.3).play()) : null;
+    if (a.actions.Idle) a.actions.Idle.reset().fadeIn(0.3).play();
   }
-  const ribbon = document.getElementById("ribbon");
-  ribbon.classList.add("show");
-  await sleep(700);
-  ribbon.classList.add("cut");
-  document.getElementById("flash").classList.add("go");
-  await sleep(500);
-  document.getElementById("modal").classList.add("show");
-})();
+}
 
-/* ---------- 渲染循环 ---------- */
-function animate() {
-  requestAnimationFrame(animate);
-  const dt = Math.min(clock.getDelta(), 0.05);
+async function setup() {
+  await spawn(MODELS.ceo, 0, 0.6);
+  const xs = [-4.6, -3.1, -1.55, 0, 1.55, 3.1, 4.6];
+  for (let i = 0; i < 7; i++) {
+    const z = Math.abs(xs[i]) < 0.1 ? -1.4 : -0.9 - Math.abs(xs[i]) * 0.06;
+    await spawn(MODELS.staff[i], xs[i], z);
+  }
+  for (const a of actors) a.actions.Walking_A?.play();
+  if (CAPTURE) {
+    spots.forEach((sp, i) => { sp.intensity = i === 2 ? 90 : 55; });
+  } else {
+    spots.forEach((sp, i) => setTimeout(() => {
+      const fade = () => { sp.intensity = Math.min(i === 2 ? 90 : 55, sp.intensity + 2); if (sp.intensity < (i === 2 ? 90 : 55)) requestAnimationFrame(fade); };
+      fade();
+    }, 200 + i * 120));
+  }
+  actorsReady = true;
+
+  if (!CAPTURE) {
+    // 正常模式：墙钟时间轴
+    (async () => {
+      const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+      await sleep(1600); startDance(); confettiBurst(60);
+      await sleep(1800); confettiBurst(40);
+      await sleep(3600); stopDance();
+      document.getElementById("ribbon").classList.add("show");
+      await sleep(700);
+      document.getElementById("ribbon").classList.add("cut");
+      document.getElementById("flash").classList.add("go");
+      await sleep(500);
+      document.getElementById("modal").classList.add("show");
+    })();
+  }
+}
+
+/* capture 模式：虚拟时钟步进（每步渲染一帧，与墙钟解耦——离线逐帧渲染，数学上绝对平滑） */
+window.__ceremonyStep = (dt) => {
+  if (!actorsReady) return false;
+  const prevT = virtualT;
+  virtualT += dt;
+  for (const ev of timelineEvents) {
+    if (!ev.fired && ev.t <= virtualT) { ev.fired = true; ev.fn(); }
+  }
+  stepScene(dt, virtualT);
+  renderer.render(scene, camera);
+  return virtualT;
+};
+window.__ceremonyReady = () => actorsReady;
+
+/* ---------- 渲染循环（正常模式墙钟；capture 模式由 __ceremonyStep 驱动） ---------- */
+function stepScene(dt, t) {
   for (const a of actors) {
     a.mixer.update(dt);
-    // 入场走位插值
     if (!dancing && a.actions.Walking_A?.isRunning()) {
       a.root.position.lerp(a.target, 1 - Math.exp(-dt * 2.4));
     }
-    // 跳舞时轻微上下律动叠加（骨骼动画之外的群体节拍感）
     if (dancing) {
-      a.root.position.y = Math.abs(Math.sin(clock.elapsedTime * 7.9)) * 0.06;
+      a.root.position.y = Math.abs(Math.sin(t * 7.9)) * 0.06;
     } else {
       a.root.position.y *= 0.9;
     }
   }
-  // 跳舞期镜头缓推
   if (camPush > 0 && camera.position.z > 10.8) {
     camera.position.z -= dt * 0.4;
     camera.position.y -= dt * 0.12;
     camera.lookAt(0, 0.9, 0);
   }
-  renderer.render(scene, camera);
 }
-animate();
+
+if (!CAPTURE) {
+  (function animate() {
+    requestAnimationFrame(animate);
+    const dt = Math.min(clock.getDelta(), 0.05);
+    stepScene(dt, clock.elapsedTime);
+    renderer.render(scene, camera);
+  })();
+}
+setup();
 </script>
 </body>
 </html>
