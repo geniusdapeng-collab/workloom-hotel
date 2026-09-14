@@ -593,8 +593,9 @@ async function main(): Promise<void> {
     [TENANT_ID, TENANT_NAME],
   );
   await q(
-    `INSERT INTO workspaces (id, tenant_id, name, slug, industry, stage, night_config)
-     VALUES ($1,$2,$3,$4,'hotel','stable',$5) ON CONFLICT (id) DO NOTHING`,
+    `INSERT INTO workspaces (id, tenant_id, name, slug, industry, stage, night_config, bundle_id, is_example)
+     VALUES ($1,$2,$3,$4,'hotel','stable',$5,'hotel',true)
+     ON CONFLICT (id) DO UPDATE SET bundle_id='hotel', is_example=true`,
     [
       WS_ID,
       TENANT_ID,
