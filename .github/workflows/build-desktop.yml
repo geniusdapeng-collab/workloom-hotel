@@ -91,7 +91,7 @@ jobs:
           persist-credentials: false
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 24, cache: pnpm }
+        with: { node-version: 24.19.0, cache: pnpm }
 
       - name: 安装依赖 + 构建 web
         env:
@@ -297,7 +297,7 @@ jobs:
           persist-credentials: false
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 24, cache: pnpm }
+        with: { node-version: 24.19.0, cache: pnpm }
 
       - name: 编译 pgvector + 同源 PG 运行时（vendor/pg-win + vendor/pgvector-win）
         shell: pwsh
