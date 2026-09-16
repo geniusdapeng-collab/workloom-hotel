@@ -39,7 +39,7 @@ test("signed 与 unsigned 平台校验边界清晰", () => {
 });
 
 test("Release 同时交付三个固定命名平台制品并披露安装风险", () => {
-  assert.match(builder, /artifactName: "\$\{productName\}-\$\{os\}-\$\{arch\}\.\$\{ext\}"/u);
+  assert.match(builder, /artifactName: "WorkLoom\.Hotel-\$\{os\}-\$\{arch\}\.\$\{ext\}"/u);
   assert.match(workflow, /--mac dmg --arm64/u);
   assert.match(workflow, /--mac dmg --x64/u);
   assert.match(workflow, /--win nsis --x64/u);
@@ -54,7 +54,7 @@ test("Release 同时交付三个固定命名平台制品并披露安装风险", 
 });
 
 test("桌面产品身份、端口和签名配置与产品清单一致", () => {
-  assert.equal(product.release.artifactPrefix, product.displayName);
+  assert.equal(product.release.artifactPrefix, "WorkLoom.Hotel");
   assert.ok(builder.includes(`appId: ${product.release.appId}`));
   assert.ok(builder.includes(`productName: ${product.displayName}`));
   assert.ok(builder.includes(`workloomPortOffset: ${product.desktop.portOffset}`));

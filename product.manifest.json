@@ -11,7 +11,7 @@
   "release": {
     "appId": "com.geniusdapeng.workloomhotel",
     "channel": "stable",
-    "artifactPrefix": "WorkLoom 酒店行业版",
+    "artifactPrefix": "WorkLoom.Hotel",
     "website": "apps/site"
   },
   "desktop": {
