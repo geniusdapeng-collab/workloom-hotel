@@ -159,5 +159,8 @@ test("正式与应急装配线统一使用每产品 lock、目标 OS/CPU 和身�
     const workflow = readFileSync(join(REPOSITORY_ROOT, ".github/workflows/desktop-production-release.yml"), "utf8");
     assert.doesNotMatch(workflow, /node-version:\s*24(?:\s|,|$)/u);
     assert.match(workflow, /node-version:\s*24\.19\.0/u);
+  } else {
+    const workflow = readFileSync(join(REPOSITORY_ROOT, ".github/workflows/build-desktop.yml"), "utf8");
+    assert.match(workflow, /preflight:[\s\S]*node-version:\s*24\.19\.0[\s\S]*name: 验证每产品 runtime 依赖锁[\s\S]*node scripts\/runtime-deps-lock\.mjs verify/u);
   }
 });

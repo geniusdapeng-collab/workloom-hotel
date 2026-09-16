@@ -48,6 +48,10 @@ jobs:
           fetch-depth: 0
           fetch-tags: true
           persist-credentials: false
+      - uses: actions/setup-node@v4
+        with: { node-version: 24.19.0 }
+      - name: 验证每产品 runtime 依赖锁
+        run: node scripts/runtime-deps-lock.mjs verify
       - id: target
         name: 固定标签、提交与签名模式
         shell: bash
