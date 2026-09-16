@@ -32,7 +32,7 @@
     },
     {
       "path": "package.json",
-      "sha256": "97350ec14b41fc2e61d31372c480cb62e6060061d4eae001657e248d27c1c3ce"
+      "sha256": "d61d0b75d95e2ae08db26cfacfc9d9de438e3222c58eb2e577ab2f1742996a91"
     },
     {
       "path": "packages/audit-engine/package.json",
@@ -68,7 +68,7 @@
     },
     {
       "path": "scripts/pack-nm-merge.mjs",
-      "sha256": "23609ede98cd64b55f8c530b5193507fc49ad6da5c12fb8876d63748ada9933c"
+      "sha256": "8e7aa9c1e7fe10e13165802f27c6162bbda9d45ae95c97841e9484e2560856ce"
     },
     {
       "path": "scripts/payload-policy.mjs",
@@ -80,7 +80,7 @@
     },
     {
       "path": "scripts/runtime-deps-lock.mjs",
-      "sha256": "b7152636ea4542a086027afbbbc42c918c3d3f70c39fce1c4aebccaed70df9a4"
+      "sha256": "38d5eba21ae509aec4de97000bda055ca632f0216473e1d1000eeba6b5e0a475"
     }
   ],
   "manifestSha256": "bae08a229cce26438b95966696c66e9e7e285b3dcf6885dc475ecb490faebefb",

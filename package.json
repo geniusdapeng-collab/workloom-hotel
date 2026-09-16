@@ -63,7 +63,8 @@
     "bundle:seal": "tsx scripts/bundle-governance.mts --refresh-digests",
     "bundle:release": "tsx scripts/bundle-governance.mts --refresh-digests --release",
     "projections:generate": "tsx scripts/generate-client-projections.mts --write",
-    "projections:check": "tsx scripts/generate-client-projections.mts"
+    "projections:check": "tsx scripts/generate-client-projections.mts",
+    "desktop:release:contract": "node --test scripts/unsigned-desktop-release.test.mjs"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
