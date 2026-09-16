@@ -13,8 +13,9 @@ const sites = ["index.html", "en.html"].map((name) =>
 
 test("tag 发布明确选择平台未签名，手动发布默认保留 signed 路径", () => {
   assert.match(workflow, /platform_signing:[\s\S]*type: choice[\s\S]*signed[\s\S]*unsigned[\s\S]*default: signed/u);
-  assert.match(workflow, /PLATFORM_SIGNING:.*workflow_dispatch.*inputs\.platform_signing.*unsigned/u);
-  assert.match(workflow, /if \[ "\$PLATFORM_SIGNING" = "signed" \]; then/u);
+  assert.ok(workflow.includes("PLATFORM_SIGNING: ${{ inputs.platform_signing }}"));
+  assert.equal((workflow.match(/if: needs\.preflight\.outputs\.platform-signing == 'signed'/gu) ?? []).length, 3);
+  assert.equal((workflow.match(/if: needs\.preflight\.outputs\.platform-signing == 'unsigned'/gu) ?? []).length, 3);
 });
 
 test("平台未签名模式不削弱 Bundle Ed25519 信任链", () => {
@@ -32,9 +33,9 @@ test("signed 与 unsigned 平台校验边界清晰", () => {
   assert.match(workflow, /codesign --verify --deep --strict/u);
   assert.match(workflow, /xcrun stapler validate/u);
   assert.match(workflow, /Get-AuthenticodeSignature/u);
-  assert.match(workflow, /CSC_IDENTITY_AUTO_DISCOVERY=false/u);
-  assert.match(workflow, /CSC_LINK= CSC_KEY_PASSWORD=/u);
-  assert.match(workflow, /WIN_CSC_LINK= WIN_CSC_KEY_PASSWORD=/u);
+  assert.equal((workflow.match(/CSC_IDENTITY_AUTO_DISCOVERY: "false"/gu) ?? []).length, 3);
+  assert.doesNotMatch(workflow, /CSC_LINK=|CSC_KEY_PASSWORD=|APPLE_ID=|WIN_CSC_LINK=|WIN_CSC_KEY_PASSWORD=/u);
+  assert.equal((workflow.match(/if: needs\.preflight\.outputs\.platform-signing == 'unsigned'/gu) ?? []).length, 3);
   assert.match(workflow, /-c\.mac\.notarize=false/u);
 });
 
@@ -46,7 +47,7 @@ test("Release 同时交付三个固定命名平台制品并披露安装风险", 
   assert.match(workflow, /未做 Apple\/Windows 平台代码签名/u);
   assert.match(workflow, /xattr -cr/u);
   assert.match(workflow, /SmartScreen/u);
-  assert.match(workflow, /body_path: release-notes\.md/u);
+  assert.match(workflow, /--notes-file "\$RUNNER_TEMP\/release-notes\.md"/u);
   for (const site of sites) {
     assert.match(site, /workloom-hotel\/releases\/latest/u);
     assert.doesNotMatch(site, /releases\/latest\/download\/WorkLoom-macOS\.zip/u);
