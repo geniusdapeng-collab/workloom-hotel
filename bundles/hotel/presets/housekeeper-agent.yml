@@ -9,6 +9,8 @@ readonly: false
 night_shift: false
 high_risk: false
 fence_bindings: [R11, R14]  # 采购超阈值必审 / 赔偿事项必审
+coverage:
+  - { eventPrefix: "housekeeping.", label: 客房派单 }
 skills: [room-service-dispatch, maintenance-dispatch, inventory-procurement]
 tools:
   - { name: task.dispatch, access: write,  desc: 清洁/维修工单分派与追踪 }

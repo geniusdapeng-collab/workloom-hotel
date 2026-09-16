@@ -1,10 +1,19 @@
 {
+  "schemaVersion": "workloom.bundle/v1",
   "name": "@workloom/hotel",
   "version": "3.2.0",
   "workloom": {
     "industry": "hotel",
     "displayName": "WorkLoom 酒店行业版",
-    "description": "酒店行业版差异资产包 v3.3：11 个 Agent preset（+语音前台 phone-agent/业主驾驶舱 owner-cockpit）+ 基线围栏包 R1–R20（v3：+倒挂/超售/差评SLA/布草损耗）+ 四类客群客户级 Patch 模板（+audit-only 质检模式：一切写操作物理 block）+ 20 类对象/16 阶段枚举 + 一店一档五类档案 20 字段组（+布草/断点/FAQ）+ 26 个官方技能（+fast-scan 快照快扫：15-30 分钟出《酒店快速体检报告》），覆盖七大业务域 67 个经营环节（先体检再托管：audit_only → 影子模式 → 低星单体酒店/民宿/无人酒店，segment-defaults 四客群默认安装清单）",
+    "description": "酒店自主经营候选包：酒店数字员工、围栏、技能、经营对象和三端行业投影。旧版扩展资产仍保留在包内，待基座扩展资产契约补齐后纳入签名索引。",
+    "status": "candidate",
+    "owner": "WorkLoom 酒店产品组",
+    "example": false,
+    "compatibility": {
+      "base": ">=0.1.0 <1.0.0",
+      "ui": ">=0.1.0 <1.0.0",
+      "contract": "2.0.0"
+    },
     "provides": {
       "presets": [
         "presets/pricing-agent.yml",
@@ -62,9 +71,315 @@
       "ui": [
         "ui/cases.json"
       ],
-      "segment_defaults": [
+      "serviceFront": [
+        "service-front/client.json"
+      ],
+      "seeds": [],
+      "pipelines": [],
+      "library": [],
+      "segmentDefaults": [
         "segment-defaults.yml"
-      ]
+      ],
+      "connectors": []
+    },
+    "ui": {
+      "schemaVersion": "workloom.bundle.ui/v1",
+      "terminology": {
+        "businessObject": "门店经营事项",
+        "customer": "住客",
+        "operation": "门店经营",
+        "field.occ": "入住率",
+        "field.adr": "平均房价",
+        "field.revpar": "每间可售房收入"
+      },
+      "navigation": {
+        "slots": [
+          {
+            "capabilityId": "hotel.incidents",
+            "title": "异常断点",
+            "route": "/hotel/incidents",
+            "group": "operations",
+            "icon": "warning",
+            "clients": [
+              "pc"
+            ],
+            "permissions": [
+              "hotel.incidents.read"
+            ]
+          },
+          {
+            "capabilityId": "hotel.price-health",
+            "title": "价格健康",
+            "route": "/hotel/price-health",
+            "group": "operations",
+            "icon": "radar",
+            "clients": [
+              "pc"
+            ],
+            "permissions": [
+              "hotel.price-health.read"
+            ]
+          },
+          {
+            "capabilityId": "hotel.goals",
+            "title": "经营目标",
+            "route": "/hotel/goals",
+            "group": "operations",
+            "icon": "executive",
+            "clients": [
+              "pc"
+            ],
+            "permissions": [
+              "hotel.goals.read"
+            ]
+          },
+          {
+            "capabilityId": "hotel.orders",
+            "title": "订单穿透",
+            "route": "/hotel/orders",
+            "group": "operations",
+            "icon": "history",
+            "clients": [
+              "pc"
+            ],
+            "permissions": [
+              "hotel.orders.read"
+            ]
+          },
+          {
+            "capabilityId": "hotel.channels",
+            "title": "渠道运营",
+            "route": "/hotel/channels",
+            "group": "operations",
+            "icon": "send",
+            "clients": [
+              "pc"
+            ],
+            "permissions": [
+              "hotel.channels.read"
+            ]
+          },
+          {
+            "capabilityId": "hotel.reputation",
+            "title": "口碑与差评",
+            "route": "/hotel/reputation",
+            "group": "operations",
+            "icon": "star",
+            "clients": [
+              "pc"
+            ],
+            "permissions": [
+              "hotel.reputation.read"
+            ]
+          },
+          {
+            "capabilityId": "hotel.voice-front",
+            "title": "语音前台",
+            "route": "/hotel/voice-front",
+            "group": "operations",
+            "icon": "phone",
+            "clients": [
+              "pc"
+            ],
+            "permissions": [
+              "hotel.voice-front.read"
+            ]
+          },
+          {
+            "capabilityId": "hotel.frontdesk-housekeeping",
+            "title": "前厅与客房",
+            "route": "/hotel/frontdesk-housekeeping",
+            "group": "operations",
+            "icon": "service",
+            "clients": [
+              "pc"
+            ],
+            "permissions": [
+              "hotel.frontdesk-housekeeping.read"
+            ]
+          },
+          {
+            "capabilityId": "hotel.stores",
+            "title": "多店驾驶舱",
+            "route": "/hotel/stores",
+            "group": "operations",
+            "icon": "workspace",
+            "clients": [
+              "pc"
+            ],
+            "permissions": [
+              "hotel.stores.read"
+            ]
+          },
+          {
+            "capabilityId": "hotel.revenue",
+            "title": "收益分析",
+            "route": "/hotel/revenue",
+            "group": "operations",
+            "icon": "report",
+            "clients": [
+              "pc"
+            ],
+            "permissions": [
+              "hotel.revenue.read"
+            ]
+          },
+          {
+            "capabilityId": "hotel.archive",
+            "title": "门店档案",
+            "route": "/hotel/archive",
+            "group": "organization",
+            "icon": "folder",
+            "clients": [
+              "pc"
+            ],
+            "permissions": [
+              "hotel.archive.read"
+            ]
+          }
+        ]
+      },
+      "home": {
+        "widgets": [
+          {
+            "slot": "home.quick-tasks",
+            "component": "QuickTaskList",
+            "clients": [
+              "pc",
+              "b-mobile"
+            ],
+            "props": {
+              "tasks": [
+                "查看今日房态异常",
+                "处理住客诉求",
+                "复核价格建议",
+                "检查夜班交接"
+              ]
+            }
+          }
+        ]
+      },
+      "welcome": {
+        "system": [
+          "这是一套面向住宿经营的智能经营系统。数字员工持续关注房价、评价、订单、客房与住客服务，高风险动作始终由您裁决。"
+        ],
+        "keywords": [
+          "房态异常",
+          "差评处置",
+          "订单对账",
+          "夜班交接"
+        ]
+      },
+      "objects": [
+        "住客诉求",
+        "客房任务",
+        "房价策略",
+        "渠道账单",
+        "门店档案"
+      ],
+      "workflows": [
+        "住客服务",
+        "客房协同",
+        "收益管理",
+        "渠道对账",
+        "异常复盘"
+      ],
+      "serviceFront": {
+        "enabled": true,
+        "identityPolicy": "order-proof",
+        "adapterId": "hotel.service-front-v1",
+        "tabs": [
+          "对话",
+          "服务",
+          "工单",
+          "消息",
+          "我的"
+        ],
+        "services": [
+          "查订单",
+          "送物服务",
+          "维修报修",
+          "投诉建议"
+        ]
+      },
+      "inspection": {
+        "enabled": true,
+        "adapterId": "hotel.inspection-v1"
+      },
+      "theme": {
+        "brand": {
+          "primary": "#e9b558",
+          "accent": "#45e0ff"
+        }
+      },
+      "permissions": [
+        "hotel.incidents.read",
+        "hotel.price-health.read",
+        "hotel.goals.read",
+        "hotel.orders.read",
+        "hotel.channels.read",
+        "hotel.reputation.read",
+        "hotel.voice-front.read",
+        "hotel.frontdesk-housekeeping.read",
+        "hotel.stores.read",
+        "hotel.revenue.read",
+        "hotel.archive.read"
+      ],
+      "experiments": []
+    }
+  },
+  "integrity": {
+    "algorithm": "sha256",
+    "digest": "7759c8078ddf6f524639dd03fc1589a18de2d39076bf0ec104b5ca745f1c3f32",
+    "assets": {
+      "fences/hotel-baseline.yml": "d7efd96728392b07cdcc71ccdbcaf55535ca0365d30f813d7c417138bbfae1d0",
+      "fences/patches/audit-only-patch.yml": "d16e0a3c4a6d1ddb919d48abfbcdaeb33db2a0fe614cf02f95d6a59977b0d514",
+      "fences/patches/homestay-patch.yml": "6d43adb5bbcedd9f64e681fc61d49bbb73f366ea56f8aad8778378e41d5e671e",
+      "fences/patches/low-star-single-patch.yml": "2b6b798eae46b0bf0464074fc7cf3f455c91bd713b5f29275dae0b943532667b",
+      "fences/patches/unmanned-patch.yml": "cffc0e00b853f627f7e6682acb9867ac5f996eba58830ce5d7e6d703bf8c58e6",
+      "presets/competitor-agent.yml": "7481c3aeb736c778d25a8ab5f0051af28b6de1ca8fb442abd544c15458b0bb65",
+      "presets/content-agent.yml": "ac292f561655411afc4afb99e46d0094bc8457f2ece715b65f708c2b4b6a4370",
+      "presets/desktop-agent.yml": "55b3197cafe26ec5bc8c887fc814c10d643b53ddd808b8525dc2f8f194bb0eb8",
+      "presets/frontdesk-agent.yml": "e3ce58c6f727138e75b618bbd9c01e746d2562407d7ce89ab2492ebb8acfa169",
+      "presets/housekeeper-agent.yml": "c6508f19a5bfc100d5788b3e3d47a70ad541d3030e5169bbb21929b7baaf7e5f",
+      "presets/inspection-agent.yml": "cc02af0732c8efafee4444b8572d35f141a12db9d5685e28439e29c809d53017",
+      "presets/owner-cockpit.yml": "0b3e887b62ab544b26e3b8217f0176cb721d732d376cb74d1be24301cc719e82",
+      "presets/phone-agent.yml": "2d2efa592626ca5314a8768cad8dc534e3f5c34bd25e05926db192a022b58084",
+      "presets/pricing-agent.yml": "8ea9c9b0dca09dfc4d1f79a601934b128631060a082fe9f6b84913c0b5b733a8",
+      "presets/reconcile-agent.yml": "c9f854d64a1d297eb3643c5d7a61ed4b42c48a37d8c3bff23e0b2fabb0e7fc69",
+      "presets/review-agent.yml": "cc1c6b087f7b1e593b3951f2d56565a3a8b820a221d4742bea82439740061834",
+      "schemas/archive.schema.json": "fd35d52bee183ffc77652ba9c2e09b865ccc2148319d30bbb3f895adaf092991",
+      "schemas/objects.json": "80590ec7de38ef3bb7338b327aff59c753311590a7a7679e8cde84d635c7504c",
+      "schemas/stages.json": "a5ab6830c3c2bc22d7661f168c0a21447b675df2d65feb3a30eeb5c4acad9118",
+      "segment-defaults.yml": "7c98dacfc8ba7b65c6a928a1e74e64e644a0184c025e05ade3e99b4ddcd0b18c",
+      "service-front/client.json": "527a1cc192a94b02f4cabc23d7c811b983ec50781b631366f1fcb72a7629a065",
+      "skills/ai-live-assistant/SKILL.md": "e2a6a48127842c6af5182b3610f50cfdfdd0d4deacbe3dbc29112f27eac88d0f",
+      "skills/channel-reconciler/SKILL.md": "34a5e0ffa505a7535a3522ba925b6762c756164cb605ac72862a348b2239fd4b",
+      "skills/checkin-checkout/SKILL.md": "4979be37b2d0515e46fbe2116edd93d76252ca6d84226e9cca46c9211cf33d58",
+      "skills/content-marketing/SKILL.md": "508eb12ffc82ca5d2251c447b8adf188006b65b09772c793bae96431aa95646e",
+      "skills/customer-service/SKILL.md": "8abe91a0929c387437c746c422a1851791fa7a2a35258c8148108e88c4d62baa",
+      "skills/fast-scan/SKILL.md": "71fc4bfa1328dc4a51b1b4488a7aaeeb931867a10d5b0f7a1f470b306e19518a",
+      "skills/finance-reporting/SKILL.md": "dd49f56553bb5c2f13d71f4a734c4d4afa5b88d30aae19cb6e4a93de85bbe634",
+      "skills/guest-profile-crm/SKILL.md": "da3d33ad5cb128bd922726061d8165063e0b64d76ef9641f34404c0f9bdf6bc7",
+      "skills/handover-manager/SKILL.md": "9fc60fd7659f6ba366b595c00eb205d385b09459af2c695b702656f7f68c9e95",
+      "skills/incident-postmortem/SKILL.md": "a4b2f173aa2681f1000d40cfd869927e41ce1bd80ba0c9e9145f5bb3cb4a5874",
+      "skills/inspection-suite/SKILL.md": "257bae27cbbe722daa8dc86fcd701fdb2ed42a89dc66b570566af7bcbc61799a",
+      "skills/inventory-procurement/SKILL.md": "014730566deea60fb956dfd42a92137b341f62c957a215b059e8b02abbbc7991",
+      "skills/maintenance-dispatch/SKILL.md": "0ecf90dcfdd3fccaa562670bd729a21e2d27fd26792c428f227acd2f65b01821",
+      "skills/morning-briefing/SKILL.md": "a31cc4656ada87c6de2b454fb5e242514431de496d9e31d4dcf7af31edcbae98",
+      "skills/night-audit-suite/SKILL.md": "98f4f9d4670f4e19af02698888d0dbdc84324a7525452793b41deb0675607f56",
+      "skills/ota-operations/SKILL.md": "5363f8cf5db527d8215c875f3862d234468b228e79ba66b2107086db8a1dd4f0",
+      "skills/overbooking-parity-guard/SKILL.md": "bb77cb147c2d305b0d89a170f282deca67879f6d9ff3d383066e98e03a0b6dd6",
+      "skills/phone-concierge/SKILL.md": "38c5175ed840a3ac6d2fa87c342b9c1037a0238f0cdeab00339d953acbaafb7a",
+      "skills/pricing-matrix/SKILL.md": "644768807c76bfb312ce5a66818a0372b6c27ba17fb96c2f7dcadeb9fc030687",
+      "skills/retention-manager/SKILL.md": "652d693dee51f57a3b01f1e0cdb199622a257b8103e7d09d8c57f4179018bc43",
+      "skills/revenue-manager/SKILL.md": "a5d04749c1349c9e85dcfaa56c94dd30e8382a9631e1db67d11f9c228e1e4d48",
+      "skills/review-asset-mining/SKILL.md": "56614671a2734648f2c462eb8215da0f5691770ff05bca0bc372410b898c7c2e",
+      "skills/review-crisis/SKILL.md": "02554e1f01f373add1bd8b12b2f8b93e42e1c7bbcb983876e2f98ddb28be8d9c",
+      "skills/room-service-dispatch/SKILL.md": "525e99df350fc3d0d28990f62788a197bbf1ad5c3c02c8ffc76f8fa8f61eb7c0",
+      "skills/safety-compliance/SKILL.md": "d1dcf82d3797a3cad43d237a9185a2df5d0d5330857f52f04865e37a0940385b",
+      "skills/staff-scheduler/SKILL.md": "33f8ef3e108f3a2afc99f52b54ae1692b80ed876e7ea5a4a3324e0112411aa94",
+      "ui/cases.json": "a59884cc3ccdc15d7833eda56c0337b6d8e9c88d80e2849bb2a74729c18c837d"
     }
   }
 }

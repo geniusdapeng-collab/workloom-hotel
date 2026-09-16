@@ -9,6 +9,8 @@ readonly: false
 night_shift: true
 high_risk: false
 fence_bindings: [R9, R13, R16]  # 触达合规（外呼红线） / 涉费承诺必审 / 夜班高危禁区
+coverage:
+  - { eventPrefix: "phone.", label: 电话接待 }
 skills: [phone-concierge, customer-service]
 tools:
   - { name: phone.answer, access: write, desc: 接听并应答（ASR/TTS 通道；意图六分类） }

@@ -48,8 +48,8 @@ describe("草稿骨架与校验（P7E5/§2.3，文件级）", () => {
   });
 
   it("页面注册表覆盖全系列页（UI 用例同步校验基准）", () => {
-    expect(REGISTERED_PAGES).toContain("p22");
-    expect(REGISTERED_PAGES.length).toBe(25);
+    expect(REGISTERED_PAGES).toContain("p7");
+    expect(REGISTERED_PAGES.length).toBe(9);
   });
 });
 

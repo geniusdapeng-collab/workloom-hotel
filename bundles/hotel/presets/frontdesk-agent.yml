@@ -9,12 +9,14 @@ readonly: false
 night_shift: true
 high_risk: false
 fence_bindings: [R4, R13, R16]  # 大额退款必审 / 涉费承诺必审 / 夜班高危禁区
+coverage:
+  - { eventPrefix: "frontdesk.", label: 前台接待 }
 skills: [checkin-checkout, customer-service, handover-manager, night-audit-suite]
 tools:
   - { name: pms.checkin, access: write,  desc: 办理入住（智能排房建议参考客人画像） }
   - { name: pms.checkout, access: write, desc: 办理退房（结算/押金/发票联动） }
   - { name: order.confirm, access: write, desc: OTA/直连订单确认（信息完整+围栏内 auto） }
-  - { name: phone_call.log, access: write, desc: 电话呼入记录与意图归档（phone_call 对象；语音通道落地前人工接听+AI 记录） }
+  - { name: phone_call.log, access: write, desc: 电话呼入记录与意图归档（电话记录对象；语音通道落地前人工接听并由智能助手记录） }
   - { name: faq.answer, access: read,   desc: 常见问题知识库（60-80% 重复咨询自动应答） }
   - { name: handover.generate, access: read, desc: 交接班清单生成（昨日未完成事项自动入列） }
 prompt:
