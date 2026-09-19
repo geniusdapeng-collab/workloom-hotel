@@ -9,7 +9,8 @@ DB_URL=$(grep -E '^DATABASE_URL=' .env | cut -d= -f2-)
 echo "⚠️  将重置本地 workloom 库为「云栖酒店 30 天经营态」快照"
 case "${1:-}" in --yes|-y) ;; *) [ -t 0 ] && { read -r -p "确认继续？[y/N] " a; [ "$a" = "y" ] || exit 0; } ;; esac
 psql "$DB_URL" -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;" >/dev/null
-zcat "$SNAP" | psql "$DB_URL" -q >/dev/null
+# macOS 自带 /usr/bin/zcat 只解 .Z（compress）不吃 .gz，统一用可移植的 gzip -dc
+gzip -dc "$SNAP" | psql "$DB_URL" -q >/dev/null
 EVENTS=$(psql "$DB_URL" -t -c "SELECT count(*) FROM biz_events" | tr -d ' ')
 echo "✅ 快照已恢复（事件 ${EVENTS} 条）。启动 pnpm dev 后："
 echo "   · P1 晨间简报 / P9 夜班驾驶舱：30 天夜班战报与决策包"

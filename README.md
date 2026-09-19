@@ -6,8 +6,9 @@
 
 [![Bundle](https://img.shields.io/badge/hotel%20bundle-v2.3.1-1B2A4E)](https://github.com/workloom-ai/workloom/releases)
 [![Fence](https://img.shields.io/badge/围栏基线-R1--R20%20v3-9A7B2D)](bundles/hotel/fences/hotel-baseline.yml)
-[![Skills](https://img.shields.io/badge/官方技能-25%20个套件-4C6FFF)](bundles/hotel/skills)
-[![Tests](https://img.shields.io/badge/门禁-suite%20443%2F443%20%C2%B7%20demo%2044%2F44-green)](docs/DEMO-TWIN.md)
+[![Staff](https://img.shields.io/badge/数字员工-11%20个岗位-C9A227)](bundles/hotel/presets)
+[![Skills](https://img.shields.io/badge/官方技能-26%20个套件-4C6FFF)](bundles/hotel/skills)
+[![Tests](https://img.shields.io/badge/门禁-suite%20459%2F459%20%28%E6%9C%8D%E5%8A%A1%E5%B1%82%20414%20%2B%20HTTP%20E2E%2045%29-green)](docs/SUITE.md)
 [![License](https://img.shields.io/badge/license-Apache--2.0-lightgrey)](LICENSE)
 
 </div>
@@ -18,25 +19,63 @@
 
 ## 📸 系统跑起来长这样（真实截图，不是设计稿）
 
-下面这批图，是我们把仓库原样跑起来（`pnpm preview:all`，「云栖酒店」30 天演示数据）之后一页一页截下来的。你看到的每条工单、每个告警、每条对话，都是系统里真实流转的模拟业务——不是 P 的，也不是写死在页面上的。
+下面这批图，是我们把仓库原样跑起来（`pnpm preview:all` + `pnpm db:seed`，「云栖酒店」演示数据）之后一页一页截下来的。你看到的每条工单、每个告警、每条对话，都是系统里真实流转的模拟业务——不是 P 的，也不是写死在页面上的。
 
-| 经营剧场（首页 P0） | 工作台 · 晨报（P1） |
+### 经营剧场 · 数字员工 · 数字人
+
+| 经营剧场（首页 `/`） | 数字员工 · 人机混编通讯录（`/agents`） |
 |---|---|
-| ![经营剧场](docs/images/running-state/p0-theater.jpg) | ![工作台晨报](docs/images/running-state/p1-workbench.jpg) |
+| ![经营剧场](docs/images/running-state/p0-theater.jpg) | ![数字员工](docs/images/running-state/p-agents.jpg) |
 
-| 夜班中心（P9） | 价格健康（P11） |
+| 织伴数字人 · 首装开场 | 织伴面板（聊聊 / 设置 / 记忆） |
 |---|---|
-| ![夜班中心](docs/images/running-state/p9-night-shift.jpg) | ![价格健康](docs/images/running-state/p11-price-health.jpg) |
+| ![织伴开场](docs/images/running-state/p-mate-welcome.jpg) | ![织伴面板](docs/images/running-state/p-mate-chat.jpg) |
 
-| 董事长视图 · 数字CEO（P21） | 技能中心（P6） |
+> 剧场里站在台上的那 11 位，就是这家店的**数字员工编制**（前厅、客房、收益、渠道、口碑、语音前台、业主驾驶舱……）；织伴是**常驻的数字人**：全页面在岗、语音 + 口型播报晨报、离线时段替您盯着，点她就能问、能派活、能看记忆。
+
+### 前台与收益（酒店行业页）
+
+| 价格健康（`/hotel/price-health`） | 渠道运营与对账（`/hotel/channels`） |
 |---|---|
-| ![董事长视图](docs/images/running-state/p21-digital-ceo.jpg) | ![技能中心](docs/images/running-state/p6-skill-center.jpg) |
+| ![价格健康](docs/images/running-state/p11-price-health.jpg) | ![渠道运营](docs/images/running-state/p14-channels.jpg) |
 
-| C 端 · AI 服务前台（移动端） | B 端移动端 · 高保真演示 |
+| 订单穿透（`/hotel/orders`） | 口碑与差评（`/hotel/reputation`） |
 |---|---|
-| ![C 端对话](docs/images/running-state/c-chat.jpg) | ![B 端移动端](docs/images/running-state/b-mobile-demo.jpg) |
+| ![订单穿透](docs/images/running-state/p13-orders.jpg) | ![口碑与差评](docs/images/running-state/p15-reputation.jpg) |
 
-> PC 端 24 个页面、移动端 5 个 Tab 全都接着真实 API——每条数据都是从事件库里查出来的。页面顶部那条琥珀色横幅（「当前为全模拟运行态」）会一直挂着，提醒你这看到的是演示门店；数据口径见 [`mock/README.md`](mock/README.md)。
+| 语音前台（`/hotel/voice-front`） | 异常断点 · 根因闭环（`/hotel/incidents`） |
+|---|---|
+| ![语音前台](docs/images/running-state/p16-voice-front.jpg) | ![异常断点](docs/images/running-state/p10-incidents.jpg) |
+
+| 经营收益（`/hotel/revenue`） | 一店一档（`/hotel/archive`） |
+|---|---|
+| ![经营收益](docs/images/running-state/p19-revenue.jpg) | ![一店一档](docs/images/running-state/p20-archive.jpg) |
+
+### 夜班与治理
+
+| 夜班中心（`/night`） | 经营驾驶舱 · 数字CEO（`/executive`） |
+|---|---|
+| ![夜班中心](docs/images/running-state/p9-night-shift.jpg) | ![经营驾驶舱](docs/images/running-state/p21-digital-ceo.jpg) |
+
+| 审批中心（`/approvals`） | 事件账本（`/events`） |
+|---|---|
+| ![审批中心](docs/images/running-state/p4-approvals.jpg) | ![事件账本](docs/images/running-state/p-events.jpg) |
+
+| 技能中心（`/skills`） | 组织记忆（`/memory`） |
+|---|---|
+| ![技能中心](docs/images/running-state/p6-skill-center.jpg) | ![组织记忆](docs/images/running-state/p-memory.jpg) |
+
+### 移动端（店主手机 / 住客小程序）
+
+| B 端 · 经营主页 | B 端 · 数字员工 | B 端 · 统一待办 |
+|---|---|---|
+| ![B 端首页](docs/images/running-state/b-mobile-demo.jpg) | ![B 端数字员工](docs/images/running-state/b-mobile-agents.jpg) | ![B 端待办](docs/images/running-state/b-mobile-inbox.jpg) |
+
+| C 端 · AI 服务前台对话 | C 端 · 服务大厅 | C 端 · 我的工单 |
+|---|---|---|
+| ![C 端对话](docs/images/running-state/c-chat.jpg) | ![C 端服务](docs/images/running-state/c-service.jpg) | ![C 端工单](docs/images/running-state/c-tickets.jpg) |
+
+> PC 端 20+ 页面、移动端 5 个 Tab 全都接着真实 API——每条数据都是从事件库里查出来的。页面顶部那条琥珀色横幅（「当前为全模拟运行态」）会一直挂着，提醒你这看到的是演示门店；数据口径见 [`mock/README.md`](mock/README.md)。
 
 ---
 
@@ -120,12 +159,15 @@ WorkLoom 就是为这件事来的：**把过去只有大酒店集团才拥有的
 
 ### 2.1 一支编队，而不是一个聊天框
 
-WorkLoom 的 AI 不是「一个助手」，是**一支有分工、有纪律、有状态机的 Agent 班组**：
+WorkLoom 的 AI 不是「一个助手」，是**一支有分工、有纪律、有状态机的数字员工编队**——酒店版随包 11 个岗位（前厅、客房、收益定价、渠道对账、竞对侦察、口碑回评、内容营销、语音前台、巡检、电脑操作、业主驾驶舱）：
 
+- **数字员工名册（`/agents`）**：人类成员与数字员工同一本通讯录；每位员工有档案页——身份与来源 Bundle、**围栏授权逐条对账**（悬空标红）、绑定技能包、运行约束、**30 天战绩**（动作数 / 采纳率 / 被驳回 / 积分与峰谷占比）与等级段位；点「派遣」当场建任务线程。夜班岗位 22:00–08:00 自动上线，只读岗位标绿（无写工具）。
+- **织伴数字人（LoomMate）**：全页面常驻的 Live2D 数字人——语音 + 口型播报晨报与提醒、离线时段聚合非 P0 事项、一键切「小角落 / 大形象 / 屏保」三态；记忆面板把它「记住了什么」摊开给您看，可单条删除。
 - **夜班班组**：每晚 22:00 自动出征——竞对采集 → 三轮对账 → 房价微调 → 清晨 08:30 交付三段式决策包（✓已完成/◆待审批/▲需介入）。任意时刻一键暂停，60 秒内全端生效，恢复后断点续跑。
 
   > **夜班的定义（酒店版·值守型）**：夜班锚的从来不是"AI 的工作时间"——AI 本来就 24 小时全勤——而是**"人的离线时间"**。它是**人类免打扰时段的系统运行模式**：① 触达上免打扰（非 P0 不叫人，聚合为清晨决策包）；② 权限上自降级（夜班微调 ≤3% auto、越线挂起，人不在线时系统把权力收小）；③ 酒店的高峰窗口是**夜班值守**——夜间入住接待、客需应答（语音前台）、夜审对账、无人酒店断点三级兜底；④ 成本上是洼地（对账/报表在谷时算力窗口执行）。一句话：**夜班服务的不是"夜晚"，是"人的离线"——把夜晚还给业主。**
-- **技能市场**：25 个官方技能套件（夜班夜审、收益经理、渠道对账、倒挂超售看门狗、差评危机、语音前台、断点根因闭环……）是**可见、可装、可迭代的资产**，每项技能都带验收用例；使用采纳率回流驱动迭代。
+- **技能市场**：26 个官方技能套件（夜班夜审、收益经理、渠道对账、倒挂超售看门狗、差评危机、语音前台、断点根因闭环……）是**可见、可装、可迭代的资产**，每项技能都带验收用例；使用采纳率回流驱动迭代。
+- **考试院（`/exams`）**：数字员工上岗与复考的统一考场（基座能力：红线题、错题本、成绩留痕），行业题库按 Bundle 扩展。
 - **意识系统**：高频重复工作被自动检测，每周产出「固化建议」——您一键确认，系统就把这件事变成自动触发器。**系统每周都比上周更懂您的店。**
 
 ### 2.2 数字CEO：让您的酒店有一位真正的总经理
@@ -150,7 +192,7 @@ WorkLoom 的 AI 不是「一个助手」，是**一支有分工、有纪律、�
 - **经营剧场**：打开系统首页就是经营剧场——数字CEO 与团队的全息形象站在舞台中央，晨报它主动讲，请示它举着等您批，您有空看一眼，没空它也把店看得好好的；
 - **全链留痕**：它的每一个决策、您的每一次授权与批准，都写进不可篡改的事件账（哈希链可验）。
 
-> **立即体验**：`pnpm demo:twin:restore && pnpm dev` → 打开首页即是经营剧场（云栖酒店已有一位试用期中的公司CEO）；左侧「董事长视图」可体验授权、裁决、绩效评议与汰换提案全流程。
+> **立即体验**：`pnpm setup && pnpm preview:all`（或 `pnpm db:seed && pnpm dev`）→ 打开首页即是经营剧场（云栖酒店已有一位试用期中的公司CEO）；左侧「经营驾驶舱」可体验授权、裁决、绩效评议与汰换提案全流程。
 
 ### 2.3 安全不是承诺，是物理约束
 
@@ -187,16 +229,17 @@ WorkLoom 的 AI 不是「一个助手」，是**一支有分工、有纪律、�
 ## 四、系统能力速览（自动生成 · 与代码同步）
 
 <!-- CAPABILITIES:BEGIN -->
-<!-- 本区块由 scripts/generate-capabilities.mjs 自动生成（2026-09-02），请勿手改；重跑 pnpm capabilities 更新 -->
+<!-- 本区块由 scripts/generate-capabilities.mjs 自动生成（2026-09-19），请勿手改；重跑 pnpm capabilities 更新 -->
 
 ## 🧩 系统能力速览（自动生成 · 与代码同步）
 
 - 🖥 **三端应用（开箱即看）**：PC 端 · B 端工作台 · 移动端 · B 端高保真 · 移动端 · C 端 AI 服务前台
-- 🏨 **行业 Bundle（垂直能力包）**：bundles/hotel/
+- 🏨 **行业 Bundle（垂直能力包）**：bundles/ai-pm/ · bundles/hotel/
+- 🧑‍💼 **数字员工与数字人（本仓自带）**：数字员工中心（`/agents`） · 织伴数字人（Live2D 常驻浮层） · 语音与口型引擎 · Live2D 渲染后端与资产
 - 🖐 **操作电脑能力（本仓自带 · 可装生产工作站）**：computer-use 三层感知（65 动作） · HTTP 远程驱动 + MCP server
-- 🤖 **AI 自动化引擎（系统内置能力）**：围栏 DSL 引擎 · L2 编排（ASK/QUEST） · 夜班自动运行 · 模型路由 · 五元事件 + RLS 隔离 · IM 渠道 等 9 项
+- 🤖 **AI 自动化引擎（系统内置能力）**：围栏 DSL 引擎 · 技能保鲜环（下行分发） · L2 编排（ASK/QUEST） · 夜班自动运行 · 模型路由 · 五元事件 + RLS 隔离 等 10 项
 - ✅ **验证与质量（工程纪律）**：一键安装（bootstrap） · 主测试套件 · 发布门禁 · 五元事件验链 · Agent 能力巡游 · 环境自检
-- 🎁 **演示与交付资产**：高保真演示页 ×6 · 官网静态站 · 自带技能 ×4 · 能力导览 PPT · Mock 数据体系
+- 🎁 **演示与交付资产**：高保真演示页 ×6 · 官网静态站 · 自带技能 ×5 · 能力导览 PPT · Mock 数据体系
 
 > 📖 完整能力导览（含截图与体验路径）：[docs/capabilities.auto.md](docs/capabilities.auto.md) ｜ 🤖 AI Agent 入口：[AGENTS.md](AGENTS.md) ｜ 🎯 首启必跑：`pnpm preview:all`
 <!-- CAPABILITIES:END -->
@@ -242,21 +285,22 @@ pnpm setup && pnpm preview:all
 **前置**：Node 24 + pnpm 10 + PostgreSQL 17（或 `docker compose up -d` 一键起库）。
 
 ```bash
-cp .env.example .env          # 默认连接本地 PG（postgres://postgres:workloom@localhost:5432/workloom）
+cp .env.example .env          # 默认连接本机 PostgreSQL（库名 workloom；连接串模板见 .env.example）
 pnpm install && pnpm db:migrate
-pnpm demo:twin:restore        # 30 秒恢复体验门店「云栖酒店」30 天经营态（随仓快照）
-pnpm dev                      # 打开工作台：P1 晨报 → P9 夜班 → P10 断点 → P11 价格健康 → P12 目标 → … → P20 一店一档
+pnpm db:seed                  # 注入「云栖酒店」演示数据集（含昨夜夜班数据）
+pnpm dev                      # 打开工作台：经营剧场 → 经营报告 → 夜班中心 → 异常断点 → 价格健康 → 经营目标 → … → 一店一档
 pnpm db:verify-chain          # 现场验证：全库哈希链逐条重算
 ```
 
-> 全部页面（P1–P20）均为真实 API 接线，数据来自事件库与一店一档——接入真实 PMS/OTA 数据源后，所见即所得。
+> 也可用随仓快照一键回到 30 天经营态：`pnpm demo:twin:restore`（整库替换为 `demo/twin/yunqi-30d.sql.gz`，注意：该快照为历史版本，恢复后需再跑 `pnpm db:migrate`）。
+> 全部页面均为真实 API 接线，数据来自事件库与一店一档——接入真实 PMS/OTA 数据源后，所见即所得。
 > 另有零安装高保真原型 [`demo/prototype/`](demo/prototype/)（PC + 移动端，双击即开），供售前演示与设计走查。
 
 **开箱即运行态**：`demo:twin:restore` 完成即进入「云栖酒店」高频重度使用的全模拟运行态——经营剧场（默认首页 `/`，**职场/舞台双视图**：等距 2.5D「云栖前厅」里前台接待/客房巡检/夜班对账各就各位，员工打字/踱步/举手/庆祝全由事件实时驱动，点举手员工原地批准驳回）有数字CEO 晨报、员工卫星群、待决策请示、实况字幕流，全部为演示数据 + 内置确定性模型（零外部依赖）。页面顶部**常显琥珀色横幅**提示「当前为全模拟运行态」，点击「接入真实数据 →」进入**落地向导**（`/onboarding`）：① 环境自检（自动）→ ② 真实大模型（DeepSeek/Kimi/智谱/OpenAI 预设一键填，**真实试调通过才落盘**，保存即全链生效免重启）→ ③ 经营主体 → ④ 启用真实模式（横幅熄灭，全程五元事件留痕；此后即可在此运行态上接入真实 PMS/OTA 数据源）。ask 问询另支持联网实时检索事实面（`ASK_WEB_SEARCH=1`，Bing RSS，keyless），与库内实时数据合并供模型合成——比如晨会前直接问「杭州明天天气对周末房价的影响」。
 
-**质量门禁**：typecheck 全绿 · base 408/408 · runtime 9/9 · suite 443/443 · demo 44/44 · 哈希链逐条一致（每版实测）。
+**质量门禁**：typecheck 全绿 · base 408/408 · runtime 9/9 · **suite 459/459（服务层 414 + HTTP E2E 45）** · 哈希链逐条一致（2026-09-19 本仓实测）。`pnpm demo` 剧本当前在「R7 围栏单调守卫」处中断（防放宽守卫拒绝改写基线 `when`，待产品确认是补 `allowWhenChange` 还是调整剧本），已记录为待修项。
 
-推荐阅读：[经营体验与演示指南](docs/DEMO-TWIN.md) · [三客群默认装配清单](bundles/hotel/segment-defaults.yml) · [围栏基线 R1–R20](bundles/hotel/fences/hotel-baseline.yml) · [25 个官方技能](bundles/hotel/skills) · [底座技术文档](README-CORE.md)
+推荐阅读：[经营体验与演示指南](docs/DEMO-TWIN.md) · [三客群默认装配清单](bundles/hotel/segment-defaults.yml) · [围栏基线 R1–R20](bundles/hotel/fences/hotel-baseline.yml) · [26 个官方技能](bundles/hotel/skills) · [11 个数字员工岗位](bundles/hotel/presets) · [底座技术文档](README-CORE.md)
 
 ---
 
