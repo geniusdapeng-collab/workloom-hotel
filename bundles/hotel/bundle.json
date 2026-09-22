@@ -400,10 +400,10 @@
   },
   "integrity": {
     "algorithm": "sha256",
-    "digest": "77a8f88bb4baeb78445a8053ea4f3b1377cdbb85d1c31b38f019106478bbdc2c",
+    "digest": "d95ebb16cab7f0b7b2db3bd92dcf1eec1c0d2e088433e28197ecf095689a99b1",
     "assets": {
       "eval/questions.json": "c51d1b0f1053f60431da9be3e817d30d2a885861a5a0af8fe459a05641ec207a",
-      "fences/hotel-baseline.yml": "d7efd96728392b07cdcc71ccdbcaf55535ca0365d30f813d7c417138bbfae1d0",
+      "fences/hotel-baseline.yml": "6f18209c72c1a2d9383dada5054860f3da4e526704251c74ad10adfb47ca3f99",
       "fences/patches/audit-only-patch.yml": "d16e0a3c4a6d1ddb919d48abfbcdaeb33db2a0fe614cf02f95d6a59977b0d514",
       "fences/patches/homestay-patch.yml": "6d43adb5bbcedd9f64e681fc61d49bbb73f366ea56f8aad8778378e41d5e671e",
       "fences/patches/low-star-single-patch.yml": "2b6b798eae46b0bf0464074fc7cf3f455c91bd713b5f29275dae0b943532667b",

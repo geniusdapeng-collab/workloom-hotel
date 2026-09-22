@@ -212,3 +212,46 @@ rules:
       actions: [inventory.loss]
     when: "params.loss_rate > params.baseline_loss_rate * 1.5"
     note: 损耗率超基线 1.5 倍（偷盗/丢失/洗涤异常）必审；基线由一店一档布草档案学习沉淀
+
+  # ========== R21–R24：v4 水位调整（审批复盘 2026-09-23，docs/approval-mechanism-review.md） ==========
+  # 原则：红线不动（R2/R9/R10/R16–R18 全部保留），只为可逆/单域/无费/内部的高频低风险动作补 auto 通道；
+  # 全部要求回执留痕并在晨报可回看（无回执不算完成）；命中率回测连续异常自动收紧一档（既有机制）。
+  - rule_id: R21
+    name: 好评与中性评价回复自动
+    level: auto
+    is_baseline: true
+    match:
+      object_types: [review]
+      actions: [review.reply]
+    when: "params.rating >= 4"
+    note: 好评/中性评价回复自动执行并留回执；差评（≤3 分）仍由 R6 必审接管（deny 优先不受本条影响）
+
+  - rule_id: R22
+    name: 常规服务工单办结自动
+    level: auto
+    is_baseline: true
+    match:
+      object_types: [service_ticket]
+      actions: [service.ticket.complete]
+    when: "params.involves_fee != true && params.compensation != true"
+    note: 送物/报修等高频工单办结自动执行；涉费涉赔仍受 R13/R14 人审约束
+
+  - rule_id: R23
+    name: 智能排房与入退调度自动
+    level: auto
+    is_baseline: true
+    match:
+      object_types: [room, booking_order, service_ticket]
+      actions: [booking.confirm, service.ticket.advance]
+    when: "params.complaint != true"
+    note: 可逆单域的排房/入退调度自动执行；超售与库存异常仍受 R18 熔断
+
+  - rule_id: R24
+    name: 内部经营内容生成自动
+    level: auto
+    is_baseline: true
+    match:
+      object_types: [content, conversion, night_package]
+      actions: [content.internal, funnel.weekly, night.package.deliver, ceo.briefing]
+    when: "params.public != true"
+    note: 晨报/口碑周报/夜班日报等内部汇报自动生成；任何对外公开发布仍受 R3/R15 必审
