@@ -91,7 +91,62 @@
         "operation": "门店经营",
         "field.occ": "入住率",
         "field.adr": "平均房价",
-        "field.revpar": "每间可售房收入"
+        "field.revpar": "每间可售房收入",
+        "field.room": "房型",
+        "field.from": "调整前",
+        "field.to": "调整后",
+        "field.occ_forecast": "预测入住率",
+        "field.tables": "宴席桌数",
+        "field.rooms": "客房间数",
+        "field.amount": "金额",
+        "field.date": "档期",
+        "field.rating": "评分",
+        "field.sla": "处置时长",
+        "field.sla_min": "办结用时（分钟）",
+        "field.item": "事项",
+        "field.orders": "订单数",
+        "field.channels": "渠道数",
+        "field.comp": "补偿",
+        "field.public": "公开回复",
+        "field.topic": "主题",
+        "field.action": "处置动作",
+        "field.exposures": "曝光量",
+        "field.intent": "住客意图",
+        "field.duration_s": "通话时长（秒）",
+        "field.resolved": "已办结",
+        "field.hour": "时段",
+        "field.channel": "渠道",
+        "field.issue": "问题",
+        "field.checkins": "今日入住",
+        "field.checkouts": "今日退房",
+        "field.queue": "排队情况",
+        "field.rules": "排房规则",
+        "field.manual_fix": "人工调整",
+        "field.delta": "环比",
+        "field.reviews": "评价数",
+        "field.topics": "热点话题",
+        "field.overnight": "夜间汇总",
+        "field.calls": "夜间来电",
+        "field.inquiries": "夜间咨询",
+        "field.escalation": "升级事项",
+        "field.today": "今日重点",
+        "field.reconcile": "对账结果",
+        "field.revpar_est": "预计收益变化",
+        "field.include": "包含内容",
+        "action.price.adjust": "调价审批",
+        "action.deal.quote": "婚宴报价",
+        "action.review.reply": "差评处置回复",
+        "action.review.asset.boost": "好评资产化",
+        "action.service.ticket.complete": "工单办结",
+        "action.service.ticket.advance": "入退高峰调度",
+        "action.service.chat": "住客应答",
+        "action.market.scan": "渠道价格巡检",
+        "action.booking.confirm": "智能排房",
+        "action.funnel.weekly": "口碑周报",
+        "action.inspection.scan": "客房巡检",
+        "action.night.package.deliver": "夜班日报送达",
+        "action.ceo.briefing": "晨报",
+        "action.order.reconcile": "对账核销"
       },
       "navigation": {
         "slots": [
@@ -269,6 +324,20 @@
           "差评处置",
           "订单对账",
           "夜班交接"
+        ],
+        "cards": [
+          {
+            "t": "昨夜它做了什么",
+            "d": "凌晨 2 点住客来电要求延迟退房，语音前台 47 秒接听并办结；差评 2 小时内处置完毕，对账连续 30 天零差错。"
+          },
+          {
+            "t": "今天它在盯什么",
+            "d": "房态异常、渠道价格倒挂、入退高峰排队都在实时巡检；周末提价建议已按预测入住率算好，等您拍板。"
+          },
+          {
+            "t": "您只要做两件事",
+            "d": "听晨报、批关键决策。送物、报修、排房、回评价这些琐事，数字员工在围栏内自动办结，全程留痕可回放。"
+          }
         ]
       },
       "objects": [
@@ -331,7 +400,7 @@
   },
   "integrity": {
     "algorithm": "sha256",
-    "digest": "119a45e01dd966a0241b4d18d31e2e8d07ae419fe5b67ef50b34a75e4c26f2d3",
+    "digest": "77a8f88bb4baeb78445a8053ea4f3b1377cdbb85d1c31b38f019106478bbdc2c",
     "assets": {
       "eval/questions.json": "c51d1b0f1053f60431da9be3e817d30d2a885861a5a0af8fe459a05641ec207a",
       "fences/hotel-baseline.yml": "d7efd96728392b07cdcc71ccdbcaf55535ca0365d30f813d7c417138bbfae1d0",

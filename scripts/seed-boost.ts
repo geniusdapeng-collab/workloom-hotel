@@ -65,14 +65,16 @@ const EVENTS: unknown[] = [
     decision: { action: "night.package.deliver", after: {"overnight": {"calls": 7, "inquiries": 11, "resolved": "100%", "escalation": 0}, "note": "语音前台全覆盖"}, basis: ["夜班值守"] },
     rule_impact: [], receipt: receipt(at(480)), model_trace: mt },
   { event_id: "E-SEED-BT-0115", who: who("company-ceo"), context: ctx(at(60)), object: { type: "conversion", id: "brief-d", label: "CEO 晨报" },
-    decision: { action: "ceo.briefing", after: {"occ": "91%", "revpar": 584, "adr": 642, "reconcile": "零差错(30d)", "review_sla": "100%", "today": "婚宴踩点 15 桌 + 协议客户 1 家"}, basis: ["晨报节拍"] },
+    decision: { action: "ceo.briefing", after: { "occ": "91%", "revpar": 584, "adr": 642, "reconcile": "零差错(30d)", "review_sla": "100%", "today": "婚宴踩点 15 桌 + 协议客户 1 家",
+      // 剧场汇报气泡只取 after.text（客户端中文校验，夹带未收录拉丁缩写会整串回落兜底文案——V4 走查修复：补 text 且全部用中文业务词）
+      "text": "老板，早报已备：昨夜入住率 91%、平均房价 ¥642、每间可售房收入 ¥584，对账连续 30 天零差错，差评全部在 2 小时内办结。今日重点：婚宴踩点 15 桌、协议客户 1 家；另有 2 件董事长级事项请您定。" }, basis: ["晨报节拍"] },
     rule_impact: [], receipt: receipt(at(60)), model_trace: mt },
 ];
 
 const APPROVALS = [
   { id: "apr-boost-h1", eventRef: "E-SEED-BT-0102",
-    snapshot: { action: "price.adjust", summary: "周末提价审批：高级大床房 ¥628 → ¥688（预测 OCC 91%）", title: "周末提价 ¥628→¥688",
-      ceo_rationale: "预测周末 OCC 91% 超熔断线；提价后 RevPAR 预计 +12.4%，竞对同档 ¥695 仍有价格优势", rule_version: "R21 hotel-baseline/v3", gate: "必审",
+    snapshot: { action: "price.adjust", summary: "周末提价审批：高级大床房 ¥628 → ¥688（预测入住率 91%）", title: "周末提价 ¥628→¥688",
+      ceo_rationale: "预测周末入住率 91% 超熔断线；提价后每间可售房收入预计 +12.4%，竞对同档 ¥695 仍有价格优势", rule_version: "R21 hotel-baseline/v3", gate: "必审",
       params: {"room": "高级大床房", "from": 628, "to": 688, "occ_forecast": "91%"},
       before: {"price": 628}, after: {"price": 688, "revpar_est": "+12.4%"} } },
   { id: "apr-boost-h2", eventRef: "E-SEED-BT-0101",
