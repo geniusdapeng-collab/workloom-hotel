@@ -90,11 +90,28 @@
       "text": "您预订的高级大床房含双早。延迟退房申请已进入确认流程，确认后会在这里显示结果。"
     }
   ],
+  "safeTerms": [
+    "OCC",
+    "ADR",
+    "RevPAR",
+    "WiFi",
+    "PMS",
+    "OTA",
+    "SOP",
+    "SLA",
+    "SPA",
+    "FAQ",
+    "Yunqi-Hotel",
+    "MQL",
+    "CPL",
+    "ROI",
+    "OKR"
+  ],
   "projection": {
     "bundleId": "hotel",
     "bundleVersion": "3.2.0",
     "contractVersion": "2.0.0",
-    "uiVersion": "0.1.1",
-    "manifestDigest": "7759c8078ddf6f524639dd03fc1589a18de2d39076bf0ec104b5ca745f1c3f32"
+    "uiVersion": "0.1.9",
+    "manifestDigest": "f7f8f35208d3909415d4a295679213a39558aba0853f05a88fe31c79e14a105d"
   }
 }
