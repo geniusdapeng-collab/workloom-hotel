@@ -39,7 +39,7 @@ const GATEWAY_URL =
 /* ================= 固定演示标识（幂等键） ================= */
 
 const TENANT_ID = "tenant-demo";
-const TENANT_NAME = "演示租户（Demo）";
+const TENANT_NAME = "演示租户";
 const WS_ID = "ws-yunqi";
 const WS_NAME = "云栖酒店";
 const WS_SLUG = "yunqi-hotel";
@@ -199,7 +199,7 @@ function yunqiArchive(): Record<string, unknown> {
     charter: {
       version: 1,
       mode: "trial",
-      identity: { name: "公司CEO", persona: "稳健经营型" },
+      identity: { name: "数字负责人", persona: "稳健经营型" },
       autonomy: {
         ranges: {
           "price-change-ratio": { label: "房价调整比例", lower: 0.85, upper: 1.15, anchor: 1 },
@@ -246,7 +246,7 @@ function yunqiArchive(): Record<string, unknown> {
       "2026-07": { occ: 0.83, adr: 512, revpar: 425 },
       "2026-08": { occ: 0.78, adr: 496, revpar: 387 },
     },
-    sop: ["差评 24h 内响应", "调价须附竞对依据", "夜间对账三轮比对"],
+    sop: ["差评 24 小时内响应", "调价须附竞对依据", "夜间对账三轮比对"],
     channels: [
       { name: "美团", kind: "ota", channel_new: false },
       { name: "携程", kind: "ota", channel_new: false },
@@ -275,7 +275,7 @@ function yunqiArchive(): Record<string, unknown> {
       year: { revenue: 1_200_000, occ: 0.80, adr: 500, revpar: 400, bad_review_rate: 0.02, repurchase_rate: 0.28 },
       month_2026_08: { revenue: 108_000, occ: 0.83, adr: 512, note: "暑期旺季冲刺" },
       breakdown: { channels: { "美团": 0.38, "携程": 0.34, "飞猪": 0.16, "直连": 0.12 }, room_types: { "RT-DLX-KING": 0.45, "RT-FAM-TWIN": 0.33, "RT-BIZ-KING": 0.22 } },
-      tracking: "goal.tracking 事件按周回写达成率与偏差归因（p12 仪表盘数据源）",
+      tracking: "按周回写达成率与偏差归因（经营仪表盘数据源）",
     },
     approval_matrix: {
       refund_review_threshold: 500,
@@ -284,7 +284,7 @@ function yunqiArchive(): Record<string, unknown> {
       night_high_risk: "block",
     },
     compensation_policy: { max_goodwill_amount: 200, upgrade_promise: "forbidden", refund_channel: "reconcile-agent" },
-    memory: { case_index: [], note: "处置案例索引（第五类 case 记忆落地前的配置层锚点）" },
+    memory: { case_index: [], note: "处置案例索引（案例记忆落地前的配置层锚点）" },
     // v2.1 新增字段组 ×3（schemas/archive.schema.json 对齐）
     linen: {
       initial_sets: { 床单: 180, 被套: 180, 枕套: 360, 毛巾: 260, 浴巾: 180 },
@@ -296,7 +296,7 @@ function yunqiArchive(): Record<string, unknown> {
     incident_profile: {
       devices: [
         { kind: "self_checkin_kiosk", model: "示例自助机 K2", warranty_until: "2027-06-30" },
-        { kind: "smart_lock", model: "示例门锁 L5", warranty_until: "2027-03-31" },
+        { kind: "smart_lock", model: "示例智能门锁", warranty_until: "2027-03-31" },
       ],
       emergency_contacts: [
         { level: 1, name: "值班手机", phone: "138****0001" },
@@ -422,7 +422,7 @@ function makeEvent(i: number, time: Date, presets: Preset[]): SeedEvent {
           action: "price.adjust",
           before: { price: before },
           after: { price: after },
-          basis: ["竞对西湖云舍同房型 ¥" + (after + int(10, 40)), "近 7 日 OCC 0.78"],
+          basis: ["竞对西湖云舍同房型 ¥" + (after + int(10, 40)), "近 7 日入住率 0.78"],
         },
         rule_impact: [{ rule_id: "R1", version: FENCE_VERSION, result: "pass" }],
         receipt: receipt(time),
@@ -440,7 +440,7 @@ function makeEvent(i: number, time: Date, presets: Preset[]): SeedEvent {
           action: "review.reply",
           params: { rating: int(1, 3) },
           after: { draft: "非常抱歉给您带来不好的体验，我们已核实空调异响问题并安排检修……" },
-          basis: ["品牌规范致歉结构", "档案 forbidden 已核对"],
+          basis: ["品牌规范致歉结构", "档案硬约束已核对"],
         },
         rule_impact: [{ rule_id: "R6", version: FENCE_VERSION, result: "review" }],
         model_trace: mt("standard"),
@@ -476,7 +476,7 @@ function makeEvent(i: number, time: Date, presets: Preset[]): SeedEvent {
             card: pick(["西湖云舍酒店", "溪上云居民宿", "云栖轻奢酒店"]),
             price: int(360, 760),
           },
-          basis: ["频次自律：请求间隔 ≥3s（L3.3）"],
+          basis: ["频次自律：两次请求之间间隔不少于 3 秒"],
         },
         rule_impact: [],
         model_trace: mt("standard"),
@@ -541,7 +541,7 @@ function makeEvent(i: number, time: Date, presets: Preset[]): SeedEvent {
           action: "price.adjust",
           before: { price: rt.base },
           after: { price: 368 },
-          basis: ["竞对溪上云居降至 ¥366（未核对档案 forbidden）"],
+          basis: ["竞对溪上云居降至 ¥366（未核对档案硬约束）"],
         },
         rule_impact: [{ rule_id: "R2", version: FENCE_VERSION, result: "blocked" }],
         model_trace: mt("standard"),
@@ -573,7 +573,7 @@ function makeEvent(i: number, time: Date, presets: Preset[]): SeedEvent {
         object: { type: "store", id: WS_ID },
         decision: {
           action: pick(["night.run.start", "night.package.deliver", "memory.consolidate"]),
-          after: { note: "夜班状态机推进（F4.8）" },
+          after: { note: "夜班状态推进" },
         },
         rule_impact: [],
       };
@@ -772,10 +772,10 @@ async function main(): Promise<void> {
     { id: "tg-faq-mine-sun", name: "FAQ 知识库周萃取（周日 03:00）", kind: "cron", schedule: "0 3 * * 0", action: { dispatch: "phone-agent", template: "faq.weekly.mine" } },
     { id: "tg-incident-weekly", name: "断点率周报（周一 04:00）", kind: "cron", schedule: "0 4 * * 1", action: { dispatch: "desktop-agent", template: "incident.weekly.report" } },
     // 数字CEO 节拍（D21：CEO Loop；调度器消费前经治理守卫校验 charter.mode）
-    { id: "tg-ceo-brief-0830", name: "公司CEO 晨报 08:30", kind: "cron", schedule: "30 8 * * *", action: { beat: "daily" } },
-    { id: "tg-ceo-queue-2h", name: "公司CEO 裁决巡检 2h", kind: "cron", schedule: "7 */2 * * *", action: { beat: "queue" } },
-    { id: "tg-ceo-deviation", name: "公司CEO 目标偏差扫描", kind: "cron", schedule: "15 */4 * * *", action: { beat: "deviation" } },
-    { id: "tg-ceo-breaker", name: "公司CEO 自治熔断巡检", kind: "cron", schedule: "45 23 * * *", action: { beat: "breaker" } },
+    { id: "tg-ceo-brief-0830", name: "公司负责人 晨报 08:30", kind: "cron", schedule: "30 8 * * *", action: { beat: "daily" } },
+    { id: "tg-ceo-queue-2h", name: "公司负责人 裁决巡检 每 2 小时", kind: "cron", schedule: "7 */2 * * *", action: { beat: "queue" } },
+    { id: "tg-ceo-deviation", name: "公司负责人 目标偏差扫描", kind: "cron", schedule: "15 */4 * * *", action: { beat: "deviation" } },
+    { id: "tg-ceo-breaker", name: "公司负责人 自治熔断巡检", kind: "cron", schedule: "45 23 * * *", action: { beat: "breaker" } },
   ];
   for (const t of triggers) {
     await q(
@@ -861,7 +861,7 @@ async function main(): Promise<void> {
 
   console.log(`✓ 五元事件：新写入 ${inserted} 条，幂等丢弃 ${dupSkipped} 条（L1.4）`);
 
-  // CEO 晨报事件（剧场汇报气泡/董事长视图简报流的数据源；幂等键 E-8999）
+  // 经营晨报事件（剧场汇报气泡/老板视图简报流的数据源；幂等键 E-8999）
   {
     const ev = {
       event_id: "E-SEED-8999",
@@ -871,7 +871,7 @@ async function main(): Promise<void> {
       decision: {
         action: "ceo.briefing",
         after: { text: "老板，早报已备：昨夜班组完成 14 项作业（评论/巡检/对账各线正常），1 件差评处置请您拍板；本周入住率与每间可售房收入趋势见节拍控制台。试用期边界降一档执行中。" },
-        basis: ["CEO Loop 日频晨报 08:30"],
+        basis: ["每日 08:30 经营晨报"],
       },
       rule_impact: [],
       receipt: { synced: true, snapshot_uri: "data/snapshots/e-8999.png", verified_at: new Date().toISOString() },
@@ -886,7 +886,7 @@ async function main(): Promise<void> {
        VALUES ($1,$2,$3,NULL,$4,$5,$6,$7) ON CONFLICT (tenant_id, event_id) DO NOTHING`,
       [ev.event_id, TENANT_ID, WS_ID, payload, prevHash, hash, ev.context.time],
     );
-    console.log("✓ CEO 晨报事件（剧场汇报气泡数据源）");
+    console.log("✓ 经营晨报事件（剧场汇报气泡数据源）");
   }
 
   // 审批样例：取最近两条 review 结果事件挂审批（一 pending 一 approved）
