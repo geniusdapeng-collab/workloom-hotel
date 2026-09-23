@@ -395,12 +395,29 @@
         "hotel.revenue.read",
         "hotel.archive.read"
       ],
-      "experiments": []
+      "experiments": [],
+      "safeTerms": [
+        "OCC",
+        "ADR",
+        "RevPAR",
+        "WiFi",
+        "PMS",
+        "OTA",
+        "SOP",
+        "SLA",
+        "SPA",
+        "FAQ",
+        "Yunqi-Hotel",
+        "MQL",
+        "CPL",
+        "ROI",
+        "OKR"
+      ]
     }
   },
   "integrity": {
     "algorithm": "sha256",
-    "digest": "d95ebb16cab7f0b7b2db3bd92dcf1eec1c0d2e088433e28197ecf095689a99b1",
+    "digest": "f7f8f35208d3909415d4a295679213a39558aba0853f05a88fe31c79e14a105d",
     "assets": {
       "eval/questions.json": "c51d1b0f1053f60431da9be3e817d30d2a885861a5a0af8fe459a05641ec207a",
       "fences/hotel-baseline.yml": "6f18209c72c1a2d9383dada5054860f3da4e526704251c74ad10adfb47ca3f99",
