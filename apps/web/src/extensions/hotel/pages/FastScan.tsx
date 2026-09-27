@@ -3,6 +3,7 @@ import { useEffect, useState, type ChangeEvent } from "react";
 import { ensureDemoLogin, trpc } from "../../../lib/trpc";
 import { Bridge } from "../../../shell/Bridge";
 import { EmptyState } from "../../../components/hud";
+import { clientIdentifierText, clientValueText } from "../labels";
 
 type SnapshotInput = Parameters<typeof trpc.twin.fastScanPreview.mutate>[0]["snapshot"];
 type Finding = {
@@ -157,7 +158,7 @@ export default function FastScan() {
     <div className="rounded-lg border border-gline bg-card p-4 text-body leading-relaxed text-ink3">
       <b className="text-ink2">数据口径</b>
       <p className="mt-2">快照由操作者提交。报告会检查价格、房态、渠道、口碑、安全与断点五线；空数据集会在覆盖度里标出。</p>
-      <p className="mt-2">预览不写库；“保存报告”只写入 WorkLoom 事件库，不修改 PMS、OTA 或 IoT。</p>
+      <p className="mt-2">预览不写库；“保存报告”只写入 WorkLoom 事件库，不修改客房管理系统、渠道平台或物联网设备。</p>
       <p className="mt-2 text-warn">来源未核验；估算金额不是已实现收益。</p>
     </div>
   );
@@ -171,14 +172,14 @@ export default function FastScan() {
         </div>
         <section className="rounded-xl border border-line bg-card p-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <label htmlFor="hotel-snapshot" className="text-body font-semibold text-ink2">AuditSnapshot JSON</label>
+            <label htmlFor="hotel-snapshot" className="text-body font-semibold text-ink2">酒店快照数据</label>
             <label className={`${quietButton} cursor-pointer`}>
-              上传 JSON 文件
+              上传数据文件
               <input className="sr-only" type="file" accept=".json,application/json" onChange={(event) => void upload(event)} disabled={busy !== null} />
             </label>
           </div>
           <textarea id="hotel-snapshot" value={raw} onChange={(event) => edit(event.target.value)}
-            spellCheck={false} placeholder={'{"snapshotId":"...","generatedAt":"2026-09-27T12:00:00+08:00","hotels":[],"roomTypes":[],"channelPrices":[],"roomDays":[],"orders":[],"channelBills":[],"reviews":[],"breakpoints":[],"holidays":[]}' }
+            spellCheck={false} placeholder={"在此粘贴酒店快照数据，或点击上方按钮上传由门店系统导出的文件"}
             className="mt-3 min-h-48 w-full resize-y rounded-lg border border-line bg-bg950 px-3 py-2 font-mono text-body text-ink2 outline-none focus:border-gold/60 disabled:opacity-50"
             disabled={busy !== null} />
           <div className="mt-3 flex flex-wrap gap-2">
@@ -201,13 +202,13 @@ export default function FastScan() {
               <div className="min-w-0"><h3 className="break-all text-lg font-bold text-ink2">{report.reportId}</h3><p className="break-words text-body text-ink3">快照 {report.snapshotId} · {new Date(report.generatedAt).toLocaleString("zh-CN")}</p></div>
               <div className="flex flex-wrap items-center gap-2"><span className="rounded border border-warn/50 px-2 py-1 text-body text-warn">来源未核验</span><button type="button" className={quietButton} onClick={downloadReport}>下载完整报告</button></div>
             </div>
-            {eventId ? <p className="break-all font-mono text-body text-go">事件回执：{eventId}</p> : null}
+            {eventId ? <p className="break-all text-body text-go">事件回执：{clientIdentifierText(eventId)}</p> : null}
             <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
               {[["门店", report.overview.hotelCount], ["发现", report.overview.findingCount], ["P0", report.overview.counts.P0 ?? 0], ["P1", report.overview.counts.P1 ?? 0]].map(([label, value]) => (
                 <div key={label} className="rounded-lg border border-line p-3"><div className="text-body text-ink3">{label}</div><b className="text-xl text-ink2">{value}</b></div>
               ))}
             </div>
-            <div><h4 className="text-body font-semibold text-ink2">检线覆盖度</h4><div className="mt-2 flex flex-wrap gap-2">{Object.entries(report.coverage).map(([line, status]) => <span key={line} className="rounded border border-line px-2 py-1 text-body text-ink3">{lineNames[line] ?? line}：{coverageNames[status] ?? status}</span>)}</div></div>
+            <div><h4 className="text-body font-semibold text-ink2">检线覆盖度</h4><div className="mt-2 flex flex-wrap gap-2">{Object.entries(report.coverage).map(([line, status]) => <span key={line} className="rounded border border-line px-2 py-1 text-body text-ink3">{clientValueText(lineNames[line] ?? line, "其他检线")}：{clientValueText(coverageNames[status] ?? status, "未覆盖")}</span>)}</div></div>
             {report.coverageNotes.length ? <ul className="list-inside list-disc space-y-1 text-body text-ink3">{report.coverageNotes.map((note) => <li key={note}>{note}</li>)}</ul> : null}
             {report.hotels.flatMap((hotel) => hotel.findings.map((finding) => ({ hotel, finding }))).map(({ hotel, finding }) => (
               <article key={`${hotel.hotelId}-${finding.id}`} className="rounded-lg border border-line p-3">
@@ -215,7 +216,7 @@ export default function FastScan() {
                 <p className="mt-1 text-body text-ink3">{finding.description}</p>
                 <p className="mt-1 text-body text-ink2">建议：{finding.suggestion}</p>
                 {finding.calculation ? <p className="mt-1 text-body text-ink3">计算：{finding.calculation.formula}；结果 {finding.calculation.result}</p> : null}
-                {finding.evidence?.length ? <p className="mt-1 break-words text-body text-ink3">证据：{finding.evidence.map((item) => `${item.kind} #${item.id}${item.note ? `（${item.note}）` : ""}`).join("、")}</p> : null}
+                {finding.evidence?.length ? <p className="mt-1 break-words text-body text-ink3">证据：{clientValueText(finding.evidence.map((item) => `${item.kind} #${item.id}${item.note ? `（${item.note}）` : ""}`).join("、"), "已记录证据")}</p> : null}
                 {finding.estimatedImpact ? <p className="mt-1 text-body text-gold">估算挽回 {finding.estimatedImpact.amount} {finding.estimatedImpact.currency} · 置信度 {confidenceNames[finding.estimatedImpact.confidence] ?? finding.estimatedImpact.confidence}</p> : null}
               </article>
             ))}
