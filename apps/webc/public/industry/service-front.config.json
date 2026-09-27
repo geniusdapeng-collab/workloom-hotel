@@ -109,9 +109,9 @@
   ],
   "projection": {
     "bundleId": "hotel",
-    "bundleVersion": "3.2.0",
+    "bundleVersion": "3.3.0",
     "contractVersion": "2.0.0",
-    "uiVersion": "0.1.9",
-    "manifestDigest": "f7f8f35208d3909415d4a295679213a39558aba0853f05a88fe31c79e14a105d"
+    "uiVersion": "0.1.14",
+    "manifestDigest": "c63bb5fbe8836c500af929406c6ef3ffd48d6536e8b676ff0b73c60e62204992"
   }
 }

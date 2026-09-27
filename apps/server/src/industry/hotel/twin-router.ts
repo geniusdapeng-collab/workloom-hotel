@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { getAppPool } from "@workloom/db";
-import { navigationPermissionProcedure, router, scopeOf } from "../../trpc/context.js";
+import { bundleActionWriteProcedure, navigationPermissionProcedure, router, scopeOf } from "../../trpc/context.js";
+import {
+  fastScanExecute, fastScanExecuteInputSchema,
+  fastScanInputSchema, fastScanPreview,
+  fastScanReceipt, fastScanReceiptInputSchema,
+} from "./fast-scan-capability.js";
 
 async function queryEventsByActions(
   scope: { tenantId: string; workspaceId: string },
@@ -52,6 +57,20 @@ async function readArchive(
 }
 
 export const hotelTwinRouter = router({
+  /** 提交调用方快照作只读预览；mutation 仅用于承载较大的 POST 请求体。 */
+  fastScanPreview: navigationPermissionProcedure("hotel.fast-scan.read")
+    .input(fastScanInputSchema)
+    .mutation(({ input }) => fastScanPreview(input)),
+
+  /** 保存只读体检报告；写权限保护的是内部事件留痕，绝不调用外部 PMS/OTA 写接口。 */
+  fastScanExecute: bundleActionWriteProcedure("hotel.fast-scan.execute")
+    .input(fastScanExecuteInputSchema)
+    .mutation(({ ctx, input }) => fastScanExecute(ctx.identity, input)),
+
+  fastScanReceipt: navigationPermissionProcedure("hotel.fast-scan.read")
+    .input(fastScanReceiptInputSchema)
+    .query(({ ctx, input }) => fastScanReceipt(ctx.identity, input)),
+
   /** P10 断点看板：断点闭环事件（根因四分类）+ 周频断点率周报 */
   incidents: navigationPermissionProcedure("hotel.incidents.read").query(async ({ ctx }) => {
     const scope = scopeOf(ctx.identity);

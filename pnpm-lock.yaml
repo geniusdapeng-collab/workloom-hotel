@@ -72,6 +72,9 @@ importers:
       '@trpc/server':
         specifier: 11.19.0
         version: 11.19.0(typescript@7.0.2)
+      '@workloom/audit-engine':
+        specifier: workspace:*
+        version: link:../../packages/audit-engine
       '@workloom/base':
         specifier: workspace:*
         version: link:../../packages/base

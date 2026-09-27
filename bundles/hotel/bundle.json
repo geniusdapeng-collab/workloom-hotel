@@ -1,7 +1,7 @@
 {
   "schemaVersion": "workloom.bundle/v1",
   "name": "@workloom/hotel",
-  "version": "3.2.0",
+  "version": "3.3.0",
   "workloom": {
     "industry": "hotel",
     "displayName": "WorkLoom 酒店行业版",
@@ -77,7 +77,9 @@
       ],
       "seeds": [],
       "pipelines": [],
-      "library": [],
+      "library": [
+        "agent-capabilities.json"
+      ],
       "segmentDefaults": [
         "segment-defaults.yml"
       ],
@@ -174,6 +176,19 @@
             ],
             "permissions": [
               "hotel.price-health.read"
+            ]
+          },
+          {
+            "capabilityId": "hotel.fast-scan",
+            "title": "快速体检",
+            "route": "/hotel/fast-scan",
+            "group": "operations",
+            "icon": "radar",
+            "clients": [
+              "pc"
+            ],
+            "permissions": [
+              "hotel.fast-scan.read"
             ]
           },
           {
@@ -385,6 +400,8 @@
       "permissions": [
         "hotel.incidents.read",
         "hotel.price-health.read",
+        "hotel.fast-scan.read",
+        "hotel.fast-scan.execute",
         "hotel.goals.read",
         "hotel.orders.read",
         "hotel.channels.read",
@@ -417,8 +434,9 @@
   },
   "integrity": {
     "algorithm": "sha256",
-    "digest": "f7f8f35208d3909415d4a295679213a39558aba0853f05a88fe31c79e14a105d",
+    "digest": "c63bb5fbe8836c500af929406c6ef3ffd48d6536e8b676ff0b73c60e62204992",
     "assets": {
+      "agent-capabilities.json": "25e57337fa975c79e18430f3f7f106f982cd306bc0f64c9bcc8677bf990771e9",
       "eval/questions.json": "c51d1b0f1053f60431da9be3e817d30d2a885861a5a0af8fe459a05641ec207a",
       "fences/hotel-baseline.yml": "6f18209c72c1a2d9383dada5054860f3da4e526704251c74ad10adfb47ca3f99",
       "fences/patches/audit-only-patch.yml": "d16e0a3c4a6d1ddb919d48abfbcdaeb33db2a0fe614cf02f95d6a59977b0d514",

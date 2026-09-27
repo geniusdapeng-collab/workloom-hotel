@@ -1,6 +1,7 @@
 import Archive from "./pages/Archive";
 import Channels from "./pages/Channels";
 import FrontdeskHousekeeping from "./pages/FrontdeskHousekeeping";
+import FastScan from "./pages/FastScan";
 import Goals from "./pages/Goals";
 import Incidents from "./pages/Incidents";
 import Orders from "./pages/Orders";
@@ -17,6 +18,7 @@ import VoiceFront from "./pages/VoiceFront";
 export const industryRoutes = [
   { path: "/hotel/incidents", capabilityId: "hotel.incidents", element: <Incidents />, legacyPaths: ["/p10"] },
   { path: "/hotel/price-health", capabilityId: "hotel.price-health", element: <PriceHealth />, legacyPaths: ["/p11"] },
+  { path: "/hotel/fast-scan", capabilityId: "hotel.fast-scan", element: <FastScan /> },
   { path: "/hotel/goals", capabilityId: "hotel.goals", element: <Goals />, legacyPaths: ["/p12"] },
   { path: "/hotel/orders", capabilityId: "hotel.orders", element: <Orders />, legacyPaths: ["/p13"] },
   { path: "/hotel/channels", capabilityId: "hotel.channels", element: <Channels />, legacyPaths: ["/p14"] },

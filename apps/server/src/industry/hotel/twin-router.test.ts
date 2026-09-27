@@ -8,6 +8,7 @@ describe("酒店经营投影路由权限边界", () => {
     const permissions = [
       "hotel.incidents.read",
       "hotel.price-health.read",
+      "hotel.fast-scan.read",
       "hotel.goals.read",
       "hotel.orders.read",
       "hotel.channels.read",
@@ -23,6 +24,12 @@ describe("酒店经营投影路由权限边界", () => {
     }
     expect(source).not.toMatch(/\bevents:\s*(?:protectedProcedure|navigationPermissionProcedure)/);
     expect(source).not.toContain("protectedProcedure");
+  });
+
+  it("快速体检的执行入口同时核验写权限与行业能力权限", () => {
+    expect(source).toContain('fastScanPreview: navigationPermissionProcedure("hotel.fast-scan.read")');
+    expect(source).toContain('fastScanExecute: bundleActionWriteProcedure("hotel.fast-scan.execute")');
+    expect(source).toContain('fastScanReceipt: navigationPermissionProcedure("hotel.fast-scan.read")');
   });
 
   it("订单穿透只能读取当前租户与工作区，档案读取也受工作区隔离", () => {
