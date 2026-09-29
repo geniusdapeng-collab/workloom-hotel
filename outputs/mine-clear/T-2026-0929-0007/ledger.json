@@ -4,7 +4,7 @@
   "repo": ".wt-mineclear-hotel",
   "title": "",
   "created_at": "2026-09-29T14:54:54.397Z",
-  "updated_at": "2026-09-29T15:40:40.083Z",
+  "updated_at": "2026-09-29T17:15:34.428Z",
   "baseline": {
     "audit": {
       "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
@@ -112,6 +112,11 @@
           "type": "log",
           "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-server-boot-missing-dist.log",
           "note": "dist 缺失时 server 启动即 ERR_MODULE_NOT_FOUND packages/base/node_modules/@workloom/industry-contract/dist/index.js；套件 E2E 段只显示「server 启动超时」，指向不了根因"
+        },
+        {
+          "type": "log",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-22-doctor.log",
+          "note": "M4 交付面独立复现：bash scripts/doctor.sh 给出「pnpm -C packages/ui build」这一在本仓不可能执行的修法（packages/ui 不存在），排障被误导"
         }
       ],
       "root_cause": {
@@ -288,6 +293,16 @@
           "type": "code",
           "ref": "apps/server/src/runtime/dispatch-routing.ts:73@ed6056f",
           "note": "派活路由把酒店默认指挥岗位写成 [\"company-ceo\",\"growth-lead\"]，但两岗都未在编 → 未命中语义规则的目标准别度落到 ready[0]（thread-runner.ts:103-107）"
+        },
+        {
+          "type": "log",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-release-gate-A-fresh-seed-PREFIX.log",
+          "note": "发布红线实测（修复前，干净库 + 真服务 8818）：release:gate 10/11，T-02「编排·节拍执行→回调落痕」红，报错原文即 F2.10 拒写 → 该缺陷直接挡发布红线"
+        },
+        {
+          "type": "log",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-release-gate-A-fresh-seed.log",
+          "note": "同一命令在修复提交 6264944 上：release:gate 11/11 全绿、退出码 0（T-02 转绿）"
         }
       ],
       "root_cause": {
@@ -321,6 +336,14 @@
           "command": "./node_modules/.bin/vitest run packages/base/captain/ceo-actor.test.ts",
           "last_result": "pass",
           "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/assert-ceo-actor-unit.log"
+        },
+        {
+          "kind": "sample",
+          "given": "干净库播种后起真服务（SERVER_PORT=8815），以 SERVER_BASE 指向该实例跑发布红线",
+          "expect": "release:gate 11/11 通过、退出码 0（修复前为 10/11，T-02 被 F2.10 拦）",
+          "command": "SERVER_BASE=http://127.0.0.1:8815 ./node_modules/.bin/tsx --env-file=.env scripts/release-gate.ts",
+          "last_result": "pass",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-release-gate-A-fresh-seed.log"
         }
       ],
       "regression": {
@@ -666,6 +689,1159 @@
       "fixed_by": "agent:root-T-2026-0929-0007",
       "verified_by": null,
       "notes": "生成物漂移在审计基线上即存在（与本次修复无关的存量红），一并收敛以免残留陈旧计数误导后续验收。"
+    },
+    {
+      "id": "MC-009",
+      "kind": "problem",
+      "level": "L2",
+      "severity": "P1",
+      "batch": 1,
+      "state": "open",
+      "title": "受管客户端文件被热修绕过 UI 升级通道，状态文件未刷新 → 本仓 static-gate 必红（舰队 8 仓同款）",
+      "evidence": [
+        {
+          "type": "log",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-08b-client-foundation-after-install.log",
+          "note": "node scripts/verify-client-foundation-consumer.mjs --repo . → ❌ 受管客户端文件指纹漂移：apps/webc/src/styles/tokens.css"
+        },
+        {
+          "type": "code",
+          "ref": ".workloom-client-foundation.json:997@ed6056f",
+          "note": "状态文件记录 tokens.css 的 sha256=b621ef32…，而文件实际为 de2640c7…（ed6056f 只改了文件本体，未刷新状态）"
+        },
+        {
+          "type": "code",
+          "ref": ".cnb.yml:37@ed6056f",
+          "note": "static-gate「UI 消费契约」步骤 set -eu，顺序执行 verify-ui-consumer 与 verify-client-foundation-consumer → 该漂移直接判红发布门禁"
+        },
+        {
+          "type": "log",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-10-foundation-drift-fleet.log",
+          "note": "M4 对 8 个订阅仓远端 main 复算：hotel/workloom/panda/growth/hyperreality/eagle/andromeda/fox 全部 DRIFT=YES"
+        }
+      ],
+      "root_cause": {
+        "file": ".workloom-client-foundation.json",
+        "line": 997,
+        "commit": "ed6056f",
+        "symbol": "managedFiles['apps/webc/src/styles/tokens.css']"
+      },
+      "trigger_path": "任何推到本仓的 PR（含本任务 PR #78）→ static-gate 第 3 步失败 → 门禁不全绿 → 机器合并不成立；本仓 main 自身也处于「门禁红」状态",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "本仓（或任一订阅仓）HEAD 上执行消费门禁",
+          "expect": "node scripts/verify-client-foundation-consumer.mjs --repo . 退出码 0，且提示「受管文件指纹零漂移」",
+          "command": "node scripts/verify-client-foundation-consumer.mjs --repo .",
+          "last_result": "fail",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-08b-client-foundation-after-install.log"
+        },
+        {
+          "kind": "property",
+          "given": "任意一次受管客户端文件变更",
+          "expect": "文件与 .workloom-client-foundation.json 的指纹在同一提交内更新（由 upgrade-pr-only 通道工具产出），不允许出现「改了文件没改状态」的组合",
+          "command": "node scripts/verify-client-foundation-consumer.mjs --repo .",
+          "last_result": "not-run",
+          "evidence": ""
+        }
+      ],
+      "notes": "未修原因：通道策略为 upgrade-pr-only（状态文件自述），正确修法是在基座车道重放/推进客户端基座波次（基座已有 @workloom/ui 0.1.15 发布提交 ec0b084/95cf8ff），由 ui-upgrade-pr 工具同批改写文件与状态；在子仓手改指纹=绕过受控通道，不做。建议同时加「受管文件变更必须同 PR 刷新 state」的硬校验，杜绝热修旁路。"
+    },
+    {
+      "id": "MC-010",
+      "kind": "problem",
+      "level": "L3",
+      "severity": "P1",
+      "batch": 2,
+      "state": "open",
+      "title": "发布红线不可在自带种子上自证：跑完套件后示例工作区身份被清（is_example=false），release:gate 从 11/11 掉到 4/9",
+      "evidence": [
+        {
+          "type": "log",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-release-gate-A-fresh-seed.log",
+          "note": "干净库播种 + 真服务：release:gate 11/11 通过（含 G-01 工作区探测、T-02 编排节拍）"
+        },
+        {
+          "type": "log",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-release-gate-B-after-suite.log",
+          "note": "同库跑完自带套件（464/464 全绿）后再跑 release:gate：4/9，G-01「无可验收的示例工作区」、Q-01/Q-02/T-01/T-02 连带全红"
+        },
+        {
+          "type": "code",
+          "ref": "scripts/suite.ts:2552@ed6056f",
+          "note": "套件 H 域调用 POST /trpc/onboarding.setupWorkspace（写入真实经营主体）"
+        },
+        {
+          "type": "code",
+          "ref": "apps/server/src/trpc/router.ts:712@ed6056f",
+          "note": "该接口执行 UPDATE workspaces SET name=$2, industry=$3, is_example=false —— 示例身份被套件永久清掉（种子重播才恢复）"
+        },
+        {
+          "type": "code",
+          "ref": "scripts/release-gate.ts:182@ed6056f",
+          "note": "发布红线的工作区探测条件写死 WHERE w.is_example=true → 套件跑完后取不到验收工作区"
+        }
+      ],
+      "root_cause": {
+        "file": "apps/server/src/trpc/router.ts",
+        "line": 712,
+        "commit": "ed6056f",
+        "symbol": "onboarding.setupWorkspace"
+      },
+      "trigger_path": "任何「先跑套件再跑发布门禁」的发布流程（本仓 README 推荐顺序）→ G-01 起 5 条红线连带红 → 发布被自家门禁挡住，且失败原因（示例身份被清）不直观",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "干净库播种 → 跑套件 → 跑发布红线（同一服务实例/同一库）",
+          "expect": "release:gate 仍 11/11（或套件改在独立工作区，示例工作区身份不被测试污染）",
+          "command": "SERVER_BASE=http://127.0.0.1:8815 ./node_modules/.bin/tsx --env-file=.env scripts/release-gate.ts",
+          "last_result": "fail",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-release-gate-B-after-suite.log"
+        },
+        {
+          "kind": "property",
+          "given": "任意次套件运行",
+          "expect": "种子示例工作区（is_example=true）在套件结束后仍为 true；套件的真实模式装配用例使用独立工作区",
+          "command": "psql -c \"SELECT id,is_example FROM workspaces",
+          "last_result": "not-run",
+          "evidence": ""
+        }
+      ],
+      "notes": "未修原因：两种修法都动发布/测试语义（① release-gate 放宽工作区探测口径；② 套件改用独立工作区），且 release-gate 属基座受控资产，应由基座车道统一裁决；本卡给出可复现 A/B 证据与回归断言。"
+    },
+    {
+      "id": "MC-011",
+      "kind": "problem",
+      "level": "L2",
+      "severity": "P2",
+      "batch": 1,
+      "state": "open",
+      "title": "桌面运行时依赖锁过期（metadata 记录的两项输入摘要与实际不符），本仓 CI 未含该门禁",
+      "evidence": [
+        {
+          "type": "log",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-23-runtime-deps-verify.log",
+          "note": "node scripts/runtime-deps-lock.mjs verify → exit 1「runtime 依赖锁元数据或输入摘要已过期」"
+        },
+        {
+          "type": "code",
+          "ref": ".workloom-runtime-deps/metadata.json:1@ed6056f",
+          "note": "inputs 记录的 apps/server/package.json（ad2df767… ≠ 6f728918…）与 pnpm-lock.yaml（1077705f… ≠ 740f6e06…）均已漂移；metadata 最后刷新于 1b3f54a（2026-09-27）"
+        },
+        {
+          "type": "code",
+          "ref": ".cnb.yml:37@ed6056f",
+          "note": "本仓 static-gate 未包含 runtime 依赖锁校验（基座有）→ 漂移不会被门禁拦住"
+        }
+      ],
+      "root_cause": {
+        "file": ".workloom-runtime-deps/metadata.json",
+        "line": 1,
+        "commit": "ed6056f",
+        "symbol": "inputs 摘要"
+      },
+      "trigger_path": "桌面端打包/受控下载闭包按旧摘要装配 → 与仓库真实依赖不一致；任何人执行 node scripts/runtime-deps-lock.mjs verify 即见红",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "刷新依赖锁后执行校验",
+          "expect": "node scripts/runtime-deps-lock.mjs verify 退出码 0",
+          "command": "node scripts/runtime-deps-lock.mjs refresh && node scripts/runtime-deps-lock.mjs verify",
+          "last_result": "not-run",
+          "evidence": ""
+        },
+        {
+          "kind": "property",
+          "given": "apps/server/package.json 或 pnpm-lock.yaml 变更后",
+          "expect": "同批刷新 .workloom-runtime-deps/**（或门禁判红），不出现「输入变了锁没变」",
+          "command": "node scripts/runtime-deps-lock.mjs verify",
+          "last_result": "fail",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-23-runtime-deps-verify.log"
+        }
+      ],
+      "notes": "未修原因：refresh 需要联网跑 npm install --package-lock-only 并重写三份锁产物，属独立小批（且建议连同「把 verify 纳入子仓 static-gate」一起做）；命令已给，随下次维护批执行。"
+    },
+    {
+      "id": "MC-012",
+      "kind": "problem",
+      "level": "L1",
+      "severity": "P2",
+      "batch": 2,
+      "state": "open",
+      "title": "文本入口未拒绝 NUL 字符：POST /trpc/threads.dispatch 传 \\u0000 → 500（应为 400）并写脏错误账本",
+      "evidence": [
+        {
+          "type": "log",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-21-security-perf.log",
+          "note": "owner token 提交 title 含 \\u0000 → http=500；服务端 invalid byte sequence for encoding \"UTF8\": 0x00（ref=329a9831）；biz_events 新增 1 条 system.error（path=threads.dispatch, code=INTERNAL_SERVER_ERROR）"
+        },
+        {
+          "type": "code",
+          "ref": "apps/server/src/trpc/router.ts:1061@ed6056f",
+          "note": "z.object({ title: z.string().min(1).max(500) })：上限有（4000 字被 Zod 正确拒为 400），控制字符无校验"
+        }
+      ],
+      "root_cause": {
+        "file": "apps/server/src/trpc/router.ts",
+        "line": 1061,
+        "commit": "ed6056f",
+        "symbol": "threadsRouter.dispatch input schema"
+      },
+      "trigger_path": "任意客户端（含脚本/恶意调用方）在 title 里带 \\u0000 → PG 编码错误 → 500 + 错误事件入库（可观测噪声与被利用的 5xx 制造面）",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "title=\"异常\\u0000字符\" 的 dispatch 请求",
+          "expect": "HTTP 400（入参校验拒绝），且不发 5xx、不写 system.error",
+          "command": "curl -s -o /dev/null -w '%{http_code}\\n' -X POST http://127.0.0.1:<SERVER_PORT>/trpc/threads.dispatch -H 'content-type: application/json' -H 'authorization: Bearer <owner-token>' -d '{\"title\":\"probe\\u0000nul\"}'",
+          "last_result": "fail",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-21-security-perf.log"
+        },
+        {
+          "kind": "property",
+          "given": "任意文本入口",
+          "expect": "含 \\u0000 等不可编码控制字符的输入一律 400，绝不进入 SQL 层",
+          "command": "./node_modules/.bin/vitest run apps/server/src --reporter=dot",
+          "last_result": "not-run",
+          "evidence": ""
+        }
+      ],
+      "notes": "未修原因：本轮修复卡已占用同一批 PR 的评审面（围栏绑定），输入净化属另一张任务卡更清晰；修法一行 zod refine + 一条用例即可，命令与期望已写明。"
+    },
+    {
+      "id": "MC-013",
+      "kind": "problem",
+      "level": "L2",
+      "severity": "P2",
+      "batch": 1,
+      "state": "open",
+      "title": "子仓 CI 未接入秘密扫描（base 有、本仓没有）：警报器被摘掉，全量扫描恒红且无受理清单",
+      "evidence": [
+        {
+          "type": "log",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-25-secret-scan-full.log",
+          "note": "全量秘密扫描 BLOCKED（51 findings）；抽样核实全部为开发默认 DSN、测试夹具与故意假 key（<redacted-key>，用于验证脱敏），与基座受理口径同类"
+        },
+        {
+          "type": "code",
+          "ref": ".cnb.yml:1@ed6056f",
+          "note": "本仓 static-gate 无 secret-scan 步骤（基座 .cnb.yml 有 secret-scan.mjs --range … --acceptance-manifest sync/base-scope.json）"
+        },
+        {
+          "type": "code",
+          "ref": "AGENTS.md:114@ed6056f",
+          "note": "受控区块要求「提交前检查 staged diff 和秘密扫描结果」——子仓缺少可执行的扫描通道，纪律无法落地"
+        }
+      ],
+      "root_cause": {
+        "file": ".cnb.yml",
+        "line": 1,
+        "commit": "ed6056f",
+        "symbol": "static-gate stages"
+      },
+      "trigger_path": "任何 PR 提交 → 无秘密扫描阶段；真泄漏（新增密钥）不会被拦截，只能靠人眼",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "在 diff 中放入形如 AWS/GitHub 的假密钥",
+          "expect": "CI（或本地门禁）判红并指出文件:行号",
+          "command": "node scripts/secret-scan.mjs --range <base>..HEAD --acceptance-manifest sync/base-scope.json",
+          "last_result": "not-run",
+          "evidence": ""
+        },
+        {
+          "kind": "property",
+          "given": "任意 PR",
+          "expect": "秘密扫描为必需步骤且只在有受理清单时可通过既有基线，新增命中一律阻断",
+          "command": "grep -c secret-scan .cnb.yml",
+          "last_result": "fail",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-25-secret-scan-full.log"
+        }
+      ],
+      "notes": "未修原因：.cnb.yml 属治理路径（协议 §3 review），应由基座把扫描步骤与受理清单一起下发到订阅仓；本仓私改会与 fanout 冲突。"
+    },
+    {
+      "id": "MC-008",
+      "kind": "problem",
+      "level": "L1",
+      "severity": "P2",
+      "batch": 2,
+      "state": "open",
+      "title": "基座行业装配/技能 PG 集成单测在本仓形态下 6 条红（测试未跨仓可移植：期望本仓 hotel 包同时满足基座自服务包口径）",
+      "evidence": [
+        {
+          "type": "log",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-12b-unit-tests-ci-env.log",
+          "note": "审计基线（origin/main ed6056f）跑 packages/base 单测：6 failed / 788 passed —— bundles.test.ts 3 条（自服务包注册表期望 [ai-pm,hotel]、hotel profile 七槽 7/7）、skills.test.ts 2 条、另 1 条 bundles 激活幂等"
+        },
+        {
+          "type": "log",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-base-pg-tests-postfix.log",
+          "note": "修复提交 6264944 上重跑同一文件：仍是同样 6 条红（6 failed | 25 passed / 31），证明与本次修复无关，是存量"
+        },
+        {
+          "type": "code",
+          "ref": "packages/base/bundles/bundles.test.ts:198@ed6056f",
+          "note": "断言写死 expect(registry.entries.map(e=>e.slug)).toEqual([\"ai-pm\",\"hotel\"])——把基座自服务包口径套到行业仓（本仓 hotel 是 candidate 行业包，不是基座自服务包）"
+        },
+        {
+          "type": "code",
+          "ref": "workloom-im@472b41a",
+          "note": "同类问题已有先例与做法：基座 T-2026-0929-0006 把 Z-03 用例改成『跨仓可移植（自注入探针规则 + 自动挑含写工具岗位）』——本卡建议沿用同一模式，或按各仓 extraExclude 排除行业不适用的基座测试"
+        }
+      ],
+      "root_cause": {
+        "file": "packages/base/bundles/bundles.test.ts",
+        "line": 198,
+        "commit": "ed6056f",
+        "symbol": "listSelfServiceBundles 断言"
+      },
+      "trigger_path": "在本仓跑 `./node_modules/.bin/vitest run packages/base`（或 CI test-gate 的『主测试套件』阶段）即复现；不影响运行时，但让『全绿』声明失去可信度（CI 该阶段为 allowFailure）",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "本仓形态（hotel 行业包 candidate）+ 修复提交",
+          "expect": "packages/base 单测全绿：0 failed（当前 6 failed）",
+          "command": "set -a && . ./.env && set +a && RUN_DB_TESTS=1 ./node_modules/.bin/vitest run packages/base",
+          "last_result": "fail",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-base-pg-tests-postfix.log"
+        },
+        {
+          "kind": "property",
+          "given": "任意行业仓（hotel / panda / tiger …）",
+          "expect": "基座用例只在被行业语义允许的范围内断言（岗位/包清单按运行时解析，不写死本仓包名）",
+          "command": "./node_modules/.bin/vitest run packages/base/bundles/bundles.test.ts",
+          "last_result": "not-run",
+          "evidence": ""
+        }
+      ],
+      "notes": "未修原因：改动落在 packages/base/**（基座受管路径），按协议应在 workloom-im 修正后随波次下发，并在各仓用 extraExclude/运行时解析收敛。回归路径：上表两条断言；修好后 CI test-gate 可考虑从 allowFailure 转必需。"
+    },
+    {
+      "id": "MC-201",
+      "kind": "problem",
+      "level": "L3",
+      "severity": "P0",
+      "batch": 0,
+      "state": "fixed",
+      "title": "求值异常降级人审的步骤被当成「已完成」：审批通过后恢复运行直接跳过该步，线程 completed 1/2（假完成；并发下可绕过未决审批直接完成）",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/runtime/src/loop.ts:211-233@ed6056f",
+          "note": "旧 existingStepIds：以 basis 前缀（「熔断：」/「越围栏挂起：」）排除挂起事件，只收录其余带 step_id 的事件"
+        },
+        {
+          "type": "code",
+          "ref": "packages/runtime/src/loop.ts:470-475@ed6056f",
+          "note": "W-01 降级挂起写的 basis 是第三种前缀「围栏无法求值（缺参数）→ 一律人工裁决」——不在排除表内，于是挂起步骤被当成已执行"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/m2-report-m2-mumurpu0.json#A2",
+          "note": "修复前实测：差评 Quest 批准后 threads.run 返回 completed 2/2，而 DB threads 行 = completed 1/2 且 review.reply 无执行事件"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/hang-injection.log",
+          "note": "修复前实测：调度器把同线程标 completed(2/2)，此时审批 apr-e-9207 仍 pending、s2 从未执行"
+        }
+      ],
+      "root_cause": {
+        "file": "packages/runtime/src/loop.ts",
+        "line": 226,
+        "commit": "ed6056f",
+        "symbol": "existingStepIds / runQuest 收尾"
+      },
+      "trigger_path": "默认 mock 规划产出空参步骤 → R6/R21 按 params.rating 求值异常 → W-01 降级为人工裁决（审批 pending）→ 人批准 → threads.run 续跑；或调度器在挂起事件写入后并发续跑（与 MC-202 叠加）",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "差评 Quest（review-agent）→ 挂起 → 批准 → 续跑",
+          "expect": "线程 completed 且 progress_done==progress_total，被降级的写步骤真的有执行事件（含 receipt）",
+          "command": "M2_BASE=http://127.0.0.1:8820 DATABASE_URL=postgres://postgres@127.0.0.1:5461/wl_mc_fix M2_SERVER_LOG=<server.log> M2_ONLY=A1,A2,E5 node outputs/mine-clear/T-2026-0929-0007/scripts/m2-runner.mjs",
+          "last_result": "pass",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m2-after-mc201-fix.log"
+        },
+        {
+          "kind": "property",
+          "given": "任意工作区快照",
+          "expect": "不存在 status=completed 且（progress_done<progress_total 或仍有 pending 审批）的线程",
+          "command": "同上 E5 用例（全工作区 SQL 属性断言）",
+          "last_result": "pass",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m2-after-mc201-fix.log"
+        },
+        {
+          "kind": "sample",
+          "given": "修改续跑锚点与收尾校验后跑全场景套件",
+          "expect": "464/464 通过（含 R-10 挂起→裁决→恢复闭环、Z-05）",
+          "command": "SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+          "last_result": "pass",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-mc201c.log"
+        }
+      ],
+      "regression": {
+        "command": "SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts && SERVER_BASE=http://127.0.0.1:8820 ./node_modules/.bin/tsx --env-file=.env scripts/release-gate.ts",
+        "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-mc201c.log; outputs/mine-clear/T-2026-0929-0007/evidence/m5-release-gate-after-mc201.log"
+      },
+      "notes": "修法（止血+地基）：① existingStepIds 改为「只认带 receipt 的执行事件」（与 E3.7「无回执不算完成」同源，前缀排除保留为兼容位）；② 收尾加双重校验——done.size 必须等于 steps.length，且本线程不得留有 pending 审批，任一不满足即保持 pending_review（fail-closed），彻底消灭 completed 1/2 与「未决审批 + completed」。"
+    },
+    {
+      "id": "MC-202",
+      "kind": "problem",
+      "level": "L3",
+      "severity": "P1",
+      "batch": 1,
+      "state": "fixed",
+      "title": "同一线程可被 dispatch 内联执行与调度器并发运行（无跨入口互斥）：响应仍 pending_review 时调度器已把线程标 completed(2/2)",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "apps/server/src/runtime/scheduler.ts:57@ed6056f",
+          "note": "inFlight 集合只覆盖调度器自己拉起的线程；threads.dispatch 的 runImmediately 直调 runQuest，不参与该互斥"
+        },
+        {
+          "type": "code",
+          "ref": "apps/server/src/trpc/router.ts:1184@ed6056f",
+          "note": "runImmediately 分支直接 await runQuest(...)，与调度器的 nextQueuedThread 抢同一 queued 行"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/hang-injection.log",
+          "note": "修复前：dispatch 返回 pending_review，同时 scheduler 日志记录同一线程 → completed（2/2），DB 侧 approval 仍 pending"
+        }
+      ],
+      "root_cause": {
+        "file": "apps/server/src/runtime/scheduler.ts",
+        "line": 57,
+        "commit": "ed6056f",
+        "symbol": "inFlight"
+      },
+      "trigger_path": "派遣请求执行时间 > 调度器 tick（默认 7s）时，同一线程被两个入口同时执行；典型：依赖慢（外部/模型）或长计划",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "同一线程并发两次 runQuest",
+          "expect": "恰一个执行者继续执行，另一个返回 running 且不写事件、不改线程；执行事件里同一 step_id 至多一条带回执记录",
+          "command": "./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-concurrency-probe.mjs",
+          "last_result": "pass",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-concurrency-probe.log"
+        },
+        {
+          "kind": "property",
+          "given": "任意线程 id",
+          "expect": "任何时刻同一线程最多一个执行者（跨入口/跨进程），且进程崩溃后锁随连接释放、线程可立即重试",
+          "command": "同上探针（并发两次）",
+          "last_result": "pass",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-concurrency-probe.log"
+        },
+        {
+          "kind": "sample",
+          "given": "引入互斥后跑全场景套件（含 R-10 直接以 running 状态建档后调 runQuest 的续跑用法）",
+          "expect": "464/464；RLS 池卫生用例 P-02 仍为 0 行（互斥不得污染连接池 GUC）",
+          "command": "SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+          "last_result": "pass",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-mc201c.log"
+        }
+      ],
+      "regression": {
+        "command": "./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-concurrency-probe.mjs && SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+        "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-concurrency-probe.log; outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-mc201c.log"
+      },
+      "notes": "修法：runQuest 入口用会话级 `pg_try_advisory_lock(hashtext('thread-run:'||threadId))` 做线程级互斥（runQuest 拆成 wrapper + body，finally 解锁）；拿不到锁的执行者返回 running 并让位。选会话锁而非状态位 CAS 的原因：崩溃/断连即释放，不依赖僵死窗口；且锁连接**不设 RLS GUC**（首版曾用状态 CAS + 会话 GUC，触发 P-02 池卫生用例变红，已改）。"
+    },
+    {
+      "id": "MC-203",
+      "kind": "problem",
+      "level": "L1",
+      "severity": "P1",
+      "batch": 1,
+      "state": "open",
+      "title": "默认 mock 模型产出的空参计划优先于行业确定性规划器：参数型围栏全部求值异常→人工裁决，价带内 2% 调价也无法自动完成",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/runtime/src/loop.ts:94-138@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "planQuestSmart 只要 llmCall 存在就先信 LLM 计划，校验仅查工具白名单/对象格式，不查业务参数完整性；失败才回落 fallbackPlanner"
+        },
+        {
+          "type": "code",
+          "ref": "apps/server/src/runtime/thread-runner.ts:246-254@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "行业规划器只作为 fallbackPlanner；除视觉目标外都给 llmCall（LLM_PROVIDER=mock 在出厂演示中即为空参计划来源）"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/m2-report-m2-mumurpu0.json#A4",
+          "note": "「把雅致大床房调价 2%」→ pricing-agent → pending_review，price.adjust 事件 after=null（计划缺 before/after）→ R1/R2/R7 求值异常；DB 见 1 条 pending 审批"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/m2-report-m2-mumurpu0.json#A2",
+          "note": "差评 Quest 的 review.reply 事件 params={}、rule_impact=[{blocked,R6},{blocked,R21}]（求值异常 R6: <= 得到 undefined）"
+        }
+      ],
+      "root_cause": {
+        "file": "packages/runtime/src/loop.ts",
+        "line": 102,
+        "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+        "symbol": "planQuestSmart"
+      },
+      "trigger_path": "出厂默认（LLM_PROVIDER=mock）或任何返回空参计划的模型 → 依赖 params/before/after 的规则（R1/R2/R6/R7/R8）求值异常 → W-01 降级人审；价带内调价无法 auto",
+      "fix_plan": "计划校验增加业务参数完整性门槛：当步骤的工具/对象命中需要参数的规则（或行业 planner 覆盖该意图域）时，缺参直接改用 fallbackPlanner（或让行业 planner 优先），并在事件里标注 plan_source；空参计划不得静默进入执行。",
+      "blast_radius": "所有依赖 planQuestSmart 的行业意图（酒店调价/差评/送物）；改动会改变既有 mock 演示的计划来源与步骤参数，需同步套件 O/R 域与验收脚本。",
+      "conflict_paths": [
+        "packages/runtime/src/loop.ts",
+        "apps/server/src/runtime/thread-runner.ts",
+        "apps/server/src/industry/hotel/acquisition-planner.ts"
+      ],
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "把雅致大床房调价 2%（R1 ≤8% 且 R7 夜班 ≤3% 均为 auto）",
+          "expect": "线程 completed，price.adjust 事件 after.price≈553.86（锚点 543×1.02），无 pending 审批",
+          "command": "M2_ONLY=A1,A4 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --fresh",
+          "last_result": "fail"
+        },
+        {
+          "kind": "property",
+          "given": "任意派遣",
+          "expect": "缺业务参数的写步骤不得进入执行；要么补参、要么明确人审（审批卡 params_incomplete）",
+          "command": "M2_ONLY=A1,A2,A4 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --no-reset",
+          "last_result": "fail"
+        }
+      ],
+      "notes": "与 MC-201 是上下游：空参计划是触发源，误判已完成是终点。"
+    },
+    {
+      "id": "MC-204",
+      "kind": "problem",
+      "level": "L1",
+      "severity": "P1",
+      "batch": 1,
+      "state": "open",
+      "title": "派活语义规则缺口碑/评价域：回复差评落到 competitor-agent，用 competitor.crawl 顶包并标 completed（假交付）",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "apps/server/src/runtime/dispatch-routing.ts:31-90@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "RULES 只有 visual/video/publish/pricing/service-ops/growth 六域，无评价/差评/口碑/回复；未命中回落行业默认（company-ceo 未在编）→ Bundle 清单顺序 → ready[0]"
+        },
+        {
+          "type": "code",
+          "ref": "apps/server/src/industry/hotel/acquisition-planner.ts:159-180@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "差评回复的确定性计划要求 preset.tools 含 review.reply；岗位错配时该分支被跳过 → planQuest 通用兜底（取该岗位前 3 个工具）"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/m2-report-m2-mumurpu0.json#A3",
+          "note": "默认入口（星环对话框不传 presetKey）「回复那条 2 分差评」→ preset=competitor-agent，事件序列 [thread.dispatch, competitor.crawl]，终态 completed"
+        }
+      ],
+      "root_cause": {
+        "file": "apps/server/src/runtime/dispatch-routing.ts",
+        "line": 31,
+        "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+        "symbol": "RULES"
+      },
+      "trigger_path": "客户在对话框直接说「回复那条差评/处理评价」；或任何未命中六域的目标（回落 ready[0]）",
+      "fix_plan": "① RULES 增 review 域（差评|评价|口碑|回复|评论 → review-agent）；② 兜底改为按目标语义与岗位工具的匹配度排序，而非 Bundle 顺序；③ 收尾校验交付物语义（无 review.reply 执行事件不得置 completed，需 failed/needs_human）。",
+      "blast_radius": "岗位路由被 P8 名册抽屉/星环/移动端共用；新增规则会改变既有语义匹配结果（评估 growth/pricing 的边界词）。与 MC-007（兜底到 company-ceo）需在同一卡内一起收口。",
+      "conflict_paths": [
+        "apps/server/src/runtime/dispatch-routing.ts",
+        "apps/server/src/runtime/thread-runner.ts"
+      ],
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "对话框入口（不传 presetKey）派遣「回复那条 2 分差评」",
+          "expect": "preset=review-agent、状态 pending_review、后续事件含 review.reply",
+          "command": "M2_ONLY=A1,A3 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --fresh",
+          "last_result": "fail"
+        },
+        {
+          "kind": "property",
+          "given": "任意派遣目标",
+          "expect": "最终完成事件的动作族与目标语义域一致；不一致时不得 completed",
+          "command": "M2_ONLY=A1,A3,A4 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --no-reset",
+          "last_result": "fail"
+        }
+      ],
+      "notes": "MCD 规范 L4 语义层典型形状（用户要改价格，交付经营日报且显示已完成）；本轮实证为要回差评、交付竞对抓取。"
+    },
+    {
+      "id": "MC-205",
+      "kind": "problem",
+      "level": "L3",
+      "severity": "P1",
+      "batch": 1,
+      "state": "open",
+      "title": "并发派遣突破 L3.1 工作区并发上限：12 路并发全部放行（上限 10），串行对照第 10 条即 429",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "apps/server/src/trpc/router.ts:1108-1120@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "SELECT count(*) 后 INSERT，无行锁/唯一约束；并发事务各自读到旧计数"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/m2-report-m2-mumurpu0.json#B2",
+          "note": "12 路并发派遣：成功 12、429=0、5xx=0；随后 DB 统计 queued/running=13（12 新 + 1 存量）"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/m2-report-m2-mumurpu0.json#B5",
+          "note": "串行对照：首次 429 出现在第 10 条（说明校验逻辑存在，只是并发下失效）"
+        }
+      ],
+      "root_cause": {
+        "file": "apps/server/src/trpc/router.ts",
+        "line": 1108,
+        "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+        "symbol": "threadsRouter.dispatch"
+      },
+      "trigger_path": "多客户端/脚本在短时间内并发派遣（双击、批量派单、集成重试）",
+      "fix_plan": "把计数+插入放进带 pg_advisory_xact_lock(hashtext('thread-cap:'+workspaceId)) 的事务，或使用 DB 侧约束/信号量（插入前 SELECT ... FOR UPDATE 工作区行）；超限返回 429 并提示排队。",
+      "blast_radius": "派遣吞吐与排队体验；advisory lock 只在本工作区串行化，多工作区不受影响。",
+      "conflict_paths": [
+        "apps/server/src/trpc/router.ts"
+      ],
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "清位后 12 路并发派遣（runImmediately=false）",
+          "expect": "成功 ≤10，其余 429；无 5xx",
+          "command": "M2_ONLY=A1,B2 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --fresh",
+          "last_result": "fail"
+        },
+        {
+          "kind": "property",
+          "given": "任意并发派遣批次",
+          "expect": "任一时刻 workspace 的 queued+running 不超过 MAX_CONCURRENT_THREADS",
+          "command": "M2_ONLY=A1,B2,B5 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --no-reset",
+          "last_result": "fail"
+        }
+      ],
+      "notes": "超限后的连锁效应（后续用例全部 429、需人工清位）已在 M2 报告记录。"
+    },
+    {
+      "id": "MC-206",
+      "kind": "problem",
+      "level": "L1",
+      "severity": "P2",
+      "batch": 2,
+      "state": "open",
+      "title": "安全网关对未分类动作直接放行（fail-open）：同一 ceo.briefing 在围栏规则装载前返回 200、装载后被 F2.10 拒 500（顺序依赖）",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/base/workdata/gateway.ts:169-183@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "checkPermission 在 isWriteAction(action) 为 false 时直接 return；动作分类依赖 registerWriteActions（规则装载时注册，dsl.ts:112 / loop.ts:185 / assembly.ts:946），带有时序"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/order-dependence.log",
+          "note": "① 全新进程（规则未装载）captain.runBeat daily → 200 + E-9100；② 跑一条巡检 Quest 触发规则装载；③ 同一调用 → 500 GatewayReject（company-ceo 未声明 fence_bindings）"
+        }
+      ],
+      "root_cause": {
+        "file": "packages/base/workdata/gateway.ts",
+        "line": 172,
+        "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+        "symbol": "checkPermission"
+      },
+      "trigger_path": "任何未经 rules/judge 的直接事件写入路径（CEO 节拍、系统 actor、工具通道）+ 进程启动初窗（规则尚未装载）",
+      "fix_plan": "网关段①对 agent actor 采用 fail-closed：显式读动作（registerReadActions/动词表）放行，其余一律要求 fenceBindings；或把未分类兜底前移到网关（与 judge default_level 同源）。",
+      "blast_radius": "所有 agent 写事件路径（含基座内部动作）；必须同步登记全部合法读动作，否则会误伤只读场景（可用 B-01..B-18/D 域回归验证）。",
+      "conflict_paths": [
+        "packages/base/workdata/gateway.ts"
+      ],
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "全新进程先跑 captain.runBeat，再跑一条 Quest，再跑同一节拍",
+          "expect": "两次结果一致（同被校验或同放行），不出现先 200 后 500",
+          "command": "bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --fresh  # 见 order-dependence.log",
+          "last_result": "fail"
+        },
+        {
+          "kind": "property",
+          "given": "任意 action 字符串",
+          "expect": "isWriteAction 的分类不受进程装载时序影响（同一 actor 同一 action 结果可重复）",
+          "command": "node scripts/delivery/mine-clear.mjs gate --ledger outputs/mine-clear/T-2026-0929-0007/ledger.json",
+          "last_result": "not-run"
+        }
+      ],
+      "notes": "与 MC-001（company-ceo 绑定/在编，已 fixed）互补：MC-001 修的是 actor 声明，本卡修的是分类时序 fail-open。"
+    },
+    {
+      "id": "MC-207",
+      "kind": "problem",
+      "level": "L2",
+      "severity": "P1",
+      "batch": 1,
+      "state": "open",
+      "title": "触发器引擎空转：tickTriggers 无生产调用点，10 条种子 cron 触发器（巡检 07:00/夜班 22:00/CEO 4 节拍/差评 SLA/倒挂看门狗/FAQ 周萃取/断点率周报）永不自动触发",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/base/night-shift/triggers.ts:141@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "tickTriggers 已实现（幂等 + advisory lock + trigger.fired 事件），但全仓 grep 仅测试文件调用；apps/server 无调度消费点（scheduler.ts 只扫 queued 线程）"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/m2-report-m2-mumurpu0.json#F3",
+          "note": "种子触发器 10/10 enabled，但 trigger_fires=0、biz_events 中 trigger.fired=0（服务端连续运行 >40 分钟，跨越多个 */15、*/30 cron 命中点）"
+        }
+      ],
+      "root_cause": {
+        "file": "packages/base/night-shift/triggers.ts",
+        "line": 141,
+        "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+        "symbol": "tickTriggers"
+      },
+      "trigger_path": "任意依赖定时触发的功能：每日巡检、夜班开工、CEO 晨报/裁决巡检、差评 SLA 扫描、渠道倒挂看门狗、FAQ 周萃取、断点率周报",
+      "fix_plan": "在 apps/server 起 tick 循环（默认 60s，可 WORKLOOM_TRIGGER_TICK_MS 关闭）：逐工作区调用 tickTriggers → 按 action.beat 走 captain.runBeat，按 action.dispatch/template 走派遣模板；失败写 trigger.fired.failed 事件并落日志。",
+      "blast_radius": "夜班/巡检/CEO 节拍会开始自动运行（此前只有手动按钮），需要配额与并发保护（与 MC-205 的并发上限联动）。",
+      "conflict_paths": [
+        "packages/base/night-shift/triggers.ts",
+        "apps/server/src/runtime/scheduler.ts",
+        "apps/server/src/index.ts"
+      ],
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "起服务并等待一个 cron 命中分钟（如 */15）",
+          "expect": "trigger_fires 出现记录、biz_events 出现 trigger.fired（对应 action）",
+          "command": "M2_ONLY=A1,F3 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --no-reset",
+          "last_result": "fail"
+        },
+        {
+          "kind": "property",
+          "given": "任意 enabled cron 触发器",
+          "expect": "命中分钟内恰有一次触发账本（幂等）且触发事件可查",
+          "command": "node scripts/delivery/mine-clear.mjs gate --ledger outputs/mine-clear/T-2026-0929-0007/ledger.json",
+          "last_result": "not-run"
+        }
+      ],
+      "notes": "MCD 守卫空转变体：消费点缺失（先 grep 消费点，再 grep 生产写入点）。"
+    },
+    {
+      "id": "MC-301",
+      "kind": "problem",
+      "level": "L4",
+      "severity": "P1",
+      "batch": 2,
+      "state": "open",
+      "title": "同一「求值异常降级人审」事实在数字职场被渲染成遇阻（blocked）且 approvalId 丢失：审批队列说待批、剧场说撞墙，且无法从剧场直达审批",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/base/captain/floor.ts:170-180,242-250@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "blocked 依据 rule_impact result=blocked 判定，且优先级高于 asking；asking 分支才会带 approvalId"
+        },
+        {
+          "type": "code",
+          "ref": "packages/runtime/src/loop.ts:410-412@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "W-01 降级保留 rawVerdict.impacts（result=blocked），所以待审批事件同时带 blocked 痕迹"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m3/m3-report-m3-mumvdo3b.json#M3-A2",
+          "note": "派遣差评挂起后：任务页 pending_review + 审批页 pending，但 captain.theater 中 review-agent=blocked、approvalId=null；对应事件 rule_impact=[{blocked,R6},{blocked,R21}]"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m3/m3-report-m3-mumvdo3b.json#M3-A3",
+          "note": "批准并完成后剧场仍为 blocked（同一 30 分钟窗口内的 rule_impact 事件持续压制 asking/celebrating 的可见性）"
+        }
+      ],
+      "root_cause": {
+        "file": "packages/base/captain/floor.ts",
+        "line": 170,
+        "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+        "symbol": "deriveFloor"
+      },
+      "trigger_path": "任何缺参导致求值异常→人工裁决的步骤（默认 mock 规划下高频）",
+      "fix_plan": "① W-01 降级时把 impacts 归一为 review（或加 downgraded_from 字段），blocked 语义只留给真熔断；② floor 的遇阻判定改为本工作区是否存在真熔断事件，pending 审批一律走 asking（保留 celebrating 共存逻辑）。",
+      "blast_radius": "剧场/大屏/移动端工位状态；改动会影响 suite V-06/W-03 类断言与遇阻文案口径。",
+      "conflict_paths": [
+        "packages/base/captain/floor.ts",
+        "packages/runtime/src/loop.ts"
+      ],
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "差评 Quest 挂起（待审批）",
+          "expect": "captain.theater 中该员工 state=asking 且 approvalId==pending_approval_id",
+          "command": "M3_ONLY=M3-A1,M3-A2 bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh",
+          "last_result": "fail"
+        },
+        {
+          "kind": "property",
+          "given": "任意工作区快照",
+          "expect": "存在 pending 审批的员工不得被渲染为 blocked（除非另有真熔断事件）",
+          "command": "node scripts/delivery/mine-clear.mjs gate --ledger outputs/mine-clear/T-2026-0929-0007/ledger.json",
+          "last_result": "not-run"
+        }
+      ],
+      "notes": "M3 联动断点：同一事实两套投影语义 + 状态优先级覆盖导致入口丢失。"
+    },
+    {
+      "id": "MC-302",
+      "kind": "problem",
+      "level": "L1",
+      "severity": "P2",
+      "batch": 2,
+      "state": "open",
+      "title": "驳回→遇阻 投影分支字段+归属双错配（floor 读 decision.params.gesture 且比对 who.id=员工，生产写的是 after.gesture 且 who=人类成员）→ 该分支确定性空转（守卫空转）",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/base/captain/floor.ts:178@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "SQL 条件 payload->'decision'->'params'->>'gesture'='reject'；全仓 grep 该路径只有这一处引用，无生产者"
+        },
+        {
+          "type": "code",
+          "ref": "packages/base/review-console/approvals.ts:254-275@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "手势事件写入 decision.after.gesture=reject，who={type:human,id:MEM-xxx}，links=[被审事件]"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m3/m3-report-m3-mumvdo3b.json#M3-A4",
+          "note": "驳回后：任务 cancelled、审批 rejected、播报 cancelled；手势事件 after.gesture=reject / params.gesture=NULL / who=human:MEM-001 → floor 分支接线=false（观测到的 blocked 来自其它 rule_impact 事件）"
+        }
+      ],
+      "root_cause": {
+        "file": "packages/base/captain/floor.ts",
+        "line": 178,
+        "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+        "symbol": "deriveFloor.blocked"
+      },
+      "trigger_path": "任何审批驳回（inapp 或 IM 回调路径）都期望该员工进入遇阻表达",
+      "fix_plan": "查询改为 decision.after.gesture='reject'，并以 links 溯源被审事件的主体（e.payload->'who'->>'id'）作为遇阻 actor；补一条回归断言（驳回后该员工 state=blocked）。",
+      "blast_radius": "剧场/大屏的员工状态；修复后驳回会出现遇阻态（此前从未出现），需确认不覆盖 asking/celebrating 的既有优先规则。",
+      "conflict_paths": [
+        "packages/base/captain/floor.ts"
+      ],
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "差评 Quest 被驳回",
+          "expect": "被审员工的 floor state=blocked，且触发依据来自 after.gesture=reject + 被审事件主体",
+          "command": "M3_ONLY=M3-A1,M3-A4 bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh",
+          "last_result": "fail"
+        },
+        {
+          "kind": "property",
+          "given": "任意 approval.gesture 事件",
+          "expect": "每个 reject 手势都能在其被审事件主体上投影出遇阻（或明确不投影的理由）",
+          "command": "node scripts/delivery/mine-clear.mjs gate --ledger outputs/mine-clear/T-2026-0929-0007/ledger.json",
+          "last_result": "not-run"
+        }
+      ],
+      "notes": "MCD M3 断点模式：生产-消费字段名不匹配 + 归属错配双命中。"
+    },
+    {
+      "id": "MC-303",
+      "kind": "problem",
+      "level": "L2",
+      "severity": "P1",
+      "batch": 1,
+      "state": "open",
+      "title": "两条官方启动路径下 C 端（对外客户入口）均不可用：出厂 .env 未声明 SERVICE_C_*；pnpm preview:all 写死 SERVICE_C_WORKSPACE_ID=ws-aipm-demo（酒店仓只有 ws-yunqi）→ /c/session 503",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "scripts/preview-all.sh:15@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "export SERVICE_C_DEMO_AUTH=true SERVICE_C_WORKSPACE_ID=ws-aipm-demo（ai-pm 工作区标识，非本仓）"
+        },
+        {
+          "type": "code",
+          "ref": "apps/server/src/service/workspace-routing.ts:30-40@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "未配置 → ServiceWorkspaceRoutingError('C 端工作区未配置…')；配置但库中不存在 → 'C 端配置的工作区不存在'"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m3/m3-report-m3-mumvdo3b.json#M3-B1",
+          "note": "默认配置 /c/session=503（C 端工作区未配置）"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m3/m3-report-m3-mumvdo3b.json#M3-B2",
+          "note": "preview:all 口径（ws-aipm-demo）=503（C 端配置的工作区不存在）；DB workspaces 仅 ws-yunqi"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m3/m3-report-m3-mumvdo3b.json#M3-B3",
+          "note": "全配（ws-yunqi）=200，且 C 端建单→PC 服务前台可见→推进→C 端回读新状态全绿（可作为修复后回归基线）"
+        }
+      ],
+      "root_cause": {
+        "file": "scripts/preview-all.sh",
+        "line": 15,
+        "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+        "symbol": "SERVICE_C_WORKSPACE_ID"
+      },
+      "trigger_path": "按 .ai-prompt/README 首启（pnpm preview:all）后打开 C 端 H5；或直接 pnpm dev 后访问 C 端",
+      "fix_plan": "① preview-all.sh 从本仓 acceptance/profile.json 的 identity.workspaceSlug（yunqi-hotel）解析工作区 id（或直接 ws-yunqi），禁止写死他仓标识；② .env.example 增加 SERVICE_C_WORKSPACE_ID/SERVICE_C_WORKSPACE_MAP 与说明；③ bootstrap/preview 启动前校验目标工作区存在，缺失即提示先 seed。",
+      "blast_radius": "三端预览与 C 端验收脚本（scripts/e2e-service-c.mjs 已用 ws-yunqi）；其他行业仓若复制了 preview-all.sh 同样受影响。",
+      "conflict_paths": [
+        "scripts/preview-all.sh",
+        ".env.example"
+      ],
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "pnpm preview:all 启动后 POST /c/session（h5 演示直登）",
+          "expect": "200 + token（工作区=ws-yunqi）",
+          "command": "bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh  # M3-B2",
+          "last_result": "fail"
+        },
+        {
+          "kind": "property",
+          "given": "任意本仓首启路径",
+          "expect": "C 端会话可用性与 PC 服务前台数据属同一工作区（不跨仓/不空指）",
+          "command": "node scripts/delivery/mine-clear.mjs gate --ledger outputs/mine-clear/T-2026-0929-0007/ledger.json",
+          "last_result": "not-run"
+        }
+      ],
+      "notes": "正面样本：全配口径下 C↔PC 跨端联动（建单/可见/推进/回读）实测全绿。"
+    },
+    {
+      "id": "MC-304",
+      "kind": "problem",
+      "level": "L4",
+      "severity": "P1",
+      "batch": 2,
+      "state": "open",
+      "title": "ask 问答与问题无关：事实块按固定顺序装填 + 120 字硬闸，当前待审批等关键事实被系统统计挤掉；明细类与行业数据类无事实面",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/runtime/src/ask.ts:85-135,269-310@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "默认事实面顺序：事件库规模 → 近 7 天动作分布 → （问题匹配时）当前待审批 → 进行中线程 → 围栏 → 记忆；composeAskAnswer 按顺序装填，超 120 字即 break"
+        },
+        {
+          "type": "code",
+          "ref": "bundles/hotel@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "酒店包无 connectors/ask-facts/provider.ts（ask-facts-loader 扫描不到 → 回落底座通用事实面），无营收/渠道/夜班/审批明细事实"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m3/m3-report-m3-mumvdo3b.json#M3-C1",
+          "note": "问「现在有多少条待审批？」（DB=4）回答只有「事件库规模：201 条…」"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m3/m3-report-m3-mumvdo3b.json#M3-C4",
+          "note": "短问句「待审批？」同样不含待审批事实（固定顺序 + 近 7 天动作分布占满预算）"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m3/m3-report-m3-mumvdo3b.json#M3-C2",
+          "note": "问「上个月被驳回的调价有哪些？」只回事件库规模（无审批明细事实面）"
+        }
+      ],
+      "root_cause": {
+        "file": "packages/runtime/src/ask.ts",
+        "line": 278,
+        "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+        "symbol": "composeAskAnswer"
+      },
+      "trigger_path": "任何 ask 问询（对话框问句或移动端问数）；默认 mock 合成路径（via=rule）必现",
+      "fix_plan": "① 事实按问题相关性排序/裁剪（审批类问题先放 approvals 事实；问数类先放对应域），或把 120 字预算按相关性分配；② 为酒店包注册 ask 事实面（营收/渠道/夜班决策包/审批明细），并在回答里标注来源域。",
+      "blast_radius": "ask 回答文案与长度预算（GR-09）；需要同步套件 O-01/O-11/Z-02 等断言与前端展示。",
+      "conflict_paths": [
+        "packages/runtime/src/ask.ts",
+        "bundles/hotel/connectors/ask-facts/provider.ts"
+      ],
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "问「现在有多少条待审批？」（DB 有 N 条）",
+          "expect": "回答包含与 DB 一致的待审批数（N 项）",
+          "command": "M3_ONLY=M3-A1,M3-C1 bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh",
+          "last_result": "fail"
+        },
+        {
+          "kind": "property",
+          "given": "任意问句",
+          "expect": "回答的首条事实与问题域一致；无该域事实时必须显式说明无此数据而不是用系统统计顶替",
+          "command": "M3_ONLY=M3-A1,M3-C1,M3-C2,M3-C3,M3-C4 bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh",
+          "last_result": "fail"
+        }
+      ],
+      "notes": "MCD M3 要求所有问答入口的数据源覆盖应覆盖应覆盖的域；当前覆盖仅系统统计 + 知识库命中（本题未命中 KB）。"
+    },
+    {
+      "id": "MC-305",
+      "kind": "problem",
+      "level": "L4",
+      "severity": "P2",
+      "batch": 2,
+      "state": "open",
+      "title": "审批手势事件 session_id=NULL：裁决动作在任务事件流与 /events 账本页均不可见（且约 1/3 非线程事件在账本页整体缺失）",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/base/review-console/approvals.ts:254-275@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "approval.gesture 事件只带 links=[被审事件]，未写 sessionId（被审事件本身的 session_id 即线程号）"
+        },
+        {
+          "type": "code",
+          "ref": "apps/web/src/pages/observability/Observability.tsx:70-72@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "账本页只取最近 12 个线程 × threads.events（WHERE session_id=threadId）——非线程事件不可见（页面已注明覆盖范围）"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m3/m3-report-m3-mumvdo3b.json#M3-A3",
+          "note": "批准后 threads.events 动作序列=[thread.dispatch, review.list, review.reply]，无 approval.gesture；DB 中该手势事件 session_id=NULL"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m3/m3-report-m3-mumvdo3b.json#M3-A5",
+          "note": "全工作区 198 条事件中 62 条（31%）无 session_id，在账本页与任务事件流中不可见"
+        }
+      ],
+      "root_cause": {
+        "file": "packages/base/review-console/approvals.ts",
+        "line": 254,
+        "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+        "symbol": "decide"
+      },
+      "trigger_path": "任何审批裁决（inapp/IM 回调）；任务详情事件流与事件账本页看不到裁决动作与原因",
+      "fix_plan": "手势事件写入 sessionId=被审事件 session_id（links 已有该 event_id，可一条 SQL 回填）；账本页增加全量事件面或明确标注覆盖范围并支持按 action/actor 过滤。",
+      "blast_radius": "事件流/账本/播报的去重与排序（sessionId 参与 threads.events 投影）；账本页数据量会上升，需要分页。",
+      "conflict_paths": [
+        "packages/base/review-console/approvals.ts",
+        "apps/web/src/pages/observability/Observability.tsx"
+      ],
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "差评 Quest 批准后拉 threads.events",
+          "expect": "事件流包含 approval.gesture（含 gesture/reason/decided_by）",
+          "command": "M3_ONLY=M3-A1,M3-A3 bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh",
+          "last_result": "fail"
+        },
+        {
+          "kind": "property",
+          "given": "任意 approval.gesture 事件",
+          "expect": "若被审事件属于某线程，则手势事件 session_id 与该线程一致（或提供等价可查路径）",
+          "command": "node scripts/delivery/mine-clear.mjs gate --ledger outputs/mine-clear/T-2026-0929-0007/ledger.json",
+          "last_result": "not-run"
+        }
+      ],
+      "notes": "审批卡状态仍能反映结果（P2 而非 P1），但谁在何时批的 在任务面不可见。"
+    },
+    {
+      "id": "MC-208",
+      "kind": "problem",
+      "level": "L4",
+      "severity": "P2",
+      "batch": 2,
+      "state": "open",
+      "title": "派遣无幂等键：同一目标重复提交（双击/重试）生成两条独立线程",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "apps/server/src/trpc/router.ts:1060-1068@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+          "note": "threads.dispatch 输入只有 title/goalRef/presetKey/runImmediately，无 clientRequestId/幂等键"
+        },
+        {
+          "type": "runtime",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/m2-report-m2-mumurpu0.json#C4",
+          "note": "同标题同参数连续两次派遣 → T-133 / T-134 两条 queued 线程（无 dedupe）"
+        }
+      ],
+      "root_cause": {
+        "file": "apps/server/src/trpc/router.ts",
+        "line": 1060,
+        "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+        "symbol": "threadsRouter.dispatch"
+      },
+      "trigger_path": "网络重试/双击/移动端弱网重复提交",
+      "fix_plan": "dispatch 接受 clientRequestId（客户端生成 UUID），workspace+requestId 唯一索引；重复提交返回既有 threadId 并标 deduped，客户端与事件都可见。",
+      "blast_radius": "星环/移动端/任务页三个派遣入口；需同步客户端生成与展示已合并重复提交的语义。",
+      "conflict_paths": [
+        "apps/server/src/trpc/router.ts"
+      ],
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "同一 clientRequestId 连续两次派遣",
+          "expect": "返回同一 threadId 且第二次 deduped=true",
+          "command": "M2_ONLY=A1,C4 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --no-reset",
+          "last_result": "not-run"
+        },
+        {
+          "kind": "property",
+          "given": "任意重复提交",
+          "expect": "同一幂等键在库中最多对应一条线程",
+          "command": "node scripts/delivery/mine-clear.mjs gate --ledger outputs/mine-clear/T-2026-0929-0007/ledger.json",
+          "last_result": "not-run"
+        }
+      ],
+      "notes": "当前为观察项（无幂等键亦非崩溃），但会放大并发上限与人工清位成本。"
+    },
+    {
+      "id": "MC-104",
+      "kind": "fix",
+      "batch": 0,
+      "state": "fixed",
+      "title": "止血 P0：续跑锚点改为「执行回执」判定 + completed 收尾双重校验 + 线程级执行互斥（advisory 锁）",
+      "covers": [
+        "MC-201",
+        "MC-202"
+      ],
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/runtime/src/loop.ts:211@6264944",
+          "note": "existingStepIds：只把带 receipt 的事件算作已执行（挂起/熔断事件不写 receipt），前缀排除保留为兼容位"
+        },
+        {
+          "type": "code",
+          "ref": "packages/runtime/src/loop.ts:640@6264944",
+          "note": "收尾校验：done.size<steps.length 或本线程仍有 pending 审批 → 保持 pending_review（fail-closed，不写 completed）"
+        },
+        {
+          "type": "code",
+          "ref": "packages/runtime/src/loop.ts:377@6264944",
+          "note": "runQuest 入口持 pg_try_advisory_lock（线程级）——wrapper/body 拆分，finally 解锁；锁连接不设 RLS GUC"
+        }
+      ],
+      "fix_plan": "① `existingStepIds` 从「按 basis 前缀排除挂起事件」改为「只认带 receipt 的执行事件」（与 E3.7 同源，历史前缀判定保留）；② `runQuest` 收尾 added 断言：全部步骤有回执 + 本线程无 pending 审批，否则回 pending_review；③ `runQuest` 外层加会话级 advisory 锁做跨入口/跨进程互斥，未获锁者返回 running 让位。",
+      "blast_radius": "所有 Quest 执行入口（dispatch 内联 / 调度器 / threads.run 续跑 / 巡检派单）与所有依赖 replay 幂等的续跑用例；修复后「批准 → 续跑」会真正执行被降级的步骤（审批语义、approvalRef 留痕、事件 schema 均不变）。副作用：线程执行期间占用一条池连接（并发上限 3/工作区，池容量充裕）；锁连接不写任何 GUC，避免 RLS 池卫生退化。",
+      "conflict_paths": [
+        "packages/runtime/src/loop.ts"
+      ],
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "差评 Quest 挂起 → 批准 → 续跑",
+          "expect": "completed 且 progress 2/2，被降级步骤确有执行事件（receipt）",
+          "command": "M2_ONLY=A1,A2,E5 node outputs/mine-clear/T-2026-0929-0007/scripts/m2-runner.mjs",
+          "last_result": "pass",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m2-after-mc201-fix.log"
+        },
+        {
+          "kind": "property",
+          "given": "任意工作区 + 同一线程并发两次执行",
+          "expect": "无 completed 且进度未满/仍有未决审批的线程；同一线程恰一个执行者、零重复执行",
+          "command": "./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-concurrency-probe.mjs",
+          "last_result": "pass",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-concurrency-probe.log"
+        }
+      ],
+      "regression": {
+        "command": "SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts && ./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-concurrency-probe.mjs && SERVER_BASE=http://127.0.0.1:8820 ./node_modules/.bin/tsx --env-file=.env scripts/release-gate.ts",
+        "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-mc201c.log; m5-concurrency-probe.log; m5-release-gate-after-mc201.log"
+      },
+      "rollback": "git revert <本卡提交 sha>（恢复旧锚点口径与无互斥执行；无数据迁移）",
+      "fixed_by": "agent:root-T-2026-0929-0007",
+      "verified_by": null,
+      "notes": "本卡为 P0/P1 止血批（MCD 第 0/1 批）；`packages/runtime/**` 属基座受管路径，同 MC-101 需回灌 workloom-im（UPSTREAM-base.md 已含该文件）。"
     }
   ],
   "gates": []

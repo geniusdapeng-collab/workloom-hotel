@@ -1,0 +1,57 @@
+{
+  "id": "MC-008",
+  "kind": "problem",
+  "level": "L1",
+  "severity": "P2",
+  "batch": 2,
+  "state": "open",
+  "title": "基座行业装配/技能 PG 集成单测在本仓形态下 6 条红（测试未跨仓可移植：期望本仓 hotel 包同时满足基座自服务包口径）",
+  "evidence": [
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-12b-unit-tests-ci-env.log",
+      "note": "审计基线（origin/main ed6056f）跑 packages/base 单测：6 failed / 788 passed —— bundles.test.ts 3 条（自服务包注册表期望 [ai-pm,hotel]、hotel profile 七槽 7/7）、skills.test.ts 2 条、另 1 条 bundles 激活幂等"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-base-pg-tests-postfix.log",
+      "note": "修复提交 6264944 上重跑同一文件：仍是同样 6 条红（6 failed | 25 passed / 31），证明与本次修复无关，是存量"
+    },
+    {
+      "type": "code",
+      "ref": "packages/base/bundles/bundles.test.ts:198@ed6056f",
+      "note": "断言写死 expect(registry.entries.map(e=>e.slug)).toEqual([\"ai-pm\",\"hotel\"])——把基座自服务包口径套到行业仓（本仓 hotel 是 candidate 行业包，不是基座自服务包）"
+    },
+    {
+      "type": "code",
+      "ref": "workloom-im@472b41a",
+      "note": "同类问题已有先例与做法：基座 T-2026-0929-0006 把 Z-03 用例改成『跨仓可移植（自注入探针规则 + 自动挑含写工具岗位）』——本卡建议沿用同一模式，或按各仓 extraExclude 排除行业不适用的基座测试"
+    }
+  ],
+  "root_cause": {
+    "file": "packages/base/bundles/bundles.test.ts",
+    "line": 198,
+    "commit": "ed6056f",
+    "symbol": "listSelfServiceBundles 断言"
+  },
+  "trigger_path": "在本仓跑 `./node_modules/.bin/vitest run packages/base`（或 CI test-gate 的『主测试套件』阶段）即复现；不影响运行时，但让『全绿』声明失去可信度（CI 该阶段为 allowFailure）",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "本仓形态（hotel 行业包 candidate）+ 修复提交",
+      "expect": "packages/base 单测全绿：0 failed（当前 6 failed）",
+      "command": "set -a && . ./.env && set +a && RUN_DB_TESTS=1 ./node_modules/.bin/vitest run packages/base",
+      "last_result": "fail",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-base-pg-tests-postfix.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意行业仓（hotel / panda / tiger …）",
+      "expect": "基座用例只在被行业语义允许的范围内断言（岗位/包清单按运行时解析，不写死本仓包名）",
+      "command": "./node_modules/.bin/vitest run packages/base/bundles/bundles.test.ts",
+      "last_result": "not-run",
+      "evidence": ""
+    }
+  ],
+  "notes": "未修原因：改动落在 packages/base/**（基座受管路径），按协议应在 workloom-im 修正后随波次下发，并在各仓用 extraExclude/运行时解析收敛。回归路径：上表两条断言；修好后 CI test-gate 可考虑从 allowFailure 转必需。"
+}

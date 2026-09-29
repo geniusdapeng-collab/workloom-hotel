@@ -21,6 +21,11 @@
       "type": "log",
       "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-server-boot-missing-dist.log",
       "note": "dist 缺失时 server 启动即 ERR_MODULE_NOT_FOUND packages/base/node_modules/@workloom/industry-contract/dist/index.js；套件 E2E 段只显示「server 启动超时」，指向不了根因"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-22-doctor.log",
+      "note": "M4 交付面独立复现：bash scripts/doctor.sh 给出「pnpm -C packages/ui build」这一在本仓不可能执行的修法（packages/ui 不存在），排障被误导"
     }
   ],
   "root_cause": {

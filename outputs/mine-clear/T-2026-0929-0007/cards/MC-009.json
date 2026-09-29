@@ -1,0 +1,62 @@
+{
+  "id": "MC-009",
+  "kind": "problem",
+  "level": "L2",
+  "severity": "P1",
+  "batch": 1,
+  "state": "open",
+  "title": "受管客户端文件被热修绕过 UI 升级通道，状态文件未刷新 → 本仓 static-gate 必红（舰队 8 仓同款）",
+  "evidence": [
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-08b-client-foundation-after-install.log",
+      "note": "node scripts/verify-client-foundation-consumer.mjs --repo . → ❌ 受管客户端文件指纹漂移：apps/webc/src/styles/tokens.css"
+    },
+    {
+      "type": "code",
+      "ref": ".workloom-client-foundation.json:997@ed6056f",
+      "note": "状态文件记录 tokens.css 的 sha256=b621ef32…，而文件实际为 de2640c7…（ed6056f 只改了文件本体，未刷新状态）"
+    },
+    {
+      "type": "code",
+      "ref": ".cnb.yml:37@ed6056f",
+      "note": "static-gate「UI 消费契约」步骤 set -eu，顺序执行 verify-ui-consumer 与 verify-client-foundation-consumer → 该漂移直接判红发布门禁"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-10-foundation-drift-fleet.log",
+      "note": "M4 对 8 个订阅仓远端 main 复算：hotel/workloom/panda/growth/hyperreality/eagle/andromeda/fox 全部 DRIFT=YES"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-pr78-ci-status.json",
+      "note": "PR #78 平台流水线实测：static-gate=error(16.6s)、db-gate=success(27.3s)、test-gate=success(allowFailure,52.9s)；M6 独立复跑 static-gate 各步骤，唯一失败步即本条指纹漂移（其余步骤全绿），且该漂移在基线 ed6056f 工作树上同样复现"
+    }
+  ],
+  "root_cause": {
+    "file": ".workloom-client-foundation.json",
+    "line": 997,
+    "commit": "ed6056f",
+    "symbol": "managedFiles['apps/webc/src/styles/tokens.css']"
+  },
+  "trigger_path": "任何推到本仓的 PR（含本任务 PR #78）→ static-gate 第 3 步失败 → 门禁不全绿 → 机器合并不成立；本仓 main 自身也处于「门禁红」状态",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "本仓（或任一订阅仓）HEAD 上执行消费门禁",
+      "expect": "node scripts/verify-client-foundation-consumer.mjs --repo . 退出码 0，且提示「受管文件指纹零漂移」",
+      "command": "node scripts/verify-client-foundation-consumer.mjs --repo .",
+      "last_result": "fail",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-08b-client-foundation-after-install.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意一次受管客户端文件变更",
+      "expect": "文件与 .workloom-client-foundation.json 的指纹在同一提交内更新（由 upgrade-pr-only 通道工具产出），不允许出现「改了文件没改状态」的组合",
+      "command": "node scripts/verify-client-foundation-consumer.mjs --repo .",
+      "last_result": "not-run",
+      "evidence": ""
+    }
+  ],
+  "notes": "未修原因：通道策略为 upgrade-pr-only（状态文件自述），正确修法是在基座车道重放/推进客户端基座波次（基座已有 @workloom/ui 0.1.15 发布提交 ec0b084/95cf8ff），由 ui-upgrade-pr 工具同批改写文件与状态；在子仓手改指纹=绕过受控通道，不做。建议同时加「受管文件变更必须同 PR 刷新 state」的硬校验，杜绝热修旁路。"
+}

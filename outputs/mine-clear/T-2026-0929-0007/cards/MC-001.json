@@ -36,6 +36,16 @@
       "type": "code",
       "ref": "apps/server/src/runtime/dispatch-routing.ts:73@ed6056f",
       "note": "派活路由把酒店默认指挥岗位写成 [\"company-ceo\",\"growth-lead\"]，但两岗都未在编 → 未命中语义规则的目标准别度落到 ready[0]（thread-runner.ts:103-107）"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-release-gate-A-fresh-seed-PREFIX.log",
+      "note": "发布红线实测（修复前，干净库 + 真服务 8818）：release:gate 10/11，T-02「编排·节拍执行→回调落痕」红，报错原文即 F2.10 拒写 → 该缺陷直接挡发布红线"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-release-gate-A-fresh-seed.log",
+      "note": "同一命令在修复提交 6264944 上：release:gate 11/11 全绿、退出码 0（T-02 转绿）"
     }
   ],
   "root_cause": {
@@ -69,6 +79,14 @@
       "command": "./node_modules/.bin/vitest run packages/base/captain/ceo-actor.test.ts",
       "last_result": "pass",
       "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/assert-ceo-actor-unit.log"
+    },
+    {
+      "kind": "sample",
+      "given": "干净库播种后起真服务（SERVER_PORT=8815），以 SERVER_BASE 指向该实例跑发布红线",
+      "expect": "release:gate 11/11 通过、退出码 0（修复前为 10/11，T-02 被 F2.10 拦）",
+      "command": "SERVER_BASE=http://127.0.0.1:8815 ./node_modules/.bin/tsx --env-file=.env scripts/release-gate.ts",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-release-gate-A-fresh-seed.log"
     }
   ],
   "regression": {

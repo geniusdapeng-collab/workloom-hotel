@@ -197,7 +197,7 @@ async function loadActiveRules(app: pg.Pool, scope: { tenantId: string; workspac
 
 export interface QuestRunResult {
   threadId: string;
-  status: "completed" | "pending_review" | "failed" | "paused";
+  status: "completed" | "pending_review" | "failed" | "paused" | "running";
   stepsDone: number;
   stepsTotal: number;
   /** 未核实步骤（E3.7：无回执不得宣称完成） */
@@ -208,6 +208,17 @@ export interface QuestRunResult {
   blockedBy?: string;
 }
 
+/**
+ * 续跑锚点：**只有带执行回执的步骤才算已执行**（MC-201 止血）。
+ *
+ * 旧口径用 basis 前缀（「熔断：」/「越围栏挂起：」）排除挂起事件；而 W-01 把
+ * "围栏求值异常"降级为人审时写的是第三种前缀（「围栏无法求值（缺参数）→ 一律人工裁决」），
+ * 于是挂起步骤被当成已完成：批准恢复后该步被跳过，线程收尾 completed 而 progress 只有 1/2
+ * （无执行回执的假完成，破 INV-5；M2 实测 A2/E5）。
+ *
+ * 新口径与 E3.7/「无回执不算完成」同源：执行路径必写 `receipt`（synced true/false 都算执行过），
+ * 挂起/熔断路径不写 receipt。前缀排除保留为兼容位（老事件仍按旧标记排除）。
+ */
 async function existingStepIds(gateway: pg.Pool, scope: { tenantId: string; workspaceId: string }, threadId: string): Promise<Set<string>> {
   const client = await gateway.connect();
   try {
@@ -223,12 +234,12 @@ async function existingStepIds(gateway: pg.Pool, scope: { tenantId: string; work
     for (const row of r.rows) {
       const decision = row.payload.decision as Record<string, unknown>;
       const sid = decision.step_id;
-      // #11 修复：只收录真正执行完成（auto）的步骤，排除 block/review 事件
-      // block/review 事件的 basis 以「熔断：」或「越围栏挂起：」开头，从未真正执行
       const basis = Array.isArray(decision.basis) ? decision.basis as string[] : [];
       const isBlocked = basis.some((b) => b.startsWith("熔断："));
       const isReview = basis.some((b) => b.startsWith("越围栏挂起："));
-      if (typeof sid === "string" && !isBlocked && !isReview) set.add(sid);
+      // 执行证据：receipt 字段（E3.7 规定未核实也要写 receipt + synced:false，故 receipt 存在=工具真的跑过）
+      const hasReceipt = typeof decision.receipt === "object" && decision.receipt !== null;
+      if (typeof sid === "string" && hasReceipt && !isBlocked && !isReview) set.add(sid);
     }
     return set;
   } catch (err) {
@@ -236,6 +247,74 @@ async function existingStepIds(gateway: pg.Pool, scope: { tenantId: string; work
     throw err;
   } finally {
     await client.query("COMMIT").catch(() => undefined);
+    client.release();
+  }
+}
+
+/** 本线程仍挂起的审批数（MC-201 收尾校验：有未决审批不得标 completed） */
+async function countPendingApprovalsForThread(
+  app: pg.Pool,
+  scope: { tenantId: string; workspaceId: string },
+  threadId: string,
+): Promise<number> {
+  const client = await app.connect();
+  try {
+    await client.query("BEGIN");
+    await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
+    await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
+    const r = await client.query<{ n: string }>(
+      `SELECT count(*)::text AS n FROM approvals a
+        JOIN biz_events e ON e.event_id = a.event_id AND e.workspace_id = a.workspace_id
+       WHERE a.workspace_id = $1 AND a.status = 'pending' AND e.session_id = $2`,
+      [scope.workspaceId, threadId],
+    );
+    return Number(r.rows[0]?.n ?? 0);
+  } catch (err) {
+    await client.query("ROLLBACK").catch(() => undefined);
+    throw err;
+  } finally {
+    await client.query("COMMIT").catch(() => undefined);
+    client.release();
+  }
+}
+
+/**
+ * MC-202：线程级互斥（跨入口/跨进程，会话级 advisory 锁）。
+ *
+ * dispatch 内联执行与调度器扫描此前各自只看自己的 inFlight 集合，能同时跑同一条线程——
+ * 实测出现「响应还是 pending_review，调度器已把该线程标 completed」「同一步被两个执行者同时跑」。
+ * 用 `pg_try_advisory_lock`（按线程 ID 取哈希键）做互斥：拿不到锁的执行者直接让位；
+ * 选它而不是"状态位互斥"的原因是——进程崩溃/连接断开时锁随连接释放，线程可立即重试，
+ * 不依赖 WORKLOOM_STALE_RUNNING_MIN 的僵死窗口。
+ */
+async function acquireThreadRunLock(
+  pool: pg.Pool,
+  scope: { tenantId: string; workspaceId: string },
+  threadId: string,
+): Promise<pg.PoolClient | null> {
+  // 注意：互斥锁连接**不设置任何 RLS GUC**——会话级 set_config 会随连接归还污染池
+  // （P-02「RLS 池卫生：未设上下文的连接读业务表应为 0 行」实测会因此变红）。
+  // advisory 锁本身不需要工作区上下文，`scope` 只用于注释性校验，故此处不落任何 GUC。
+  void scope;
+  const client = await pool.connect();
+  try {
+    const r = await client.query<{ ok: boolean }>(
+      `SELECT pg_try_advisory_lock(hashtext($1)) AS ok`,
+      [`thread-run:${threadId}`],
+    );
+    if (r.rows[0]?.ok) return client;
+    client.release();
+    return null;
+  } catch (err) {
+    client.release();
+    throw err;
+  }
+}
+
+async function releaseThreadRunLock(client: pg.PoolClient, threadId: string): Promise<void> {
+  try {
+    await client.query(`SELECT pg_advisory_unlock(hashtext($1))`, [`thread-run:${threadId}`]);
+  } finally {
     client.release();
   }
 }
@@ -317,6 +396,39 @@ export async function runQuest(
     modelId?: string;
   },
 ): Promise<QuestRunResult> {
+  // MC-202：同一线程同一时刻只允许一个执行者（跨入口/跨进程互斥）
+  const lock = await acquireThreadRunLock(app, scope, input.threadId);
+  if (!lock) {
+    return {
+      threadId: input.threadId, status: "running", stepsDone: 0, stepsTotal: 0, unverified: [],
+      blockedBy: "线程已在执行中（跨入口互斥，MC-202）",
+    };
+  }
+  try {
+    return await runQuestBody(app, gateway, scope, input);
+  } finally {
+    await releaseThreadRunLock(lock, input.threadId);
+  }
+}
+
+async function runQuestBody(
+  app: pg.Pool,
+  gateway: pg.Pool,
+  scope: { tenantId: string; workspaceId: string },
+  input: {
+    threadId: string;
+    goal: string;
+    presetKey: string;
+    actorVersion?: string;
+    mode?: "quest" | "agent";
+    llmCall?: (prompt: string) => Promise<string>;
+    /** 行业精细规划只可由活动 Bundle 的受信任适配器注入。 */
+    fallbackPlanner?: QuestPlanner;
+    /** 真实连接器执行器由部署层注入；缺省执行器仅支持明确的模拟档案。 */
+    toolExecutor?: ToolExecutor;
+    modelId?: string;
+  },
+): Promise<QuestRunResult> {
   const { threadId } = input;
   // F3.6/L3.7：装配三要素校验（缺一拒绝）
   const preset = await assemblePreset(app, scope, { workspaceId: scope.workspaceId, presetKey: input.presetKey, goal: input.goal });
@@ -339,6 +451,7 @@ export async function runQuest(
   // M3：首个产出事件携带 memory_refs 并写 memory_usage（每线程一次，用量口径=「记忆影响了多少个任务」）
   let prefUsageRecorded = false;
 
+  // 入口已持线程互斥锁；此处落运行态与派生字段（progress_total/agent_id）
   await updateThread(app, scope, threadId, { status: "running", progress_total: steps.length, agent_id: preset.agentId });
 
   for (const step of steps) {
@@ -608,6 +721,18 @@ export async function runQuest(
   if (unverified.length > 0) {
     await updateThread(app, scope, threadId, { status: "failed", error: `步骤 ${unverified.join("/")} 无回执，标「未核实」` });
     return { threadId, status: "failed", stepsDone: done.size, stepsTotal: steps.length, unverified };
+  }
+  /**
+   * MC-201 收尾校验（P0 止血）：completed 前必须同时满足
+   *   ① 每个步骤都留下执行回执（done.size === steps.length，续跑锚点不会被挂起事件污染）
+   *   ② 本线程没有仍未裁决的审批（防止「未决审批 + completed」的假完成）
+   * 任一不满足 → 保持/回到 pending_review（fail-closed），不做静默完成。
+   */
+  const pendingApprovals = await countPendingApprovalsForThread(app, scope, threadId);
+  if (done.size < steps.length || pendingApprovals > 0) {
+    const reason = `完成前校验未过：已执行 ${done.size}/${steps.length}，未决审批 ${pendingApprovals} 条（不得假完成，MC-201）`;
+    await updateThread(app, scope, threadId, { status: "pending_review", error: reason });
+    return { threadId, status: "pending_review", stepsDone: done.size, stepsTotal: steps.length, unverified };
   }
   await updateThread(app, scope, threadId, { status: "completed", closed_at: new Date().toISOString() });
   return { threadId, status: "completed", stepsDone: done.size, stepsTotal: steps.length, unverified };

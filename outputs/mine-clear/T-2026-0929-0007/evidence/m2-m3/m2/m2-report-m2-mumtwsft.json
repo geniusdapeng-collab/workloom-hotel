@@ -1,0 +1,1841 @@
+{
+  "taskId": "T-2026-0929-0007",
+  "phase": "M2 动态排雷",
+  "base": "http://127.0.0.1:8802",
+  "runId": "m2-mumtwsft",
+  "startedAt": "2026-09-29T15:26:14.777Z",
+  "finishedAt": "2026-09-29T15:26:15.362Z",
+  "counts": {
+    "total": 28,
+    "pass": 2,
+    "fail": 23,
+    "observe": 2,
+    "error": 1
+  },
+  "results": [
+    {
+      "id": "A1",
+      "dimension": "主链路",
+      "title": "健康检查 + 三成员登录（owner/manager/readonly）",
+      "expectation": "health 200 / system.health db=up / 三 token 互不相同",
+      "verdict": "FAIL",
+      "summary": "health=0, db=undefined",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "health=0, db=undefined"
+      },
+      "startedAt": "2026-09-29T15:26:14.778Z",
+      "durationMs": 19,
+      "evidence": {
+        "api": [
+          {
+            "path": "/health",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 15,
+            "request": null,
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/system.health",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": null,
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": [
+          "owner token 长度=0, manager=0, readonly=0"
+        ]
+      }
+    },
+    {
+      "id": "A2",
+      "dimension": "主链路",
+      "title": "差评回复闭环（指定口碑岗）：派遣→挂起→人工批准→续跑完成",
+      "expectation": "dispatch 返回 pending_review 且带 pending_approval_id；批准后 threads.run 返回 completed 2/2",
+      "verdict": "FAIL",
+      "summary": "dispatch 未返回 threadId：{\"transportError\":\"TypeError: fetch failed\"}",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "dispatch 未返回 threadId：{\"transportError\":\"TypeError: fetch failed\"}"
+      },
+      "startedAt": "2026-09-29T15:26:14.798Z",
+      "durationMs": 1,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "回复那条 2 分差评（口碑岗） [m2-mumtwsft]",
+              "presetKey": "review-agent",
+              "runImmediately": true
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "A3",
+      "dimension": "主链路/语义层",
+      "title": "差评回复闭环（用户默认入口：不指定岗位，模拟对话框派任务）",
+      "expectation": "默认路由应把「回复差评」交给带 review.reply 的岗位并走挂起审批；派给他岗并以不相关工具 completed 判 FAIL（假交付）",
+      "verdict": "FAIL",
+      "summary": "dispatch 未返回 threadId：{\"transportError\":\"TypeError: fetch failed\"}",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "dispatch 未返回 threadId：{\"transportError\":\"TypeError: fetch failed\"}"
+      },
+      "startedAt": "2026-09-29T15:26:14.799Z",
+      "durationMs": 0,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "回复那条 2 分差评（默认入口） [m2-mumtwsft]",
+              "runImmediately": true
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "A4",
+      "dimension": "主链路",
+      "title": "调价闭环（价带内 5% 应 auto 完成，不产生审批）",
+      "expectation": "dispatch 返回 completed；DB 内 price.adjust 步骤带 after.price 且无 pending 审批",
+      "verdict": "FAIL",
+      "summary": "dispatch 未返回 threadId：{\"transportError\":\"TypeError: fetch failed\"}",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "dispatch 未返回 threadId：{\"transportError\":\"TypeError: fetch failed\"}"
+      },
+      "startedAt": "2026-09-29T15:26:14.799Z",
+      "durationMs": 1,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "把雅致大床房调价 5% [m2-mumtwsft]",
+              "runImmediately": true
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "A5",
+      "dimension": "主链路",
+      "title": "含糊指令→反问澄清（不建任务）",
+      "expectation": "dispatch 返回 kind=clarify 且工作区线程数不增加",
+      "verdict": "FAIL",
+      "summary": "kind=?, threads 58→58",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "kind=?, threads 58→58"
+      },
+      "startedAt": "2026-09-29T15:26:14.800Z",
+      "durationMs": 14,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "帮我看看"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [
+          {
+            "sql": "SELECT count(*)::int AS n FROM threads WHERE workspace_id='ws-yunqi'",
+            "rowCount": 1,
+            "rows": [
+              {
+                "n": 58
+              }
+            ]
+          },
+          {
+            "sql": "SELECT count(*)::int AS n FROM threads WHERE workspace_id='ws-yunqi'",
+            "rowCount": 1,
+            "rows": [
+              {
+                "n": 58
+              }
+            ]
+          }
+        ],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "A6",
+      "dimension": "主链路",
+      "title": "问数闭环（ask 模式即时应答）",
+      "expectation": "dispatch 返回 mode=ask 且带非空 answer；线程终态 completed",
+      "verdict": "FAIL",
+      "summary": "mode=undefined, answer 长度=0",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "mode=undefined, answer 长度=0"
+      },
+      "startedAt": "2026-09-29T15:26:14.815Z",
+      "durationMs": 0,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "查一下昨天的订单量 [m2-mumtwsft]"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": [
+          "answer="
+        ]
+      }
+    },
+    {
+      "id": "B1",
+      "dimension": "并发",
+      "title": "12 路并发裁决同一审批（只允许一次生效）",
+      "expectation": "仅 1 路非 deduped；approvals.status=approved；approval.gesture 事件恰 1 条；无 5xx",
+      "verdict": "FAIL",
+      "summary": "未拿到待审审批",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "未拿到待审审批"
+      },
+      "startedAt": "2026-09-29T15:26:14.815Z",
+      "durationMs": 1,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "回复那条 2 分差评（并发裁决探针） [m2-mumtwsft]",
+              "presetKey": "review-agent",
+              "runImmediately": true
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.get?input=%7B%7D",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": null,
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "B2",
+      "dimension": "并发",
+      "title": "12 路并发派遣（工作区并发上限 10）",
+      "expectation": "无 5xx；成功数 ≤10；每路 threadId 唯一；429 为预期拒绝码",
+      "verdict": "FAIL",
+      "summary": "成功=0, 429=0, 5xx=0",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "成功=0, 429=0, 5xx=0"
+      },
+      "startedAt": "2026-09-29T15:26:14.816Z",
+      "durationMs": 5,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "渠道价格巡检 1 [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "渠道价格巡检 2 [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "渠道价格巡检 3 [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "渠道价格巡检 4 [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "渠道价格巡检 5 [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "渠道价格巡检 6 [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 2,
+            "request": {
+              "title": "渠道价格巡检 7 [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 2,
+            "request": {
+              "title": "渠道价格巡检 8 [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "渠道价格巡检 9 [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "渠道价格巡检 10 [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "渠道价格巡检 11 [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "渠道价格巡检 12 [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [
+          {
+            "sql": "UPDATE threads SET status='completed', closed_at=now(), updated_at=now() WHERE workspace_id='ws-yunqi' AND status IN ('queued','running') AND id NOT IN ('T-101','T-102','T-103')",
+            "rowCount": 0,
+            "rows": []
+          },
+          {
+            "sql": "SELECT id, status FROM threads WHERE id = ANY($1::text[]) ORDER BY id",
+            "rowCount": 0,
+            "rows": []
+          },
+          {
+            "sql": "SELECT count(*)::int AS n FROM threads WHERE workspace_id='ws-yunqi' AND status IN ('queued','running')",
+            "rowCount": 1,
+            "rows": [
+              {
+                "n": 0
+              }
+            ]
+          }
+        ],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": [
+          "成功=0，429=0，其它=12"
+        ]
+      }
+    },
+    {
+      "id": "B3",
+      "dimension": "并发",
+      "title": "12 路并发续跑同一线程（replay 幂等）",
+      "expectation": "全部请求不 5xx；终态唯一；该线程 step 事件不重复",
+      "verdict": "OBSERVE",
+      "summary": "B2 未产出可续跑线程，跳过",
+      "error": null,
+      "extra": {
+        "verdict": "OBSERVE",
+        "summary": "B2 未产出可续跑线程，跳过"
+      },
+      "startedAt": "2026-09-29T15:26:14.821Z",
+      "durationMs": 0,
+      "evidence": {
+        "api": [],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "B4",
+      "dimension": "并发",
+      "title": "12 路并发超时扫描 approvals.sweep",
+      "expectation": "全部成功；过期项不重复标；同项不重复写手势事件",
+      "verdict": "PASS",
+      "summary": "5xx=0, 状态分布=[{\"status\":\"approved\",\"n\":496},{\"status\":\"edited\",\"n\":4},{\"status\":\"expired\",\"n\":8},{\"status\":\"pending\",\"n\":34},{\"status\":\"rejected\",\"n\":78}]",
+      "error": null,
+      "extra": {
+        "verdict": "PASS",
+        "summary": "5xx=0, 状态分布=[{\"status\":\"approved\",\"n\":496},{\"status\":\"edited\",\"n\":4},{\"status\":\"expired\",\"n\":8},{\"status\":\"pending\",\"n\":34},{\"status\":\"rejected\",\"n\":78}]"
+      },
+      "startedAt": "2026-09-29T15:26:14.821Z",
+      "durationMs": 14,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/approvals.sweep",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {},
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.sweep",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {},
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.sweep",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {},
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.sweep",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {},
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.sweep",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {},
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.sweep",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {},
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.sweep",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {},
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.sweep",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {},
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.sweep",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {},
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.sweep",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {},
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.sweep",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {},
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.sweep",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {},
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [
+          {
+            "sql": "SELECT status, count(*)::int AS n FROM approvals WHERE workspace_id='ws-yunqi' GROUP BY 1 ORDER BY 1",
+            "rowCount": 5,
+            "rows": [
+              {
+                "status": "approved",
+                "n": 496
+              },
+              {
+                "status": "edited",
+                "n": 4
+              },
+              {
+                "status": "expired",
+                "n": 8
+              },
+              {
+                "status": "pending",
+                "n": 34
+              },
+              {
+                "status": "rejected",
+                "n": 78
+              }
+            ]
+          },
+          {
+            "sql": "SELECT approval_id, count(*)::int AS n FROM ( SELECT payload->'decision'->'after'->>'approvalId' AS approval_id FROM biz_events WHERE workspace_id='ws-yunqi' AND payload->'decision'->>'action'='approval.gesture' ) s WHERE approval_id IS NOT NULL GROUP BY 1 HAVING count(*) > 2",
+            "rowCount": 0,
+            "rows": []
+          }
+        ],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "C1",
+      "dimension": "异常注入/配置",
+      "title": "模型配置写入（不可达 baseUrl）必须 fail-closed",
+      "expectation": "saveLlmConfig 拒绝落盘（400）且 .env 的 LLM_PROVIDER 保持 mock",
+      "verdict": "FAIL",
+      "summary": "status=0, LLM_PROVIDER=mock",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "status=0, LLM_PROVIDER=mock"
+      },
+      "startedAt": "2026-09-29T15:26:14.835Z",
+      "durationMs": 1,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/onboarding.saveLlmConfig",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "provider": "dead",
+              "baseUrl": "http://127.0.0.1:9/v1",
+              "apiKey": "sk-dead",
+              "model": "dead-1"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": [
+          ".env: LLM_PROVIDER=mock"
+        ]
+      }
+    },
+    {
+      "id": "C2",
+      "dimension": "异常注入",
+      "title": "goalRef 指向不存在档案 → fail-closed 且留日志",
+      "expectation": "线程仍建立（按标题规划），服务端出现 [dispatch] 未取到档案 警告",
+      "verdict": "FAIL",
+      "summary": "threadId=-, 日志含警告=false",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "threadId=-, 日志含警告=false"
+      },
+      "startedAt": "2026-09-29T15:26:14.836Z",
+      "durationMs": 1,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "渠道价格巡检（goalRef 缺失探针） [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "goalRef": "goal-nonexistent-m2-mumtwsft",
+              "runImmediately": true
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [
+          {
+            "sql": "SELECT payload->'decision'->'after' AS after FROM biz_events WHERE session_id=$1 LIMIT 1",
+            "rowCount": 0,
+            "rows": []
+          }
+        ],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "C3",
+      "dimension": "异常注入/状态机",
+      "title": "驳回路径出口探测：挂起线程被驳回后是否可达终态",
+      "expectation": "驳回后线程不得永久滞留 pending_review；必须有可解释的出口（终态或可续跑）",
+      "verdict": "FAIL",
+      "summary": "未拿到待审审批",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "未拿到待审审批"
+      },
+      "startedAt": "2026-09-29T15:26:14.837Z",
+      "durationMs": 1,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "回复那条 2 分差评（驳回探针） [m2-mumtwsft]",
+              "presetKey": "review-agent",
+              "runImmediately": true
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.get?input=%7B%7D",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": null,
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "C4",
+      "dimension": "异常注入",
+      "title": "重复提交同一目标（模拟双击）",
+      "expectation": "观察行为：是否产生两条独立线程（幂等键缺失）",
+      "verdict": "PASS",
+      "summary": "deduped（undefined）",
+      "error": null,
+      "extra": {
+        "verdict": "PASS",
+        "summary": "deduped（undefined）"
+      },
+      "startedAt": "2026-09-29T15:26:14.839Z",
+      "durationMs": 0,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "渠道价格巡检（重复提交探针） [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "渠道价格巡检（重复提交探针） [m2-mumtwsft]",
+              "presetKey": "inspection-agent",
+              "runImmediately": false
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [
+          {
+            "sql": "SELECT id, title, status FROM threads WHERE id = ANY($1::text[]) ORDER BY id",
+            "rowCount": 0,
+            "rows": []
+          }
+        ],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "C5",
+      "dimension": "异常注入/环境",
+      "title": "外部工具不可用时的手尾（海报生图工具未配置）",
+      "expectation": "线程不得永久 running；应落到可解释终态且日志留痕",
+      "verdict": "FAIL",
+      "summary": "dispatch=?, 终态=- -/-",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "dispatch=?, 终态=- -/-"
+      },
+      "startedAt": "2026-09-29T15:26:14.840Z",
+      "durationMs": 0,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "给周末促销活动做一张海报 [m2-mumtwsft]",
+              "presetKey": "content-agent",
+              "runImmediately": true
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "D1",
+      "dimension": "边界",
+      "title": "标题长度边界 0 / 500 / 501",
+      "expectation": "空标题 400；500 字接受；501 字 400",
+      "verdict": "FAIL",
+      "summary": "空=0, 500=0, 501=0",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "空=0, 500=0, 501=0"
+      },
+      "startedAt": "2026-09-29T15:26:14.840Z",
+      "durationMs": 1,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": ""
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长",
+              "presetKey": "inspection-agent"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "D2",
+      "dimension": "边界/注入",
+      "title": "注入式/畸形标题（SQL / HTML / emoji / 零宽字符）原样落库不炸",
+      "expectation": "创建成功且 DB 中标题与输入逐字一致；无 5xx",
+      "verdict": "FAIL",
+      "summary": "创建=0/3，逐字一致=true",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "创建=0/3，逐字一致=true"
+      },
+      "startedAt": "2026-09-29T15:26:14.841Z",
+      "durationMs": 2,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "'; DROP TABLE threads; -- [m2-mumtwsft]",
+              "presetKey": "inspection-agent"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "<img src=x onerror=alert(1)> [m2-mumtwsft]",
+              "presetKey": "inspection-agent"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "emoji 与零宽字符 [m2-mumtwsft]",
+              "presetKey": "inspection-agent"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [
+          {
+            "sql": "SELECT id, title FROM threads WHERE id = ANY($1::text[])",
+            "rowCount": 0,
+            "rows": []
+          }
+        ],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "D3",
+      "dimension": "边界",
+      "title": "事件流分页 limit 边界 0 / 1 / 200 / 201",
+      "expectation": "0 与 201 被 400 拒绝；1 与 200 正常返回",
+      "verdict": "FAIL",
+      "summary": "0=0, 1=0, 200=0, 201=0",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "0=0, 1=0, 200=0, 201=0"
+      },
+      "startedAt": "2026-09-29T15:26:14.843Z",
+      "durationMs": 1,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.events?input=%7B%22threadId%22%3Anull%2C%22limit%22%3A0%7D",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": null,
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.events?input=%7B%22threadId%22%3Anull%2C%22limit%22%3A1%7D",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": null,
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.events?input=%7B%22threadId%22%3Anull%2C%22limit%22%3A200%7D",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": null,
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.events?input=%7B%22threadId%22%3Anull%2C%22limit%22%3A201%7D",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": null,
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "D4",
+      "dimension": "边界",
+      "title": "审批状态过滤非法枚举",
+      "expectation": "非法 status 被 400 拒绝",
+      "verdict": "FAIL",
+      "summary": "status=0",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "status=0"
+      },
+      "startedAt": "2026-09-29T15:26:14.844Z",
+      "durationMs": 0,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/approvals.list?input=%7B%22status%22%3A%22bogus%22%7D",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": null,
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "D5",
+      "dimension": "边界",
+      "title": "批量裁决边界：空数组 / 51 项",
+      "expectation": "空数组 400；51 项 400（上限 50）",
+      "verdict": "FAIL",
+      "summary": "空=0, 51=0",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "空=0, 51=0"
+      },
+      "startedAt": "2026-09-29T15:26:14.844Z",
+      "durationMs": 1,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/approvals.batchApprove",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "approvalIds": []
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.batchApprove",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "approvalIds": [
+                "apr-m2-0",
+                "apr-m2-1",
+                "apr-m2-2",
+                "apr-m2-3",
+                "apr-m2-4",
+                "apr-m2-5",
+                "apr-m2-6",
+                "apr-m2-7",
+                "apr-m2-8",
+                "apr-m2-9",
+                "apr-m2-10",
+                "apr-m2-11",
+                "apr-m2-12",
+                "apr-m2-13",
+                "apr-m2-14",
+                "apr-m2-15",
+                "apr-m2-16",
+                "apr-m2-17",
+                "apr-m2-18",
+                "apr-m2-19",
+                "apr-m2-20",
+                "apr-m2-21",
+                "apr-m2-22",
+                "apr-m2-23",
+                "apr-m2-24",
+                "apr-m2-25",
+                "apr-m2-26",
+                "apr-m2-27",
+                "apr-m2-28",
+                "apr-m2-29",
+                "apr-m2-30",
+                "apr-m2-31",
+                "apr-m2-32",
+                "apr-m2-33",
+                "apr-m2-34",
+                "apr-m2-35",
+                "apr-m2-36",
+                "apr-m2-37",
+                "apr-m2-38",
+                "apr-m2-39",
+                "apr-m2-40",
+                "apr-m2-41",
+                "apr-m2-42",
+                "apr-m2-43",
+                "apr-m2-44",
+                "apr-m2-45",
+                "apr-m2-46",
+                "apr-m2-47",
+                "apr-m2-48",
+                "apr-m2-49",
+                "apr-m2-50"
+              ]
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "D6",
+      "dimension": "边界",
+      "title": "驳回原因长度边界 200 / 201",
+      "expectation": "200 字接受；201 字 400",
+      "verdict": "FAIL",
+      "summary": "200 字=0, 201 字=0",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "200 字=0, 201 字=0"
+      },
+      "startedAt": "2026-09-29T15:26:14.845Z",
+      "durationMs": 2,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "回复那条 2 分差评（原因长度探针） [m2-mumtwsft]",
+              "presetKey": "review-agent",
+              "runImmediately": true
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.decide",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "gesture": "reject",
+              "reasonEnum": "not_appropriate",
+              "reasonText": "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "title": "回复那条 2 分差评（原因长度探针） [m2-mumtwsft]",
+              "presetKey": "review-agent",
+              "runImmediately": true
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.decide",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "gesture": "reject",
+              "reasonEnum": "not_appropriate",
+              "reasonText": "长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长长"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "E1",
+      "dimension": "状态机",
+      "title": "completed 线程再 run（replay 是否幂等）",
+      "expectation": "重复 run completed 线程不产生重复 step 事件、状态不变",
+      "verdict": "FAIL",
+      "summary": "before=undefined, after=undefined, 重复执行=0",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "before=undefined, after=undefined, 重复执行=0"
+      },
+      "startedAt": "2026-09-29T15:26:14.847Z",
+      "durationMs": 502,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.run",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "threadId": null
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [
+          {
+            "sql": "SELECT status, progress_done, progress_total FROM threads WHERE id=$1",
+            "rowCount": 0,
+            "rows": []
+          },
+          {
+            "sql": "SELECT status, progress_done, progress_total FROM threads WHERE id=$1",
+            "rowCount": 0,
+            "rows": []
+          },
+          {
+            "sql": "SELECT payload->'decision'->'after'->>'stepId' AS step, count(*)::int AS n FROM biz_events WHERE session_id=$1 AND payload->'decision'->>'action'='review.reply' GROUP BY 1 HAVING count(*) > 1",
+            "rowCount": 0,
+            "rows": []
+          }
+        ],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "E2",
+      "dimension": "状态机",
+      "title": "过期审批：decide 与 sweep 的终态一致性",
+      "expectation": "过期快照 decide 被拒并标 expired；不会出现 approved",
+      "verdict": "ERROR",
+      "summary": "",
+      "error": "column \"expires_at\" of relation \"approvals\" does not exist\nerror: column \"expires_at\" of relation \"approvals\" does not exist\n    at /Users/mac/WorkLoom-fleet/.wt-mc-hotel-m23/node_modules/.pnpm/pg-pool@3.14.0_pg@8.23.0/node_modules/pg-pool/index.js:45:11\n    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n    at async q (file:///Users/mac/WorkLoom-fleet/.wt-mc-hotel-m23/outputs/mine-clear/T-2026-0929-0007/scripts/m2-runner.mjs:95:13)",
+      "extra": {},
+      "startedAt": "2026-09-29T15:26:15.349Z",
+      "durationMs": 1,
+      "evidence": {
+        "api": [],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "E3",
+      "dimension": "状态机/联动",
+      "title": "夜班决策包投递（夜班出口链路）",
+      "expectation": "nightShift.deliver 正常推进状态机；若被安全网关拒绝判 FAIL",
+      "verdict": "OBSERVE",
+      "summary": "无夜班班次可投递",
+      "error": null,
+      "extra": {
+        "verdict": "OBSERVE",
+        "summary": "无夜班班次可投递"
+      },
+      "startedAt": "2026-09-29T15:26:15.350Z",
+      "durationMs": 1,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/nightShift.current",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": null,
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "E4",
+      "dimension": "状态机/越权",
+      "title": "readonly 成员越权与跨工作区读取",
+      "expectation": "readonly dispatch/run 403；跨工作区 threadId 查询返回空（不泄露存在性）",
+      "verdict": "FAIL",
+      "summary": "readonly dispatch=0, run=0, 不存在线程查询=有数据",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "readonly dispatch=0, run=0, 不存在线程查询=有数据"
+      },
+      "startedAt": "2026-09-29T15:26:15.351Z",
+      "durationMs": 4,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/threads.dispatch",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "title": "readonly 越权探针 [m2-mumtwsft]"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.run",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "threadId": null
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/threads.get?input=%7B%22threadId%22%3A%22T-999999%22%7D",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": null,
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [
+          {
+            "sql": "SELECT id FROM threads WHERE workspace_id='ws-other' AND id='T-101'",
+            "rowCount": 0,
+            "rows": [],
+            "as": "app+RLS"
+          }
+        ],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "F1",
+      "dimension": "业务错误",
+      "title": "业务错误路径：不存在审批 / 越权角色 / 非法手势",
+      "expectation": "不存在审批 404；readonly 裁决 403；非法手势 400（结构校验）",
+      "verdict": "FAIL",
+      "summary": "不存在=0, readonly=0, 非法手势=0",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "不存在=0, readonly=0, 非法手势=0"
+      },
+      "startedAt": "2026-09-29T15:26:15.355Z",
+      "durationMs": 1,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/approvals.decide",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "approvalId": "apr-nonexistent-m2-mumtwsft",
+              "gesture": "approve"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.decide",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "approvalId": null,
+              "gesture": "approve"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          },
+          {
+            "path": "/trpc/approvals.decide",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 0,
+            "request": {
+              "approvalId": null,
+              "gesture": "maybe"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    },
+    {
+      "id": "F2",
+      "dimension": "配置错误/环境",
+      "title": "CEO 节拍在围栏规则装载后的可用性（company-ceo 写权限）",
+      "expectation": "runBeat 在规则装载后仍可写事件；若被系统级禁写 500 判 FAIL",
+      "verdict": "FAIL",
+      "summary": "status=0, eventId=-",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "status=0, eventId=-"
+      },
+      "startedAt": "2026-09-29T15:26:15.356Z",
+      "durationMs": 1,
+      "evidence": {
+        "api": [
+          {
+            "path": "/trpc/captain.runBeat",
+            "method": "GET",
+            "httpStatus": 0,
+            "bizStatus": 0,
+            "ms": 1,
+            "request": {
+              "beat": "daily"
+            },
+            "response": {
+              "transportError": "TypeError: fetch failed"
+            }
+          }
+        ],
+        "db": [],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": [
+          "error=null"
+        ]
+      }
+    },
+    {
+      "id": "F3",
+      "dimension": "环境错误",
+      "title": "触发器引擎是否有生产调度（cron 触发器实际触发）",
+      "expectation": "存在消费点：trigger_fires 有记录 / trigger.fired 事件存在；否则判 FAIL（触发器空转）",
+      "verdict": "FAIL",
+      "summary": "种子触发器 14/16 启用，trigger_fires=0，trigger.fired 事件=0",
+      "error": null,
+      "extra": {
+        "verdict": "FAIL",
+        "summary": "种子触发器 14/16 启用，trigger_fires=0，trigger.fired 事件=0"
+      },
+      "startedAt": "2026-09-29T15:26:15.357Z",
+      "durationMs": 5,
+      "evidence": {
+        "api": [],
+        "db": [
+          {
+            "sql": "SELECT count(*)::int AS n FROM trigger_fires",
+            "rowCount": 1,
+            "rows": [
+              {
+                "n": 0
+              }
+            ]
+          },
+          {
+            "sql": "SELECT count(*)::int AS n FROM biz_events WHERE payload->'decision'->>'action'='trigger.fired'",
+            "rowCount": 1,
+            "rows": [
+              {
+                "n": 0
+              }
+            ]
+          },
+          {
+            "sql": "SELECT count(*)::int AS n, count(*) FILTER (WHERE enabled)::int AS enabled FROM triggers WHERE workspace_id='ws-yunqi'",
+            "rowCount": 1,
+            "rows": [
+              {
+                "n": 16,
+                "enabled": 14
+              }
+            ]
+          }
+        ],
+        "logs": [
+          {
+            "after": 1497,
+            "text": ""
+          }
+        ],
+        "notes": []
+      }
+    }
+  ]
+}

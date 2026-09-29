@@ -1,0 +1,52 @@
+{
+  "id": "MC-013",
+  "kind": "problem",
+  "level": "L2",
+  "severity": "P2",
+  "batch": 1,
+  "state": "open",
+  "title": "子仓 CI 未接入秘密扫描（base 有、本仓没有）：警报器被摘掉，全量扫描恒红且无受理清单",
+  "evidence": [
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-25-secret-scan-full.log",
+      "note": "全量秘密扫描 BLOCKED（51 findings）；抽样核实全部为开发默认 DSN、测试夹具与故意假 key（<redacted-key>，用于验证脱敏），与基座受理口径同类"
+    },
+    {
+      "type": "code",
+      "ref": ".cnb.yml:1@ed6056f",
+      "note": "本仓 static-gate 无 secret-scan 步骤（基座 .cnb.yml 有 secret-scan.mjs --range … --acceptance-manifest sync/base-scope.json）"
+    },
+    {
+      "type": "code",
+      "ref": "AGENTS.md:114@ed6056f",
+      "note": "受控区块要求「提交前检查 staged diff 和秘密扫描结果」——子仓缺少可执行的扫描通道，纪律无法落地"
+    }
+  ],
+  "root_cause": {
+    "file": ".cnb.yml",
+    "line": 1,
+    "commit": "ed6056f",
+    "symbol": "static-gate stages"
+  },
+  "trigger_path": "任何 PR 提交 → 无秘密扫描阶段；真泄漏（新增密钥）不会被拦截，只能靠人眼",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "在 diff 中放入形如 AWS/GitHub 的假密钥",
+      "expect": "CI（或本地门禁）判红并指出文件:行号",
+      "command": "node scripts/secret-scan.mjs --range <base>..HEAD --acceptance-manifest sync/base-scope.json",
+      "last_result": "not-run",
+      "evidence": ""
+    },
+    {
+      "kind": "property",
+      "given": "任意 PR",
+      "expect": "秘密扫描为必需步骤且只在有受理清单时可通过既有基线，新增命中一律阻断",
+      "command": "grep -c secret-scan .cnb.yml",
+      "last_result": "fail",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-25-secret-scan-full.log"
+    }
+  ],
+  "notes": "未修原因：.cnb.yml 属治理路径（协议 §3 review），应由基座把扫描步骤与受理清单一起下发到订阅仓；本仓私改会与 fanout 冲突。"
+}

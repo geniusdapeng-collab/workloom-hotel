@@ -1,0 +1,47 @@
+{
+  "id": "MC-012",
+  "kind": "problem",
+  "level": "L1",
+  "severity": "P2",
+  "batch": 2,
+  "state": "open",
+  "title": "文本入口未拒绝 NUL 字符：POST /trpc/threads.dispatch 传 \\u0000 → 500（应为 400）并写脏错误账本",
+  "evidence": [
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-21-security-perf.log",
+      "note": "owner token 提交 title 含 \\u0000 → http=500；服务端 invalid byte sequence for encoding \"UTF8\": 0x00（ref=329a9831）；biz_events 新增 1 条 system.error（path=threads.dispatch, code=INTERNAL_SERVER_ERROR）"
+    },
+    {
+      "type": "code",
+      "ref": "apps/server/src/trpc/router.ts:1061@ed6056f",
+      "note": "z.object({ title: z.string().min(1).max(500) })：上限有（4000 字被 Zod 正确拒为 400），控制字符无校验"
+    }
+  ],
+  "root_cause": {
+    "file": "apps/server/src/trpc/router.ts",
+    "line": 1061,
+    "commit": "ed6056f",
+    "symbol": "threadsRouter.dispatch input schema"
+  },
+  "trigger_path": "任意客户端（含脚本/恶意调用方）在 title 里带 \\u0000 → PG 编码错误 → 500 + 错误事件入库（可观测噪声与被利用的 5xx 制造面）",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "title=\"异常\\u0000字符\" 的 dispatch 请求",
+      "expect": "HTTP 400（入参校验拒绝），且不发 5xx、不写 system.error",
+      "command": "curl -s -o /dev/null -w '%{http_code}\\n' -X POST http://127.0.0.1:<SERVER_PORT>/trpc/threads.dispatch -H 'content-type: application/json' -H 'authorization: Bearer <owner-token>' -d '{\"title\":\"probe\\u0000nul\"}'",
+      "last_result": "fail",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-21-security-perf.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意文本入口",
+      "expect": "含 \\u0000 等不可编码控制字符的输入一律 400，绝不进入 SQL 层",
+      "command": "./node_modules/.bin/vitest run apps/server/src --reporter=dot",
+      "last_result": "not-run",
+      "evidence": ""
+    }
+  ],
+  "notes": "未修原因：本轮修复卡已占用同一批 PR 的评审面（围栏绑定），输入净化属另一张任务卡更清晰；修法一行 zod refine + 一条用例即可，命令与期望已写明。"
+}

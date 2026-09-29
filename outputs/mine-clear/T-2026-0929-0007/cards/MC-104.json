@@ -1,0 +1,59 @@
+{
+  "id": "MC-104",
+  "kind": "fix",
+  "batch": 0,
+  "state": "fixed",
+  "title": "止血 P0：续跑锚点改为「执行回执」判定 + completed 收尾双重校验 + 线程级执行互斥（advisory 锁）",
+  "covers": [
+    "MC-201",
+    "MC-202"
+  ],
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "packages/runtime/src/loop.ts:211@6264944",
+      "note": "existingStepIds：只把带 receipt 的事件算作已执行（挂起/熔断事件不写 receipt），前缀排除保留为兼容位"
+    },
+    {
+      "type": "code",
+      "ref": "packages/runtime/src/loop.ts:640@6264944",
+      "note": "收尾校验：done.size<steps.length 或本线程仍有 pending 审批 → 保持 pending_review（fail-closed，不写 completed）"
+    },
+    {
+      "type": "code",
+      "ref": "packages/runtime/src/loop.ts:377@6264944",
+      "note": "runQuest 入口持 pg_try_advisory_lock（线程级）——wrapper/body 拆分，finally 解锁；锁连接不设 RLS GUC"
+    }
+  ],
+  "fix_plan": "① `existingStepIds` 从「按 basis 前缀排除挂起事件」改为「只认带 receipt 的执行事件」（与 E3.7 同源，历史前缀判定保留）；② `runQuest` 收尾 added 断言：全部步骤有回执 + 本线程无 pending 审批，否则回 pending_review；③ `runQuest` 外层加会话级 advisory 锁做跨入口/跨进程互斥，未获锁者返回 running 让位。",
+  "blast_radius": "所有 Quest 执行入口（dispatch 内联 / 调度器 / threads.run 续跑 / 巡检派单）与所有依赖 replay 幂等的续跑用例；修复后「批准 → 续跑」会真正执行被降级的步骤（审批语义、approvalRef 留痕、事件 schema 均不变）。副作用：线程执行期间占用一条池连接（并发上限 3/工作区，池容量充裕）；锁连接不写任何 GUC，避免 RLS 池卫生退化。",
+  "conflict_paths": [
+    "packages/runtime/src/loop.ts"
+  ],
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "差评 Quest 挂起 → 批准 → 续跑",
+      "expect": "completed 且 progress 2/2，被降级步骤确有执行事件（receipt）",
+      "command": "M2_ONLY=A1,A2,E5 node outputs/mine-clear/T-2026-0929-0007/scripts/m2-runner.mjs",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m2-after-mc201-fix.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意工作区 + 同一线程并发两次执行",
+      "expect": "无 completed 且进度未满/仍有未决审批的线程；同一线程恰一个执行者、零重复执行",
+      "command": "./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-concurrency-probe.mjs",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-concurrency-probe.log"
+    }
+  ],
+  "regression": {
+    "command": "SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts && ./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-concurrency-probe.mjs && SERVER_BASE=http://127.0.0.1:8820 ./node_modules/.bin/tsx --env-file=.env scripts/release-gate.ts",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-mc201c.log; m5-concurrency-probe.log; m5-release-gate-after-mc201.log"
+  },
+  "rollback": "git revert <本卡提交 sha>（恢复旧锚点口径与无互斥执行；无数据迁移）",
+  "fixed_by": "agent:root-T-2026-0929-0007",
+  "verified_by": null,
+  "notes": "本卡为 P0/P1 止血批（MCD 第 0/1 批）；`packages/runtime/**` 属基座受管路径，同 MC-101 需回灌 workloom-im（UPSTREAM-base.md 已含该文件）。"
+}

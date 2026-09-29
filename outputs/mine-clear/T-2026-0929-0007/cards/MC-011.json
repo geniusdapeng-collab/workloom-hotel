@@ -1,0 +1,52 @@
+{
+  "id": "MC-011",
+  "kind": "problem",
+  "level": "L2",
+  "severity": "P2",
+  "batch": 1,
+  "state": "open",
+  "title": "桌面运行时依赖锁过期（metadata 记录的两项输入摘要与实际不符），本仓 CI 未含该门禁",
+  "evidence": [
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-23-runtime-deps-verify.log",
+      "note": "node scripts/runtime-deps-lock.mjs verify → exit 1「runtime 依赖锁元数据或输入摘要已过期」"
+    },
+    {
+      "type": "code",
+      "ref": ".workloom-runtime-deps/metadata.json:1@ed6056f",
+      "note": "inputs 记录的 apps/server/package.json（ad2df767… ≠ 6f728918…）与 pnpm-lock.yaml（1077705f… ≠ 740f6e06…）均已漂移；metadata 最后刷新于 1b3f54a（2026-09-27）"
+    },
+    {
+      "type": "code",
+      "ref": ".cnb.yml:37@ed6056f",
+      "note": "本仓 static-gate 未包含 runtime 依赖锁校验（基座有）→ 漂移不会被门禁拦住"
+    }
+  ],
+  "root_cause": {
+    "file": ".workloom-runtime-deps/metadata.json",
+    "line": 1,
+    "commit": "ed6056f",
+    "symbol": "inputs 摘要"
+  },
+  "trigger_path": "桌面端打包/受控下载闭包按旧摘要装配 → 与仓库真实依赖不一致；任何人执行 node scripts/runtime-deps-lock.mjs verify 即见红",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "刷新依赖锁后执行校验",
+      "expect": "node scripts/runtime-deps-lock.mjs verify 退出码 0",
+      "command": "node scripts/runtime-deps-lock.mjs refresh && node scripts/runtime-deps-lock.mjs verify",
+      "last_result": "not-run",
+      "evidence": ""
+    },
+    {
+      "kind": "property",
+      "given": "apps/server/package.json 或 pnpm-lock.yaml 变更后",
+      "expect": "同批刷新 .workloom-runtime-deps/**（或门禁判红），不出现「输入变了锁没变」",
+      "command": "node scripts/runtime-deps-lock.mjs verify",
+      "last_result": "fail",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-23-runtime-deps-verify.log"
+    }
+  ],
+  "notes": "未修原因：refresh 需要联网跑 npm install --package-lock-only 并重写三份锁产物，属独立小批（且建议连同「把 verify 纳入子仓 static-gate」一起做）；命令已给，随下次维护批执行。"
+}

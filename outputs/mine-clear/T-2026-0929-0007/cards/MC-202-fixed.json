@@ -1,0 +1,64 @@
+{
+  "id": "MC-202",
+  "kind": "problem",
+  "level": "L3",
+  "severity": "P1",
+  "batch": 1,
+  "state": "fixed",
+  "title": "同一线程可被 dispatch 内联执行与调度器并发运行（无跨入口互斥）：响应仍 pending_review 时调度器已把线程标 completed(2/2)",
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "apps/server/src/runtime/scheduler.ts:57@ed6056f",
+      "note": "inFlight 集合只覆盖调度器自己拉起的线程；threads.dispatch 的 runImmediately 直调 runQuest，不参与该互斥"
+    },
+    {
+      "type": "code",
+      "ref": "apps/server/src/trpc/router.ts:1184@ed6056f",
+      "note": "runImmediately 分支直接 await runQuest(...)，与调度器的 nextQueuedThread 抢同一 queued 行"
+    },
+    {
+      "type": "runtime",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/hang-injection.log",
+      "note": "修复前：dispatch 返回 pending_review，同时 scheduler 日志记录同一线程 → completed（2/2），DB 侧 approval 仍 pending"
+    }
+  ],
+  "root_cause": {
+    "file": "apps/server/src/runtime/scheduler.ts",
+    "line": 57,
+    "commit": "ed6056f",
+    "symbol": "inFlight"
+  },
+  "trigger_path": "派遣请求执行时间 > 调度器 tick（默认 7s）时，同一线程被两个入口同时执行；典型：依赖慢（外部/模型）或长计划",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "同一线程并发两次 runQuest",
+      "expect": "恰一个执行者继续执行，另一个返回 running 且不写事件、不改线程；执行事件里同一 step_id 至多一条带回执记录",
+      "command": "./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-concurrency-probe.mjs",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-concurrency-probe.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意线程 id",
+      "expect": "任何时刻同一线程最多一个执行者（跨入口/跨进程），且进程崩溃后锁随连接释放、线程可立即重试",
+      "command": "同上探针（并发两次）",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-concurrency-probe.log"
+    },
+    {
+      "kind": "sample",
+      "given": "引入互斥后跑全场景套件（含 R-10 直接以 running 状态建档后调 runQuest 的续跑用法）",
+      "expect": "464/464；RLS 池卫生用例 P-02 仍为 0 行（互斥不得污染连接池 GUC）",
+      "command": "SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-mc201c.log"
+    }
+  ],
+  "regression": {
+    "command": "./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-concurrency-probe.mjs && SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-concurrency-probe.log; outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-mc201c.log"
+  },
+  "notes": "修法：runQuest 入口用会话级 `pg_try_advisory_lock(hashtext('thread-run:'||threadId))` 做线程级互斥（runQuest 拆成 wrapper + body，finally 解锁）；拿不到锁的执行者返回 running 并让位。选会话锁而非状态位 CAS 的原因：崩溃/断连即释放，不依赖僵死窗口；且锁连接**不设 RLS GUC**（首版曾用状态 CAS + 会话 GUC，触发 P-02 池卫生用例变红，已改）。"
+}

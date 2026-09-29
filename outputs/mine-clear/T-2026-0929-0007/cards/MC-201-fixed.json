@@ -1,0 +1,69 @@
+{
+  "id": "MC-201",
+  "kind": "problem",
+  "level": "L3",
+  "severity": "P0",
+  "batch": 0,
+  "state": "fixed",
+  "title": "求值异常降级人审的步骤被当成「已完成」：审批通过后恢复运行直接跳过该步，线程 completed 1/2（假完成；并发下可绕过未决审批直接完成）",
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "packages/runtime/src/loop.ts:211-233@ed6056f",
+      "note": "旧 existingStepIds：以 basis 前缀（「熔断：」/「越围栏挂起：」）排除挂起事件，只收录其余带 step_id 的事件"
+    },
+    {
+      "type": "code",
+      "ref": "packages/runtime/src/loop.ts:470-475@ed6056f",
+      "note": "W-01 降级挂起写的 basis 是第三种前缀「围栏无法求值（缺参数）→ 一律人工裁决」——不在排除表内，于是挂起步骤被当成已执行"
+    },
+    {
+      "type": "runtime",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/m2-report-m2-mumurpu0.json#A2",
+      "note": "修复前实测：差评 Quest 批准后 threads.run 返回 completed 2/2，而 DB threads 行 = completed 1/2 且 review.reply 无执行事件"
+    },
+    {
+      "type": "runtime",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m2/hang-injection.log",
+      "note": "修复前实测：调度器把同线程标 completed(2/2)，此时审批 apr-e-9207 仍 pending、s2 从未执行"
+    }
+  ],
+  "root_cause": {
+    "file": "packages/runtime/src/loop.ts",
+    "line": 226,
+    "commit": "ed6056f",
+    "symbol": "existingStepIds / runQuest 收尾"
+  },
+  "trigger_path": "默认 mock 规划产出空参步骤 → R6/R21 按 params.rating 求值异常 → W-01 降级为人工裁决（审批 pending）→ 人批准 → threads.run 续跑；或调度器在挂起事件写入后并发续跑（与 MC-202 叠加）",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "差评 Quest（review-agent）→ 挂起 → 批准 → 续跑",
+      "expect": "线程 completed 且 progress_done==progress_total，被降级的写步骤真的有执行事件（含 receipt）",
+      "command": "M2_BASE=http://127.0.0.1:8820 DATABASE_URL=postgres://postgres@127.0.0.1:5461/wl_mc_fix M2_SERVER_LOG=<server.log> M2_ONLY=A1,A2,E5 node outputs/mine-clear/T-2026-0929-0007/scripts/m2-runner.mjs",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m2-after-mc201-fix.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意工作区快照",
+      "expect": "不存在 status=completed 且（progress_done<progress_total 或仍有 pending 审批）的线程",
+      "command": "同上 E5 用例（全工作区 SQL 属性断言）",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m2-after-mc201-fix.log"
+    },
+    {
+      "kind": "sample",
+      "given": "修改续跑锚点与收尾校验后跑全场景套件",
+      "expect": "464/464 通过（含 R-10 挂起→裁决→恢复闭环、Z-05）",
+      "command": "SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-mc201c.log"
+    }
+  ],
+  "regression": {
+    "command": "SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts && SERVER_BASE=http://127.0.0.1:8820 ./node_modules/.bin/tsx --env-file=.env scripts/release-gate.ts",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-mc201c.log; outputs/mine-clear/T-2026-0929-0007/evidence/m5-release-gate-after-mc201.log"
+  },
+  "notes": "修法（止血+地基）：① existingStepIds 改为「只认带 receipt 的执行事件」（与 E3.7「无回执不算完成」同源，前缀排除保留为兼容位）；② 收尾加双重校验——done.size 必须等于 steps.length，且本线程不得留有 pending 审批，任一不满足即保持 pending_review（fail-closed），彻底消灭 completed 1/2 与「未决审批 + completed」。"
+}
