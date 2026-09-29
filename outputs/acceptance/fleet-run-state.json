@@ -1,0 +1,71 @@
+{
+ "repo": "workloom-hotel",
+ "repoDir": "/Users/mac/WorkLoom-fleet/workloom-hotel",
+ "startedAt": "2026-09-19T12:01:41.846Z",
+ "steps": {
+  "prepare": {
+   "ok": true,
+   "detail": "main@9dcfccb"
+  },
+  "install": {
+   "ok": true,
+   "detail": "node_modules 已就绪（跳过安装）"
+  },
+  "env": {
+   "ok": true,
+   "detail": "由 .env.example 生成"
+  },
+  "seed": {
+   "ok": true,
+   "detail": "db:seed + db:seed:boost + db:seed:aipm"
+  },
+  "regression": {
+   "ok": true,
+   "detail": "suite=失败 exit=1：    at emitErrorNT (node:net:2；db:verify-chain=通过（✅ 全库验证通过：9 个 workspace 段 / 2607 条事件，六；typecheck=通过（[WARN] The \"pnpm\" field in package.js"
+  },
+  "preview": {
+   "ok": false,
+   "detail": "三端未在 4 分钟内全部就绪（当前 0/4 端口监听）。日志：/Users/mac/WorkLoom-fleet/workloom-hotel/outputs/acceptance/preview.log"
+  },
+  "profile": {
+   "ok": true,
+   "detail": "已生成默认 profile"
+  },
+  "matrix": {
+   "ok": false,
+   "detail": "前置：真机未就绪，跳过"
+  },
+  "ui": {
+   "ok": false,
+   "detail": "前置：真机未就绪，跳过"
+  },
+  "experience": {
+   "ok": false,
+   "detail": "前置：真机未就绪，跳过"
+  },
+  "report": {
+   "ok": false,
+   "detail": "前置：真机未就绪，跳过"
+  },
+  "teardown": {
+   "ok": true,
+   "detail": "预览已关停"
+  }
+ },
+ "ok": false,
+ "notes": [
+  "工作树不干净（2 项），跳过 pull，按当前内容验收",
+  ".env 由 .env.example 生成（DATABASE_URL=postgres://postgres:workloom@localhost:5432/wl_workloomhote）",
+  "生成默认 acceptance/profile.json（bundle=hotel slug=yunqi-hotel）"
+ ],
+ "revision": {
+  "branch": "main",
+  "head": "9dcfccb"
+ },
+ "regression": {
+  "suite": "失败 exit=1：    at emitErrorNT (node:net:2203:8)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v24.19.0",
+  "db:verify-chain": "通过（✅ 全库验证通过：9 个 workspace 段 / 2607 条事件，六项检查全绿 [WARN] The \"pnpm\" field in package.json is no longer read by pnpm. The following keys were ignored: \"pnpm.onlyBuiltDe）",
+  "typecheck": "通过（[WARN] The \"pnpm\" field in package.json is no longer read by pnpm. The following keys were ignored: \"pnpm.onlyBuiltDependencies\", \"pnpm.overrides\". See https://）"
+ },
+ "finishedAt": "2026-09-19T12:05:58.448Z"
+}

@@ -1,0 +1,8 @@
+{
+ "commands": {
+  "suite": "失败 exit=1：    at emitErrorNT (node:net:2203:8)     at process.processTicksAndRejections (node:internal/process/task_queues:90:21) Node.js v24.19.0",
+  "db:verify-chain": "通过（✅ 全库验证通过：9 个 workspace 段 / 2607 条事件，六项检查全绿 [WARN] The \"pnpm\" field in package.json is no longer read by pnpm. The following keys were ignored: \"pnpm.onlyBuiltDe）",
+  "typecheck": "通过（[WARN] The \"pnpm\" field in package.json is no longer read by pnpm. The following keys were ignored: \"pnpm.onlyBuiltDependencies\", \"pnpm.overrides\". See https://）"
+ },
+ "at": "2026-09-19T12:01:55.431Z"
+}

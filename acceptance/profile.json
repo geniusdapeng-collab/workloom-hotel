@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "workloom.acceptance-profile/v1",
+  "repo": "workloom-ai/workloom-hotel",
+  "productName": "WorkLoom 酒店行业版",
+  "lane": "industry",
+  "primaryBundle": "hotel",
+  "workspaceId": null,
+  "identity": {
+    "workspaceSlug": "yunqi-hotel",
+    "human": "MEM-001",
+    "guest": "demo-direct"
+  },
+  "startup": {
+    "command": "pnpm preview:all",
+    "ports": {
+      "pc": 3000,
+      "bMobile": 3001,
+      "cMobile": 3002,
+      "server": 8787
+    }
+  },
+  "surfaces": {
+    "pcRoutes": [
+      "/",
+      "/inbox",
+      "/tasks",
+      "/approvals",
+      "/reports",
+      "/service",
+      "/executive",
+      "/guardrails",
+      "/exams",
+      "/memory",
+      "/night",
+      "/skills",
+      "/members",
+      "/partners",
+      "/account",
+      "/workspaces",
+      "/customize",
+      "/configuration",
+      "/assembly",
+      "/agents",
+      "/portfolio",
+      "/events",
+      "/models",
+      "/onboarding"
+    ],
+    "bMobileRoutes": [
+      "/",
+      "/inbox",
+      "/tasks",
+      "/operations",
+      "/account"
+    ],
+    "cRoutes": [
+      "#chat",
+      "#service",
+      "#tickets",
+      "#messages",
+      "#me"
+    ]
+  },
+  "thresholds": {
+    "firstValueMs": 20000,
+    "dispatchMs": 60000,
+    "approvalMs": 30000,
+    "traceClicks": 2,
+    "guestFirstReplyMs": 30000,
+    "decisionQuota": 7,
+    "minContrastRatio": 4.5,
+    "idleInterruptionWindowS": 20
+  },
+  "notes": "由 fleet-run.mjs 依据 product.manifest.json 生成：角色/旅程/阈值请本仓负责人在首轮验收后按行业细化。"
+}
