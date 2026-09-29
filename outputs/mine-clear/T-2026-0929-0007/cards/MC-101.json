@@ -1,0 +1,61 @@
+{
+  "id": "MC-101",
+  "kind": "fix",
+  "batch": 1,
+  "state": "fixed",
+  "title": "CEO 节拍 actor 绑定与名册同源（ceoActor）+ 酒店包补 company-ceo 指挥岗位在编",
+  "covers": [
+    "MC-001"
+  ],
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "packages/base/captain/loop.ts:26@ed6056f",
+      "note": "新增 ceoActor(client, scope)：从 agents 表按 preset_key='company-ceo' 读 readonly/fence_bindings；缺编返回空绑定（fail-closed）"
+    },
+    {
+      "type": "code",
+      "ref": "bundles/hotel/presets/company-ceo.yml:1@ed6056f",
+      "note": "新增指挥岗位声明：kind=commander、fence_bindings=[R17,R18,R19,R24]、写工具 ceo.briefing/ceo.queue.scan、coverage=ceo. 前缀"
+    },
+    {
+      "type": "code",
+      "ref": "bundles/hotel/bundle.json:20@ed6056f",
+      "note": "provides.presets 登记新岗位 + 重算 integrity（bundle-governance --refresh-digests）"
+    }
+  ],
+  "fix_plan": "① packages/base/captain/loop.ts：把写死的 CEO_ACTOR 换成 ceoActor()（emitCeoEvent 内每次取，事务内同 GUC，缺编即空绑定）；② bundles/hotel/presets/company-ceo.yml：按行业语义声明指挥岗位（绑定 R17/R18/R19 三条经营红线 + R24 内部汇报自动），写工具与 coverage 齐备以满足 WorkforcePresetSchema；③ bundle.json#provides.presets 登记并重封 integrity；④ 新增 packages/base/captain/ceo-actor.test.ts 与套件 Z-05 双向断言。",
+  "blast_radius": "① 员工名册 11→12（职场 floor 循环分配工位，W-01 覆盖断言不受影响）；② 派活路由的酒店默认指挥岗候选人开始命中 → 未命中语义规则的目标改由 company-ceo 接单（见 MC-007 未闭环项）；③ 网关写类动作集合新增 ceo.briefing/ceo.queue.scan（由岗位写工具与 R24 双路登记）——只会更严，不会放行未绑定身份；④ 事件归因 who.id 仍为 company-ceo（成绩单/剧场/门禁口径不变）。",
+  "conflict_paths": [
+    "packages/base/captain/loop.ts",
+    "bundles/hotel/bundle.json",
+    "bundles/hotel/presets/company-ceo.yml",
+    "scripts/suite.ts"
+  ],
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "干净库迁移+种子后跑全场景套件",
+      "expect": "464/464（服务层 419 + HTTP E2E 45），R-05/R-13/R-14/R-15/R-16/R-27 转绿，退出码 0",
+      "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix5.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意时刻清空该岗位绑定（模拟缺编/未声明）",
+      "expect": "同一拍被网关拒写且不留痕；恢复绑定后又可写（可逆、无偷放）",
+      "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts   # Z-05",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix5.log"
+    }
+  ],
+  "regression": {
+    "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts && ./node_modules/.bin/vitest run packages/base/captain/ceo-actor.test.ts && node scripts/verify-product-content.mjs && ./node_modules/.bin/tsx scripts/bundle-governance.mts",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix5.log; outputs/mine-clear/T-2026-0929-0007/evidence/assert-ceo-actor-unit.log; outputs/mine-clear/T-2026-0929-0007/evidence/gate-product-verify.log; outputs/mine-clear/T-2026-0929-0007/evidence/gate-bundle-governance.log"
+  },
+  "rollback": "git revert <本卡提交 sha>（回归到 actor 写死 + 11 岗位；无需数据迁移，种子重跑即可复原）",
+  "fixed_by": "agent:root-T-2026-0929-0007",
+  "verified_by": null,
+  "notes": "基座侧改动（loop.ts）属 sync/base-scope.json include 路径，需按协议回灌 workloom-im 后再随波次下发，本仓先落以保证交付；已在 PR 描述与报告中标注。"
+}

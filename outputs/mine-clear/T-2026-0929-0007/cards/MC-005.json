@@ -1,0 +1,56 @@
+{
+  "id": "MC-005",
+  "kind": "problem",
+  "level": "L1",
+  "severity": "P2",
+  "batch": 3,
+  "state": "fixed",
+  "title": "能力导览生成物漂移（capabilities.auto.* + README 区块与生成器不一致，且残留「11 个岗位」陈旧计数）",
+  "evidence": [
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-derived-builds-check.log",
+      "note": "干净检出（origin/main ed6056f）跑 node scripts/generate-capabilities.mjs --check：✗ docs/capabilities.auto.md / .json / README.md 三处漂移（与本次修复无关的存量红）"
+    },
+    {
+      "type": "code",
+      "ref": "docs/capabilities.auto.json:48@ed6056f",
+      "note": "生成物里残留「11 个数字员工岗位 · 26 个官方技能」「本包 11 个岗位」，而生成器已改为不写死计数 → 事实源与产物分叉"
+    },
+    {
+      "type": "code",
+      "ref": "README.md:176@ed6056f",
+      "note": "README 正文手写「酒店版随包 11 个岗位（…）」与「11 个数字员工岗位」链接文案，随本卡修复一并按事实源对齐为 12"
+    }
+  ],
+  "root_cause": {
+    "file": "docs/capabilities.auto.json",
+    "line": 48,
+    "commit": "ed6056f",
+    "symbol": "generated artifact"
+  },
+  "trigger_path": "node scripts/generate-capabilities.mjs --check（本仓 doctor/文档门禁）任意时刻执行即红；岗位数变化后 README 正文更会与 bundle 事实分叉",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "重跑生成器后执行 --check",
+      "expect": "docs/capabilities.auto.md / .json / README 三处均报「已最新」，退出码 0",
+      "command": "node scripts/generate-capabilities.mjs --check",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/assert-capabilities-check.log"
+    },
+    {
+      "kind": "property",
+      "given": "bundles/hotel/presets 下增删岗位后",
+      "expect": "生成物与 README 区块随生成器更新，不出现写死计数（生成器不输出岗位数字，正文数字人工与 presets 数一致）",
+      "command": "ls bundles/hotel/presets/*.yml | wc -l && node scripts/generate-capabilities.mjs --check",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/assert-capabilities-check.log"
+    }
+  ],
+  "regression": {
+    "command": "node scripts/generate-capabilities.mjs --check",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/assert-capabilities-check.log"
+  },
+  "notes": "本卡修复=重跑生成器（3 文件 7 行）+ README 两处计数与围栏范围指针对齐（11→12 岗位、R1–R20→R1–R24、套件计数 459→464）。"
+}

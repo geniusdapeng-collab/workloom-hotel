@@ -1,0 +1,79 @@
+{
+  "id": "MC-001",
+  "kind": "problem",
+  "level": "L2",
+  "severity": "P1",
+  "batch": 1,
+  "state": "fixed",
+  "title": "公司CEO 岗位未在编 + CEO 节拍 actor 不读名册绑定 → 晨报链被自家围栏门禁拒写（F2.10）",
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "packages/base/captain/loop.ts:23@ed6056f",
+      "note": "旧实现：const CEO_ACTOR = { id: \"company-ceo\", type: \"agent\" as const } —— actor 写死且不带 fenceBindings"
+    },
+    {
+      "type": "code",
+      "ref": "packages/base/workdata/gateway.ts:179@ed6056f",
+      "note": "网关段①：isWriteAction(action) 为真且 actor.fenceBindings 为空 → GatewayReject(\"未声明 fence_bindings，系统级禁写（F2.10）\")"
+    },
+    {
+      "type": "code",
+      "ref": "bundles/hotel/fences/hotel-baseline.yml:255@ed6056f",
+      "note": "R24（内部经营内容生成自动）match.actions 含 ceo.briefing；装载期 registerWriteActions(rules.flatMap(r=>r.actions)) 把围栏声明的动作登记为「显式写」（fence-engine/dsl.ts:112、bundles/assembly.ts:946）"
+    },
+    {
+      "type": "code",
+      "ref": "bundles/hotel/bundle.json:18@ed6056f",
+      "note": "provides.presets 仅 11 个岗位文件，无 company-ceo.yml；DB 实测 agents 表同工作区 11 行、preset_key='company-ceo' 不存在（psql 输出见 evidence/m1-agents-roster.txt）"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-baseline.log:373@ed6056f",
+      "note": "基线套件 411/418：R-05/R-13/R-14/R-15/R-16/R-27 六条红，错误原文均为 Agent「company-ceo」未声明 fence_bindings，系统级禁写（F2.10），动作 ceo.briefing 拒绝"
+    },
+    {
+      "type": "code",
+      "ref": "apps/server/src/runtime/dispatch-routing.ts:73@ed6056f",
+      "note": "派活路由把酒店默认指挥岗位写成 [\"company-ceo\",\"growth-lead\"]，但两岗都未在编 → 未命中语义规则的目标准别度落到 ready[0]（thread-runner.ts:103-107）"
+    }
+  ],
+  "root_cause": {
+    "file": "packages/base/captain/loop.ts",
+    "line": 23,
+    "commit": "ed6056f",
+    "symbol": "emitCeoEvent / CEO_ACTOR"
+  },
+  "trigger_path": "08:30 晨报 cron（triggers.id=tg-ceo-brief-0830）或 captain.runBeat(daily) → runBriefingBeat → emitCeoEvent → gatewayAppendOnClient 段①权限校验；任何写了 ceo.briefing 的节拍（晨报/周会/月报/集团晨报、到期降级前置拍）都走这条链",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "干净库迁移+种子（含 company-ceo 在编）后跑本仓全场景套件",
+      "expect": "服务层 419/419 + HTTP E2E 45/45，R-05/R-13/R-14/R-15/R-16/R-27 全部转绿，套件退出码 0",
+      "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix5.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意时刻把 company-ceo 岗位的 fence_bindings 清空（模拟缺编/未声明）",
+      "expect": "同一拍（runBriefingBeat）必须抛网关拒绝且原因含 fence_bindings，事件库不留痕（ceo.briefing 计数不变）——取消绑定不得被降级为放行",
+      "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts   # Z-05 用例",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix5.log"
+    },
+    {
+      "kind": "sample",
+      "given": "ceoActor() 面对在编/缺编/只读三种名册行",
+      "expect": "在编行原样返回绑定与只读位；缺编返回空绑定且 checkPermission 对 ceo.briefing 抛「未声明 fence_bindings」；只读行抛「只读 preset」",
+      "command": "./node_modules/.bin/vitest run packages/base/captain/ceo-actor.test.ts",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/assert-ceo-actor-unit.log"
+    }
+  ],
+  "regression": {
+    "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts && ./node_modules/.bin/vitest run packages/base/captain/ceo-actor.test.ts",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix5.log; outputs/mine-clear/T-2026-0929-0007/evidence/assert-ceo-actor-unit.log"
+  },
+  "notes": "影响面（挡交付）：数字CEO 全部简报类节拍 100% 不可用；派活路由的指挥岗候选长期缺编。修复不含任何围栏阈值放宽，仅补岗位声明并把 actor 绑定与名册同源；未在编时仍然 fail-closed。"
+}

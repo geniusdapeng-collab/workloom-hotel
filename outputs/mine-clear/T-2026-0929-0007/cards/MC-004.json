@@ -1,0 +1,52 @@
+{
+  "id": "MC-004",
+  "kind": "problem",
+  "level": "L2",
+  "severity": "P2",
+  "batch": 1,
+  "state": "open",
+  "title": "派生构建自检在本仓形态下恒报红：写死检查 packages/ui（本仓 UI 是稳定制品 tarball），同时真问题（industry-contract 未构建）缺少启动指引",
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "scripts/check-derived-builds.mjs:21@ed6056f",
+      "note": "TARGETS 写死 [{pkg:\"packages/ui\"},{pkg:\"packages/industry-contract\"}]；本仓 packages/ 下没有 ui（UI 由 @workloom/ui 稳定制品 tarball 提供）"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-derived-builds-check.log",
+      "note": "干净检出（origin/main）跑 node scripts/check-derived-builds.mjs：❌ 同时报 @workloom/ui 与 @workloom/industry-contract 缺 dist ——前者在本仓永不可能通过（误报），后者是真问题"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-server-boot-missing-dist.log",
+      "note": "dist 缺失时 server 启动即 ERR_MODULE_NOT_FOUND packages/base/node_modules/@workloom/industry-contract/dist/index.js；套件 E2E 段只显示「server 启动超时」，指向不了根因"
+    }
+  ],
+  "root_cause": {
+    "file": "scripts/check-derived-builds.mjs",
+    "line": 21,
+    "commit": "ed6056f",
+    "symbol": "TARGETS"
+  },
+  "trigger_path": "任何新克隆/复制 node_modules 后未跑 `pnpm install`（dist 不入库）时：doctor/自检恒红 → 使用者习惯性忽略 → industry-contract 真缺失被误报掩盖；套件 E2E 段的失败信息只剩「server 启动超时」",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "干净检出、industry-contract 已构建、UI 走稳定制品",
+      "expect": "node scripts/check-derived-builds.mjs 退出码 0（@workloom/ui 按实际安装位置判定，不因 packages/ui 不存在而误报）",
+      "command": "node scripts/check-derived-builds.mjs",
+      "last_result": "fail",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-derived-builds-check.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意一处真实 dist 缺失",
+      "expect": "自检退出码 1 且指明缺哪个包、怎么重建（`pnpm -C <pkg> build`）",
+      "command": "node scripts/check-derived-builds.mjs",
+      "last_result": "not-run",
+      "evidence": ""
+    }
+  ],
+  "notes": "未修原因：该脚本属基座受管路径（sync/base-scope.json include scripts/**），本仓单独改会漂移；建议在 workloom-im 修正后随波次下发。回归路径：改后按上面两条断言跑，本仓 doctor 应转绿。"
+}

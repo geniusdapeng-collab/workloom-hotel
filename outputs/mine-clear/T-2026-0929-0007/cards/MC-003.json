@@ -1,0 +1,56 @@
+{
+  "id": "MC-003",
+  "kind": "problem",
+  "level": "L2",
+  "severity": "P2",
+  "batch": 3,
+  "state": "fixed",
+  "title": "套件模型 stub 端口硬编码 8791 → 同机多会话/多副本并行时 HTTP E2E 段以 EADDRINUSE 崩掉（无结论）",
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "scripts/suite.ts:2486@ed6056f",
+      "note": "const STUB_PORT = 8791;（硬编码，而同文件的 E2E 服务端口早已支持 SUITE_SERVER_PORT 覆盖）"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix4.log",
+      "note": "H-09 之后抛 listen EADDRINUSE 127.0.0.1:8791，套件以未捕获异常退出，HTTP E2E 无 45 条结论"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m3-port-8791-holder.txt",
+      "note": "lsof 实证：8791 被同机另一会话（另一仓工作树 server）占用——端口冲突来自环境，不是业务失败"
+    }
+  ],
+  "root_cause": {
+    "file": "scripts/suite.ts",
+    "line": 2486,
+    "commit": "ed6056f",
+    "symbol": "STUB_PORT"
+  },
+  "trigger_path": "同机存在第二个 WorkLoom 会话/副本（本机实测 ≥8 个并行会话）时跑套件 → E2E 段 stub 绑定失败 → 后续 45 条 E2E 用例全部没有结论",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "8791 被占用，改用 SUITE_STUB_PORT=8806 跑套件",
+      "expect": "HTTP E2E 45/45 通过，套件总报告 464/464、退出码 0",
+      "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix5.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意非法 SUITE_STUB_PORT（如 80 / 70000 / 非数字）",
+      "expect": "套件启动即报「SUITE_STUB_PORT 必须是 1024 到 65535 的整数」并退出，不静默回落到 8791",
+      "command": "SUITE_STUB_PORT=80 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts 2>&1 | head -3",
+      "last_result": "not-run",
+      "evidence": ""
+    }
+  ],
+  "regression": {
+    "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix5.log"
+  },
+  "notes": "默认值仍是 8791（向后兼容）；此卡只把端口变成可覆盖 + 值域校验，不改任何业务断言。"
+}

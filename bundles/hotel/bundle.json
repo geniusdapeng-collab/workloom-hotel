@@ -17,6 +17,7 @@
     "provides": {
       "evalQuestions": "eval/questions.json",
       "presets": [
+        "presets/company-ceo.yml",
         "presets/pricing-agent.yml",
         "presets/review-agent.yml",
         "presets/reconcile-agent.yml",
@@ -434,7 +435,7 @@
   },
   "integrity": {
     "algorithm": "sha256",
-    "digest": "c63bb5fbe8836c500af929406c6ef3ffd48d6536e8b676ff0b73c60e62204992",
+    "digest": "88e791c8265b9ed2439dd4515aa061352e6aad64141ce5e992eda4d690d03fd6",
     "assets": {
       "agent-capabilities.json": "25e57337fa975c79e18430f3f7f106f982cd306bc0f64c9bcc8677bf990771e9",
       "eval/questions.json": "c51d1b0f1053f60431da9be3e817d30d2a885861a5a0af8fe459a05641ec207a",
@@ -443,6 +444,7 @@
       "fences/patches/homestay-patch.yml": "6d43adb5bbcedd9f64e681fc61d49bbb73f366ea56f8aad8778378e41d5e671e",
       "fences/patches/low-star-single-patch.yml": "2b6b798eae46b0bf0464074fc7cf3f455c91bd713b5f29275dae0b943532667b",
       "fences/patches/unmanned-patch.yml": "cffc0e00b853f627f7e6682acb9867ac5f996eba58830ce5d7e6d703bf8c58e6",
+      "presets/company-ceo.yml": "877c80f0b5da374fcd3edc6a8ab373a68c5e1d7ff4be1c8d53215b3713bb2d41",
       "presets/competitor-agent.yml": "7481c3aeb736c778d25a8ab5f0051af28b6de1ca8fb442abd544c15458b0bb65",
       "presets/content-agent.yml": "ac292f561655411afc4afb99e46d0094bc8457f2ece715b65f708c2b4b6a4370",
       "presets/desktop-agent.yml": "55b3197cafe26ec5bc8c887fc814c10d643b53ddd808b8525dc2f8f194bb0eb8",

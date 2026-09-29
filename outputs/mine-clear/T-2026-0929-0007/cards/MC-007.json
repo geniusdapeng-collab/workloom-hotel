@@ -1,0 +1,57 @@
+{
+  "id": "MC-007",
+  "kind": "problem",
+  "level": "L3",
+  "severity": "P2",
+  "batch": 2,
+  "state": "open",
+  "title": "指挥岗位在编后：未命中语义派活规则的目标落到 company-ceo，其写步（ceo.briefing）无对应围栏对象类型 → 首步即挂 L2 人审（联动后果，待产品裁决）",
+  "evidence": [
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m3-ceo-dispatch-exec.log",
+      "note": "threads.dispatch「帮我把上周的客诉情况梳理成一份汇报」runImmediately=true → thread T-231 status=pending_review，stepsDone=1/3；approvals 新增 3 条 pending l2_captain（action=ceo.briefing）"
+    },
+    {
+      "type": "code",
+      "ref": "apps/server/src/runtime/dispatch-routing.ts:73@ed6056f",
+      "note": "hotel 默认指挥岗位 = [\"company-ceo\",\"growth-lead\"]（本次修复使 company-ceo 真正在编，候选开始命中）"
+    },
+    {
+      "type": "code",
+      "ref": "packages/runtime/src/loop.ts:69@ed6056f",
+      "note": "safeObjectType(\"ceo.briefing\") = \"ceo\"，而 R24 的 match.object_types = [content, conversion, night_package] → 不命中 → judge 走 default_level=review（hotel-baseline.yml:13）"
+    },
+    {
+      "type": "code",
+      "ref": "bundles/hotel/fences/hotel-baseline.yml:248@ed6056f",
+      "note": "R24 名称/说明写的是「内部经营内容生成自动（晨报…自动生成）」，actions 也含 ceo.briefing，但对象类型不含 company_ceo/ceo → 声明与可达范围不一致"
+    }
+  ],
+  "root_cause": {
+    "file": "bundles/hotel/fences/hotel-baseline.yml",
+    "line": 248,
+    "commit": "ed6056f",
+    "symbol": "R24.match.object_types"
+  },
+  "trigger_path": "任何未命中语义规则的交付型目标（如「把上周客诉梳理成汇报」）→ resolveDispatchPresetKey 命中 company-ceo → runQuest 规划出 ceo.briefing 写步 → judge 无命中 → default_level review → 首步挂起等人批",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "在编 company-ceo 的工作区派「帮我把上周的客诉情况梳理成一份汇报」并立即执行",
+      "expect": "该目标要么不落 CEO（派给业务岗位），要么其内部汇报步按 R24 声明自动执行；当前实际首步进 l2_captain 待审",
+      "command": "node outputs/mine-clear/T-2026-0929-0007/evidence/m3-dispatch-routing-probe.mjs http://127.0.0.1:8807",
+      "last_result": "fail",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m3-ceo-dispatch-assignment.txt"
+    },
+    {
+      "kind": "property",
+      "given": "任意派给指挥岗位的目标",
+      "expect": "每一步都有明确出口：auto 执行 / review 挂起（有人审入口）/ block 熔断三态之一，不存在无出口状态；且 review 原因可读（触发规则或 default_level 可见）",
+      "command": "psql -c \"SELECT approval_id,status,tier,snapshot->>'action' FROM approvals WHERE workspace_id='ws-yunqi' AND status='pending'\"",
+      "last_result": "not-run",
+      "evidence": ""
+    }
+  ],
+  "notes": "未修原因：两种修法都动围栏语义或派活策略（① R24 的 object_types 增列 company_ceo/ceo，属放宽 auto 范围，按协议 §3 需人审；② 派活路由对「纯汇报类」目标不落指挥岗），应由产品所有者裁决后单开任务卡。本次修复只把指挥岗补在编，未改任何围栏阈值/范围——因此该行为现在至少是 fail-closed 且带审批入口，不是静默错交。"
+}

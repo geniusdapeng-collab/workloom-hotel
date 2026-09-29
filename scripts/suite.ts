@@ -2483,7 +2483,15 @@ function defineE2E(): void {
 
 /* ---- D24 落地向导 E2E：模拟态横幅事实源 → 真实模型装配 → ask 真实推理 → 真实模式 ---- */
 let llmStub: Server | null = null;
-const STUB_PORT = 8791;
+/**
+ * 模型 stub 端口（与 SUITE_SERVER_PORT 同口径可覆盖）：
+ * 多会话/多副本并行跑套件时，固定端口会撞上同机其它实例（实测 8791 被另一仓服务占用，
+ * 套件在 H-09 之后以 EADDRINUSE 崩掉，表现为"HTTP E2E 无结论"而不是业务失败）。
+ */
+const STUB_PORT = Number(process.env.SUITE_STUB_PORT ?? "8791");
+if (!Number.isInteger(STUB_PORT) || STUB_PORT < 1024 || STUB_PORT > 65535) {
+  throw new Error("SUITE_STUB_PORT 必须是 1024 到 65535 的整数");
+}
 h2("onboarding.status 全模拟运行态（横幅事实源：simulated + mock）", async () => {
   const { data } = await api<{ result?: { data?: { dataMode?: string; llm?: { real?: boolean }; workspace?: { events?: number; agents?: number } } } }>("/trpc/onboarding.status", { token: tokenOwner });
   eq(data.result?.data?.dataMode, "simulated", "种子库默认模拟态");
@@ -3286,12 +3294,21 @@ h2("融合·LLM 降级链：死端配置被拒 → mock 兜底应答不断链", 
   const WC = C("W");
   const { buildFloor, deriveFloor, defaultOfficeScene } = await import("@workloom/base/captain");
   const WPROBE = `w-probe-${SFX}`;
+  /**
+   * 探针也是"员工"：F2.10 语义下，未声明 fence_bindings 的 Agent 不得发起写类动作，
+   * 而 `night.package.deliver` 已被酒店基线 R24 登记为写类动作（网关 registerWriteActions）。
+   * 因此探针必须像真实岗位一样声明绑定——否则用例测到的是"门禁拒绝了没绑定的探针"，
+   * 而不是要验的"夜班包交付 → 庆祝"投影链路（MCD T-2026-0929-0007）。
+   * 生产侧该动作由白名单系统组件 `night-shift` 发出（packages/base/night-shift/package.ts），
+   * 不受本条约束；此处模拟的是"具名员工名下出现该动作"的融合形态。
+   */
+  const WPROBE_BINDINGS = ["R24"];
   const ensureWProbe = () => qApp(
     `INSERT INTO agents (id, workspace_id, preset_key, name, version, kind, readonly, fence_bindings, skills, status)
-     VALUES ($1,$2,$3,'融合探针','v1','specialist',false,'[]','[]','ready') ON CONFLICT (id) DO NOTHING`,
-    [`agt-${WPROBE}`, scope.workspaceId, WPROBE],
+     VALUES ($1,$2,$3,'融合探针','v1','specialist',false,$4,'[]','ready') ON CONFLICT (id) DO NOTHING`,
+    [`agt-${WPROBE}`, scope.workspaceId, WPROBE, JSON.stringify(WPROBE_BINDINGS)],
   );
-  const wEvent = async (action: string, ruleImpact: Array<Record<string, unknown>> = []) => (await gatewayAppend(gw, { ...scope, actor: { id: WPROBE, type: "agent" }, sessionId: `suite-w-${SFX}` }, {
+  const wEvent = async (action: string, ruleImpact: Array<Record<string, unknown>> = []) => (await gatewayAppend(gw, { ...scope, actor: { id: WPROBE, type: "agent", fenceBindings: WPROBE_BINDINGS }, sessionId: `suite-w-${SFX}` }, {
     who: { type: "agent", id: WPROBE, version: "v1" },
     context: { tenant_id: scope.tenantId, workspace_id: scope.workspaceId, time: new Date().toISOString() },
     object: { type: "suite", id: `w-${SFX}` },
@@ -3883,6 +3900,55 @@ z("高危批量守卫：l4_chairman 审批（快照无 high_risk）也必须逐�
   );
   const batch2 = await batchApprove(app, gw, zScope, boss, [okId]);
   eq(batch2.approved.length, 1, "普通项照批");
+});
+
+z("CEO 节拍 actor 绑定同源：在编可写；绑定被清空后同一拍必须拒写（F2.10 fail-closed）", async () => {
+  /**
+   * 口径（MCD T-2026-0929-0007）：CEO 节拍的写类动作（ceo.briefing / ceo.decision / …）
+   * 由 `packages/base/captain/loop.ts#ceoActor` 从**本工作区 company-ceo 岗位**读 fence_bindings，
+   * 与网关段①的判据同源；岗位缺编或未声明绑定时拒写（不偷放）。
+   *
+   * 本用例是"守卫不得空转"的双向锚：正向证明在编岗位能把晨报链写通（旧实现写死 actor
+   * 不带绑定，酒店基线 R24 把 ceo.briefing 登记为写类动作后整条链被自家门禁拦下），
+   * 反向证明把绑定清空后同一拍必然被拒且不留痕——防止将来"为了跑通"改成放行。
+   */
+  const rosterRow = (await zQuery<{ fence_bindings: string[]; readonly: boolean }>(
+    `SELECT fence_bindings, readonly FROM agents WHERE workspace_id=$1 AND preset_key='company-ceo'`,
+    [zScope.workspaceId],
+  )).rows[0];
+  assert(rosterRow, "工作区应有 company-ceo 岗位在编（行业包 presets 声明）");
+  assert(Array.isArray(rosterRow.fence_bindings) && rosterRow.fence_bindings.length > 0,
+    "在编岗位必须声明 fence_bindings（F2.10：未声明即系统级禁写）");
+  const countBriefings = async () => Number((await zQuery<{ n: string }>(
+    `SELECT count(*)::text AS n FROM biz_events
+      WHERE workspace_id=$1 AND payload->'decision'->>'action'='ceo.briefing'`,
+    [zScope.workspaceId],
+  )).rows[0]!.n);
+  const before = await countBriefings();
+  const beat = await runBriefingBeat(app, zScope, "daily");
+  assert(beat.eventId, "在编 + 绑定齐备：晨报节拍落库（actor 绑定同源后链路口径成立）");
+  eq(await countBriefings(), before + 1, "ceo.briefing 事件 +1");
+  // 反向（属性断言）：任意时刻只要该岗位未声明围栏，同一拍就必须被拒
+  await zQuery(
+    `UPDATE agents SET fence_bindings='[]'::jsonb WHERE workspace_id=$1 AND preset_key='company-ceo'`,
+    [zScope.workspaceId],
+  );
+  try {
+    let rejected = false;
+    try {
+      await runBriefingBeat(app, zScope, "daily");
+    } catch (err) {
+      rejected = true;
+      assert(String(err).includes("fence_bindings"), `拒绝原因须指向未声明围栏，实际：${String(err).slice(0, 120)}`);
+    }
+    assert(rejected, "绑定被清空 → 网关必须拒写（守卫不得空转）");
+    eq(await countBriefings(), before + 1, "被拒的写动作不得留痕（事件库与拒绝口径一致）");
+  } finally {
+    await zQuery(
+      `UPDATE agents SET fence_bindings=$2::jsonb WHERE workspace_id=$1 AND preset_key='company-ceo'`,
+      [zScope.workspaceId, JSON.stringify(rosterRow.fence_bindings)],
+    );
+  }
 });
 
 const svcPassed = await runCases(cases, "服务层用例");

@@ -1,0 +1,7 @@
+  id   |            title             | status |   preset_key    
+-------+------------------------------+--------+-----------------
+ T-228 | 把雅致大床房调价到 510 元    | queued | pricing-agent
+ T-229 | 把 305 房的送物工单派下去    | queued | frontdesk-agent
+ T-230 | 帮我把昨天的经营情况整理一下 | queued | company-ceo
+(3 rows)
+

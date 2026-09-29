@@ -1,0 +1,56 @@
+{
+  "id": "MC-002",
+  "kind": "problem",
+  "level": "L1",
+  "severity": "P2",
+  "batch": 3,
+  "state": "fixed",
+  "title": "套件 W 域探针未声明围栏绑定 → W-04 测的是「门禁拒绝探针」而不是「夜班包交付→庆祝」",
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "scripts/suite.ts:3289@ed6056f",
+      "note": "ensureWProbe() 直插 agents 表：fence_bindings 写死 '[]'（探针模拟员工却没有任何围栏声明）"
+    },
+    {
+      "type": "code",
+      "ref": "scripts/suite.ts:3294@ed6056f",
+      "note": "wEvent() 的 actor = { id: WPROBE, type: \"agent\" }，不带 fenceBindings"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-baseline-ed6056f.log",
+      "note": "W-04 红：Agent「w-probe-…」未声明 fence_bindings，系统级禁写（F2.10），动作 night.package.deliver 拒绝"
+    }
+  ],
+  "root_cause": {
+    "file": "scripts/suite.ts",
+    "line": 3289,
+    "commit": "ed6056f",
+    "symbol": "ensureWProbe / wEvent"
+  },
+  "trigger_path": "跑服务层套件进入 W 域（W-04 庆祝真实形态融合）时触发；night.package.deliver 已被酒店基线 R24 登记为写类动作（HP-02 二次修复口径），无绑定的探针必然先撞 F2.10",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "探针声明 R24 绑定后重跑套件 W 域",
+      "expect": "W-04 转绿：floor 状态在近窗 night.package.deliver 事件后变为 celebrating（或被前序熔断窗压成 blocked，二者均判过）",
+      "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix5.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意未声明绑定的探针试图写 night.package.deliver",
+      "expect": "网关仍然拒绝（夹具修复不得放宽 F2.10；生产侧该动作由白名单系统组件 night-shift 发出）",
+      "command": "./node_modules/.bin/vitest run packages/base/workdata/gateway.test.ts 2>/dev/null || ./node_modules/.bin/vitest run packages/base/fence-engine/hardening.test.ts",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/gate-fence-hardening.log"
+    }
+  ],
+  "regression": {
+    "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix5.log"
+  },
+  "notes": "回归锚：W-04 是审计#2 修复的锚点，探针本身不代表生产路径（生产由 night-shift 系统组件写），因此夹具补声明而不是改门禁。"
+}

@@ -1,0 +1,52 @@
+{
+  "id": "MC-006",
+  "kind": "problem",
+  "level": "L4",
+  "severity": "P2",
+  "batch": 3,
+  "state": "open",
+  "title": "同一动作 ceo.briefing 存在两套归因：种子事件 who.id=\"captain\"，生产链路 who.id=\"company-ceo\"（成绩单只统计后者）",
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "scripts/seed.ts:874@ed6056f",
+      "note": "种子演示晨报：who: { type: \"agent\", id: \"captain\", version: \"v1.0\" } + decision.action = \"ceo.briefing\""
+    },
+    {
+      "type": "code",
+      "ref": "packages/base/captain/loop.ts:103@ed6056f",
+      "note": "生产链路 emitCeoEvent 固定 who.id = \"company-ceo\"（修复后仍为其一，只补绑定）"
+    },
+    {
+      "type": "code",
+      "ref": "packages/base/captain/scorecard.ts:34@ed6056f",
+      "note": "成绩单只统计 payload->'who'->>'id' = 'company-ceo' 的事件 → 种子那条简报永远不计入老板看到的成绩单"
+    }
+  ],
+  "root_cause": {
+    "file": "scripts/seed.ts",
+    "line": 874,
+    "commit": "ed6056f",
+    "symbol": "demo briefing seed event"
+  },
+  "trigger_path": "打开店铺首页/成绩单时观察「简报数」与事件库实际 ceo.briefing 条数不一致（种子 1 条 + 真机节拍若干）",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "种子库 + 跑一次晨报节拍后读成绩单",
+      "expect": "成绩单 briefings 计数 = 事件库中 who.id='company-ceo' 的 ceo.briefing 条数（种子事件归因与生产一致，或改由 captain 身份记录并在成绩单并计）",
+      "command": "psql -c \"SELECT count(*) FROM biz_events WHERE payload->'decision'->>'action'='ceo.briefing' AND payload->'who'->>'id'='company-ceo'\"",
+      "last_result": "fail",
+      "evidence": ""
+    },
+    {
+      "kind": "property",
+      "given": "任意新写入的 ceo.briefing 事件",
+      "expect": "who.id 落在 {company-ceo}（生产链路唯一身份），不再出现 captain 归属的简报",
+      "command": "psql -c \"SELECT DISTINCT payload->'who'->>'id' FROM biz_events WHERE payload->'decision'->>'action'='ceo.briefing'\"",
+      "last_result": "not-run",
+      "evidence": ""
+    }
+  ],
+  "notes": "未修原因：改种子归因会改变演示数据产物（事件 who、剧场显示名、成绩单基线），属产品展示口径决策，需产品所有者确认「演示晨报算谁的成绩」；本卡给出回归断言与两种修法。"
+}

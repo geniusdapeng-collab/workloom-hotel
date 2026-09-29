@@ -1,0 +1,18 @@
+# 审计基线 ed6056f（干净库 wl_mc_prefix，迁移+种子后）：company-ceo 不在编
+# 命令：psql -h 127.0.0.1 -p 5461 -U postgres -d wl_mc_prefix -c "SELECT ... FROM agents"
+    preset_key     | readonly | status |    fence_bindings    
+-------------------+----------+--------+----------------------
+ competitor-agent  | t        | ready  | []
+ content-agent     | f        | ready  | ["R3"]
+ desktop-agent     | f        | ready  | ["R2"]
+ frontdesk-agent   | f        | ready  | ["R4", "R13", "R16"]
+ housekeeper-agent | f        | ready  | ["R11", "R14"]
+ inspection-agent  | t        | ready  | []
+ owner-cockpit     | t        | ready  | []
+ phone-agent       | f        | ready  | ["R9", "R13", "R16"]
+ pricing-agent     | f        | ready  | ["R1", "R2"]
+ reconcile-agent   | f        | ready  | ["R4", "R5"]
+ review-agent      | f        | ready  | ["R6"]
+(11 rows)
+
+# company-ceo rows = 0

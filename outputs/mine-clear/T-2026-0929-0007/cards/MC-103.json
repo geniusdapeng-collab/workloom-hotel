@@ -1,0 +1,55 @@
+{
+  "id": "MC-103",
+  "kind": "fix",
+  "batch": 3,
+  "state": "fixed",
+  "title": "生成物与文档事实对齐：重跑能力导览生成器 + README 计数/围栏范围指针对齐",
+  "covers": [
+    "MC-005"
+  ],
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "README.md:176@ed6056f",
+      "note": "岗位清单 11→12（补「公司CEO（数字CEO）」）；同文 line 317 链路文案「11 个数字员工岗位」→12、「围栏基线 R1–R20」→R1–R24、套件计数按本轮实测更新"
+    },
+    {
+      "type": "code",
+      "ref": "docs/capabilities.auto.json:1@ed6056f",
+      "note": "由 node scripts/generate-capabilities.mjs 重新生成（32 项能力 / 7 组），消除与生成器的分叉与陈旧计数"
+    }
+  ],
+  "fix_plan": "① 运行生成器重写 docs/capabilities.auto.{md,json} 与 README 的 CAPABILITIES 区块；② 手工对齐 README 正文两处岗位计数与围栏范围指针（本次修复使岗位数从 11→12，R21–R24 早已入库）。",
+  "blast_radius": "仅文档与生成物：不改运行时/围栏/审批行为。README 与生成物的岗位计数改由 bundle presets 事实对齐，后续增删岗位需重跑生成器。",
+  "conflict_paths": [
+    "README.md",
+    "docs/capabilities.auto.md",
+    "docs/capabilities.auto.json"
+  ],
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "重跑生成器后执行 --check",
+      "expect": "三处生成物「已最新」，退出码 0",
+      "command": "node scripts/generate-capabilities.mjs --check",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/assert-capabilities-check.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意时刻统计 bundles/hotel/presets/*.yml 数量",
+      "expect": "README 正文宣称的岗位数与实际文件数一致（当前 12）",
+      "command": "ls bundles/hotel/presets/*.yml | wc -l",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/assert-capabilities-check.log"
+    }
+  ],
+  "regression": {
+    "command": "node scripts/generate-capabilities.mjs --check",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/assert-capabilities-check.log"
+  },
+  "rollback": "git revert <本卡提交 sha>",
+  "fixed_by": "agent:root-T-2026-0929-0007",
+  "verified_by": null,
+  "notes": "生成物漂移在审计基线上即存在（与本次修复无关的存量红），一并收敛以免残留陈旧计数误导后续验收。"
+}
