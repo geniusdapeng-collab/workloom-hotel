@@ -115,7 +115,7 @@ td{padding:9px 10px;border-bottom:1px solid var(--line)}
   <a data-p="handover">🔁 交接班</a>
   <div class="sec">组织与安全</div>
   <a data-p="approvals">✋ 审批队列 <span class="b">3</span></a>
-  <a data-p="fence">⛓️ 围栏 R1–R20</a>
+  <a data-p="fence">⛓️ 围栏 R1–R24</a>
   <a data-p="skills">🧩 技能市场</a>
   <a data-p="memory">🧠 组织记忆</a>
   <a data-p="incident">🧯 断点看板</a>
@@ -209,7 +209,7 @@ const D = {
   goals:[["OCC 入住率",0.83,0.826,"78%"],["ADR 平均房价",512,506,"74%"],["RevPAR",425,418,"76%"],["月营收",108000,108400,"达成 78%"]],
   faq:[["有充电桩吗","周问 5 次","待确认"],["能带宠物吗","周问 4 次","待确认"],["有停车场吗","已入库 · 首响 2.8s","已确认"],["早餐几点","已入库 · 首响 2.5s","已确认"]],
 };
-const TITLES={today:"今日驾驶舱",goals:"经营目标",stores:"多店管理",report:"收益分析",orders:"订单全流程穿透",channels:"渠道运营",price:"收益与价格矩阵",parity:"价格健康（倒挂/超售）",reviews:"口碑与差评",phone:"AI 语音前台",crm:"客户与回访",front:"入退与智能排房",house:"客房与布草",night:"夜班驾驶舱",handover:"交接班",approvals:"审批队列",fence:"围栏引擎 R1–R20",skills:"技能市场",memory:"组织记忆",incident:"断点看板",staff:"排班与安全",archive:"一店一档"};
+const TITLES={today:"今日驾驶舱",goals:"经营目标",stores:"多店管理",report:"收益分析",orders:"订单全流程穿透",channels:"渠道运营",price:"收益与价格矩阵",parity:"价格健康（倒挂/超售）",reviews:"口碑与差评",phone:"AI 语音前台",crm:"客户与回访",front:"入退与智能排房",house:"客房与布草",night:"夜班驾驶舱",handover:"交接班",approvals:"审批队列",fence:"围栏引擎 R1–R24",skills:"技能市场",memory:"组织记忆",incident:"断点看板",staff:"排班与安全",archive:"一店一档"};
 const storeName={yunqi:"云栖酒店",xixi:"云栖·西溪店",manlong:"云栖·满陇店",all:"全店视图"};
 const storeMode={yunqi:"低星单体酒店模式",xixi:"民宿模式",manlong:"无人酒店模式",all:"业主驾驶舱 · 多模式混合"};
 let curStore="yunqi";
@@ -479,7 +479,7 @@ ${D.approvals.map(a=>`<div class="row" onclick="aprDetail('${a.id}')"><span clas
 
 P.fence=()=>`
 <div class="grid g4">
-<div class="card"><h3>基线规则</h3><div class="kpi">R1–R20</div><div class="delta">hotel-baseline/v3</div></div>
+<div class="card"><h3>基线规则</h3><div class="kpi">R1–R24</div><div class="delta">hotel-baseline/v3</div></div>
 <div class="card"><h3>30 天判定</h3><div class="kpi">3,812 次</div><div class="delta">100% 动作过围栏</div></div>
 <div class="card"><h3>熔断拦截</h3><div class="kpi" style="color:var(--red)">7 次</div><div class="delta">倒挂 2/超售 1/高危 4</div></div>
 <div class="card"><h3>单调守卫</h3><div class="kpi">只紧不松</div><div class="delta">放宽提案 ×1 已被拒</div></div>

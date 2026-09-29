@@ -12,7 +12,7 @@
 | biz_events | ✅ | ~1345 条 | 30 天全业务域五元事件，哈希链逐条可验 |
 | approvals | ✅ | ×10（approved 7 / pending 2 / rejected 1） | 三手势、驳回回流、P4 决断队列 |
 | night_runs | ✅ | ×30（package_generated） | 与 30 个夜班决策包事件一一对应 |
-| fence_rules | ✅ | R1–R20 ×active（v3）+ 旧版 rolled_back | 版本化留痕可演示回滚 |
+| fence_rules | ✅ | R1–R24 ×active（v3）+ 旧版 rolled_back | 版本化留痕可演示回滚 |
 | fence_dry_runs | ✅ | ×3（2 confirmed / 1 rejected） | 含单调守卫驳回样本（只紧不松） |
 | org_memory | ✅ | ×8（pattern/sop/preference） | 来源事件可归因（source_events） |
 | memory_usage | ✅ | ×16 | 记忆-事件使用归因 |

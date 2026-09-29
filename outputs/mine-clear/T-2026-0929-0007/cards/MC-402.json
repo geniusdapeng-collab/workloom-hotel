@@ -1,0 +1,60 @@
+{
+  "id": "MC-402",
+  "kind": "problem",
+  "level": "L2",
+  "severity": "P1",
+  "batch": 1,
+  "state": "open",
+  "title": "基座未回灌：packages/base/captain/loop.ts 属 sync/base-scope.json include，workloom-im origin/main 仍写死 CEO_ACTOR，下一次 full 波次会覆盖本仓修复（M6 验收期发现）",
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "packages/base/captain/loop.ts:26@6264944",
+      "note": "酒店仓已改为 ceoActor(client, scope) 从名册读绑定（修复有效）"
+    },
+    {
+      "type": "code",
+      "ref": "packages/base/captain/loop.ts:23@dcc651e",
+      "note": "dcc651e = workloom-im origin/main（2026-09-30 实测）：仍是 const CEO_ACTOR = { id: \"company-ceo\", type: \"agent\" as const }，无 ceoActor 导出"
+    },
+    {
+      "type": "code",
+      "ref": "sync/base-scope.json:include@dcc651e",
+      "note": "基座同步范围 include 含 packages/base/**；full 波次按基座版本回写子仓该路径"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-backport-gap.log",
+      "note": "M6 实测：酒店 .workloom-base-sync.json lastSyncedBaseSha=7735969c；基座 origin/main=dcc651e 仍写死 actor"
+    }
+  ],
+  "root_cause": {
+    "file": "packages/base/captain/loop.ts",
+    "line": 23,
+    "commit": "dcc651e",
+    "symbol": "CEO_ACTOR（基座侧未回灌）"
+  },
+  "trigger_path": "基座 fanout 跑 full 模式（全量波次）时，include 路径 packages/base/** 以基座版本为准回写子仓 → loop.ts 回到写死 CEO_ACTOR → 酒店基线 R24 把 ceo.briefing 登记为写动作后，晨报链重新被 F2.10 拒写（MC-001 复发），且无红灯提示。",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "基座仓库 workloom-im（回灌完成后）",
+      "expect": "origin/main 的 packages/base/captain/loop.ts 含 export async function ceoActor，且不再出现 const CEO_ACTOR =",
+      "command": "cd ~/WorkLoom-fleet/workloom-im && git fetch origin main -q && git show origin/main:packages/base/captain/loop.ts | grep -c 'export async function ceoActor'",
+      "last_result": "fail",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-backport-gap.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意一次 full 波次同步落地后",
+      "expect": "酒店仓 loop.ts 与基座 origin/main 同源（ceoActor 存在），且套件 Z-05/R-05 仍绿（同步不得静默回退修复）",
+      "command": "cd ~/WorkLoom-fleet/.wt-mc-hotel-verify && SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+      "last_result": "not-run"
+    }
+  ],
+  "regression": {
+    "command": "cd ~/WorkLoom-fleet/workloom-im && git fetch origin main -q && git show origin/main:packages/base/captain/loop.ts | grep -c 'export async function ceoActor'",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-backport-gap.log（M6 当前计数为 0；回灌后应为 1，随后按属性断言在酒店仓复跑套件）"
+  },
+  "notes": "M6 追加（验收期发现）：修复卡 MC-101 的 notes 已声明『需回灌 workloom-im』，但截至 2026-09-30 00:11 基座 origin/main 仍无 ceoActor。本卡把该口头前置转为有回归路径的未闭环项；回灌需在 workloom-im 开任务卡（协议 §5）并带基座侧单测。"
+}

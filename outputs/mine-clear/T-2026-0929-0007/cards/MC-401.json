@@ -1,0 +1,56 @@
+{
+  "id": "MC-401",
+  "kind": "problem",
+  "level": "L4",
+  "severity": "P2",
+  "batch": 3,
+  "state": "open",
+  "title": "围栏范围文案残留 R1–R20：README 面向用户正文与演示原型/文档注释未随 R1–R24 对齐（MC-005/MC-103 同类残留，M6 验收期发现）",
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "README.md:213@6264944",
+      "note": "客户可见正文仍写『围栏引擎 R1–R20』；同文件 176 行岗位计数已被 MC-103 更新为 12，说明本轮只改了部分文案"
+    },
+    {
+      "type": "code",
+      "ref": "bundles/hotel/fences/hotel-baseline.yml:249@6264944",
+      "note": "事实源：基线含 R21–R24（rule_id R24 位于 249 行），围栏范围为 R1–R24"
+    },
+    {
+      "type": "log",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-stale-docs.log",
+      "note": "M6 机检：README.md:213、demo/prototype/{README,app,pc}.html、docs/TWIN-COVERAGE.md:15、scripts/{seed,simulate-twin,build-sales-pptx} 共 11 处 R1–R20 残留；WORKLOOM_PRODUCT_CONTEXT.md:214 另残留『11 个岗位』（基座受管文件）"
+    }
+  ],
+  "root_cause": {
+    "file": "README.md",
+    "line": 213,
+    "commit": "6264944",
+    "symbol": "围栏引擎 R1–R20 段落"
+  },
+  "trigger_path": "客户或交付演示阅读 README、打开 demo 原型页时看到『围栏 R1–R20』，而 bundles/hotel/fences/hotel-baseline.yml 实际装载 R1–R24（24 条）——对外口径与事实源不一致。",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "M6 验收基线 6264944 的客户可见文档",
+      "expect": "README.md 不再出现 R1–R20（应写 R1–R24）",
+      "command": "git grep -n -E 'R1[–-]R20' -- README.md",
+      "last_result": "fail",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-stale-docs.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意一次围栏规则增删后",
+      "expect": "客户可见文档与演示原型中不出现与当前基线不符的规则范围字符串（grep 无命中）",
+      "command": "! git grep -q -E 'R1[–-]R20' -- README.md demo docs",
+      "last_result": "fail",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-stale-docs.log"
+    }
+  ],
+  "regression": {
+    "command": "! git grep -q -E 'R1[–-]R20' -- README.md demo docs",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-stale-docs.log（当前 exit=1，存在残留；修好后应 exit=0）"
+  },
+  "notes": "M6 追加（验收期发现，非本轮修复引入的回归）：R1–R20 文案在本轮之前即存在，MC-103 只对齐了推荐阅读指针与生成物，未覆盖 README:213/演示原型。基座受管文件 WORKLOOM_PRODUCT_CONTEXT.md:214 的『11 个岗位』需在 workloom-im 侧修正后随波次下发，不在本仓改动范围。"
+}

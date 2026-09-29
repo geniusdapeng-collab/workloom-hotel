@@ -1,0 +1,525 @@
+{
+  "schema": "workloom.mine-clear/handoff@1",
+  "task_id": "T-2026-0929-0007",
+  "repo": ".wt-mineclear-hotel",
+  "generated_at": "2026-09-29T17:25:29.344Z",
+  "audit_baseline": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+  "repair_baseline": null,
+  "acceptance_baseline": null,
+  "environment_claim": "local-preview",
+  "invariants": [
+    {
+      "id": "INV-1",
+      "text": "租户边界覆盖数据库 RLS、运行时上下文、事件、缓存和外部连接器。",
+      "source": "AGENTS.md#4.1"
+    },
+    {
+      "id": "INV-2",
+      "text": "经营事件、审批和关键回执只增不改；纠正通过新事件表达，不静默覆盖证据。",
+      "source": "AGENTS.md#4.2"
+    },
+    {
+      "id": "INV-3",
+      "text": "所有外部或变更性动作及其子调用，统一经过权限、PII、围栏和审批链路。",
+      "source": "AGENTS.md#4.3"
+    },
+    {
+      "id": "INV-4",
+      "text": "涉钱、敏感数据、群发、公开发布、交易和破坏性变更必须按高风险处理并由人审批。",
+      "source": "AGENTS.md#4.4"
+    },
+    {
+      "id": "INV-5",
+      "text": "没有真实回执就不能标记完成；mock、模拟和体验模式在数据结构与界面上都要明确区分。",
+      "source": "AGENTS.md#4.5"
+    },
+    {
+      "id": "INV-6",
+      "text": "客户原始经营数据不得上行；蜂群只接受白名单化、最小化、匿名化且可审计的元数据或派生经验。",
+      "source": "AGENTS.md#4.6"
+    },
+    {
+      "id": "INV-7",
+      "text": "租户覆盖层只能收紧围栏，不能放宽平台不可变红线。",
+      "source": "AGENTS.md#4.7"
+    },
+    {
+      "id": "INV-8",
+      "text": "模型、提示词、技能、bundle、策略和热更新必须先评测再灰度，且始终可回滚。",
+      "source": "AGENTS.md#4.8"
+    },
+    {
+      "id": "INV-9",
+      "text": "platform-ops、平台账户运营和平台秘密只属于 Andromeda。",
+      "source": "AGENTS.md#4.9"
+    },
+    {
+      "id": "INV-10",
+      "text": "Tiger 在获得单独的合规审查和用户明确授权前，只能模拟或纸面交易。",
+      "source": "AGENTS.md#4.10"
+    },
+    {
+      "id": "INV-11",
+      "text": "令牌、密码、API key、私钥、客户凭证和私密客户数据不得进入源码、文档、上下文、提示词、日志或提交。",
+      "source": "AGENTS.md#4.11"
+    },
+    {
+      "id": "INV-12",
+      "text": "个性化与行业扩展不得形成公共机制的第二事实源。",
+      "source": "AGENTS.md#4.12"
+    }
+  ],
+  "closed_problems": [
+    {
+      "id": "MC-001",
+      "title": "公司CEO 岗位未在编 + CEO 节拍 actor 不读名册绑定 → 晨报链被自家围栏门禁拒写（F2.10）",
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-independent.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-ceo-actor-unit.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-seed.log",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "干净库迁移+种子（含 company-ceo 在编）后跑本仓全场景套件",
+          "expect": "服务层 419/419 + HTTP E2E 45/45，R-05/R-13/R-14/R-15/R-16/R-27 全部转绿，套件退出码 0",
+          "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+          "last_result": "pass"
+        },
+        {
+          "kind": "property",
+          "given": "任意时刻把 company-ceo 岗位的 fence_bindings 清空（模拟缺编/未声明）",
+          "expect": "同一拍（runBriefingBeat）必须抛网关拒绝且原因含 fence_bindings，事件库不留痕（ceo.briefing 计数不变）——取消绑定不得被降级为放行",
+          "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts   # Z-05 用例",
+          "last_result": "pass"
+        },
+        {
+          "kind": "sample",
+          "given": "ceoActor() 面对在编/缺编/只读三种名册行",
+          "expect": "在编行原样返回绑定与只读位；缺编返回空绑定且 checkPermission 对 ceo.briefing 抛「未声明 fence_bindings」；只读行抛「只读 preset」",
+          "command": "./node_modules/.bin/vitest run packages/base/captain/ceo-actor.test.ts",
+          "last_result": "pass"
+        }
+      ]
+    },
+    {
+      "id": "MC-002",
+      "title": "套件 W 域探针未声明围栏绑定 → W-04 测的是「门禁拒绝探针」而不是「夜班包交付→庆祝」",
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-independent.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-fence-hardening.log",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "探针声明 R24 绑定后重跑套件 W 域",
+          "expect": "W-04 转绿：floor 状态在近窗 night.package.deliver 事件后变为 celebrating（或被前序熔断窗压成 blocked，二者均判过）",
+          "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+          "last_result": "pass"
+        },
+        {
+          "kind": "property",
+          "given": "任意未声明绑定的探针试图写 night.package.deliver",
+          "expect": "网关仍然拒绝（夹具修复不得放宽 F2.10；生产侧该动作由白名单系统组件 night-shift 发出）",
+          "command": "./node_modules/.bin/vitest run packages/base/workdata/gateway.test.ts 2>/dev/null || ./node_modules/.bin/vitest run packages/base/fence-engine/hardening.test.ts",
+          "last_result": "pass"
+        }
+      ]
+    },
+    {
+      "id": "MC-003",
+      "title": "套件模型 stub 端口硬编码 8791 → 同机多会话/多副本并行时 HTTP E2E 段以 EADDRINUSE 崩掉（无结论）",
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-independent.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-invalid-stub-port.log",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "8791 被占用，改用 SUITE_STUB_PORT=8806 跑套件",
+          "expect": "HTTP E2E 45/45 通过，套件总报告 464/464、退出码 0",
+          "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+          "last_result": "pass"
+        },
+        {
+          "kind": "property",
+          "given": "任意非法 SUITE_STUB_PORT（如 80 / 70000 / 非数字）",
+          "expect": "套件启动即报「SUITE_STUB_PORT 必须是 1024 到 65535 的整数」并退出，不静默回落到 8791",
+          "command": "SUITE_STUB_PORT=80 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts 2>&1 | head -3",
+          "last_result": "not-run"
+        }
+      ]
+    },
+    {
+      "id": "MC-005",
+      "title": "能力导览生成物漂移（capabilities.auto.* + README 区块与生成器不一致，且残留「11 个岗位」陈旧计数）",
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-capabilities-check.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-mc103-presets.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-product-verify.log",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "重跑生成器后执行 --check",
+          "expect": "docs/capabilities.auto.md / .json / README 三处均报「已最新」，退出码 0",
+          "command": "node scripts/generate-capabilities.mjs --check",
+          "last_result": "pass"
+        },
+        {
+          "kind": "property",
+          "given": "bundles/hotel/presets 下增删岗位后",
+          "expect": "生成物与 README 区块随生成器更新，不出现写死计数（生成器不输出岗位数字，正文数字人工与 presets 数一致）",
+          "command": "ls bundles/hotel/presets/*.yml | wc -l && node scripts/generate-capabilities.mjs --check",
+          "last_result": "pass"
+        }
+      ]
+    },
+    {
+      "id": "MC-101",
+      "title": "CEO 节拍 actor 绑定与名册同源（ceoActor）+ 酒店包补 company-ceo 指挥岗位在编",
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-independent.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-ceo-actor-unit.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-product-verify.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-bundle-governance.log",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "干净库迁移+种子后跑全场景套件",
+          "expect": "464/464（服务层 419 + HTTP E2E 45），R-05/R-13/R-14/R-15/R-16/R-27 转绿，退出码 0",
+          "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+          "last_result": "pass"
+        },
+        {
+          "kind": "property",
+          "given": "任意时刻清空该岗位绑定（模拟缺编/未声明）",
+          "expect": "同一拍被网关拒写且不留痕；恢复绑定后又可写（可逆、无偷放）",
+          "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts   # Z-05",
+          "last_result": "pass"
+        }
+      ]
+    },
+    {
+      "id": "MC-102",
+      "title": "套件夹具保真：W 域探针声明围栏绑定 + stub 端口可覆盖（SUITE_STUB_PORT）",
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-independent.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-fence-hardening.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-invalid-stub-port.log",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "8791 被同机其它会话占用，SUITE_STUB_PORT=8806 跑套件",
+          "expect": "W-04 与全部 HTTP E2E（含 H-10/H-11/H-14 LLM stub 用例）通过，套件 464/464、退出码 0",
+          "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+          "last_result": "pass"
+        },
+        {
+          "kind": "property",
+          "given": "任意未声明绑定的 Agent 写 night.package.deliver",
+          "expect": "仍被网关按 F2.10 拒（夹具修复不得让步门禁）",
+          "command": "./node_modules/.bin/vitest run packages/base/fence-engine/hardening.test.ts",
+          "last_result": "pass"
+        }
+      ]
+    },
+    {
+      "id": "MC-103",
+      "title": "生成物与文档事实对齐：重跑能力导览生成器 + README 计数/围栏范围指针对齐",
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-capabilities-check.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-mc103-presets.log",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "重跑生成器后执行 --check",
+          "expect": "三处生成物「已最新」，退出码 0",
+          "command": "node scripts/generate-capabilities.mjs --check",
+          "last_result": "pass"
+        },
+        {
+          "kind": "property",
+          "given": "任意时刻统计 bundles/hotel/presets/*.yml 数量",
+          "expect": "README 正文宣称的岗位数与实际文件数一致（当前 12）",
+          "command": "ls bundles/hotel/presets/*.yml | wc -l",
+          "last_result": "pass"
+        }
+      ]
+    }
+  ],
+  "open_problems": [
+    {
+      "id": "MC-004",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P2",
+      "title": "派生构建自检在本仓形态下恒报红：写死检查 packages/ui（本仓 UI 是稳定制品 tarball），同时真问题（industry-contract 未构建）缺少启动指引",
+      "evidence": "scripts/check-derived-builds.mjs:21@ed6056f",
+      "root_cause": "scripts/check-derived-builds.mjs:21@ed6056f",
+      "fix_plan": null,
+      "regression": "node scripts/check-derived-builds.mjs"
+    },
+    {
+      "id": "MC-006",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P2",
+      "title": "同一动作 ceo.briefing 存在两套归因：种子事件 who.id=\"captain\"，生产链路 who.id=\"company-ceo\"（成绩单只统计后者）",
+      "evidence": "scripts/seed.ts:874@ed6056f",
+      "root_cause": "scripts/seed.ts:874@ed6056f",
+      "fix_plan": null,
+      "regression": "psql -c \"SELECT count(*) FROM biz_events WHERE payload->'decision'->>'action'='ceo.briefing' AND payload->'who'->>'id'='company-ceo'\""
+    },
+    {
+      "id": "MC-007",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P2",
+      "title": "指挥岗位在编后：未命中语义派活规则的目标落到 company-ceo，其写步（ceo.briefing）无对应围栏对象类型 → 首步即挂 L2 人审（联动后果，待产品裁决）",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m3-ceo-dispatch-exec.log",
+      "root_cause": "bundles/hotel/fences/hotel-baseline.yml:248@ed6056f",
+      "fix_plan": null,
+      "regression": "node outputs/mine-clear/T-2026-0929-0007/evidence/m3-dispatch-routing-probe.mjs http://127.0.0.1:8807"
+    },
+    {
+      "id": "MC-009",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P1",
+      "title": "受管客户端文件被热修绕过 UI 升级通道，状态文件未刷新 → 本仓 static-gate 必红（舰队 8 仓同款）",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-08b-client-foundation-after-install.log",
+      "root_cause": ".workloom-client-foundation.json:997@ed6056f",
+      "fix_plan": null,
+      "regression": "node scripts/verify-client-foundation-consumer.mjs --repo ."
+    },
+    {
+      "id": "MC-010",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P1",
+      "title": "发布红线不可在自带种子上自证：跑完套件后示例工作区身份被清（is_example=false），release:gate 从 11/11 掉到 4/9",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-release-gate-A-fresh-seed.log",
+      "root_cause": "apps/server/src/trpc/router.ts:712@ed6056f",
+      "fix_plan": null,
+      "regression": "SERVER_BASE=http://127.0.0.1:8815 ./node_modules/.bin/tsx --env-file=.env scripts/release-gate.ts"
+    },
+    {
+      "id": "MC-011",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P2",
+      "title": "桌面运行时依赖锁过期（metadata 记录的两项输入摘要与实际不符），本仓 CI 未含该门禁",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-23-runtime-deps-verify.log",
+      "root_cause": ".workloom-runtime-deps/metadata.json:1@ed6056f",
+      "fix_plan": null,
+      "regression": "node scripts/runtime-deps-lock.mjs refresh && node scripts/runtime-deps-lock.mjs verify"
+    },
+    {
+      "id": "MC-012",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P2",
+      "title": "文本入口未拒绝 NUL 字符：POST /trpc/threads.dispatch 传 \\u0000 → 500（应为 400）并写脏错误账本",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-21-security-perf.log",
+      "root_cause": "apps/server/src/trpc/router.ts:1061@ed6056f",
+      "fix_plan": null,
+      "regression": "curl -s -o /dev/null -w '%{http_code}\\n' -X POST http://127.0.0.1:<SERVER_PORT>/trpc/threads.dispatch -H 'content-type: application/json' -H 'authorization: Bearer <owner-token>' -d '{\"title\":\"probe\\u0000nul\"}'"
+    },
+    {
+      "id": "MC-013",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P2",
+      "title": "子仓 CI 未接入秘密扫描（base 有、本仓没有）：警报器被摘掉，全量扫描恒红且无受理清单",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-25-secret-scan-full.log",
+      "root_cause": ".cnb.yml:1@ed6056f",
+      "fix_plan": null,
+      "regression": "node scripts/secret-scan.mjs --range <base>..HEAD --acceptance-manifest sync/base-scope.json"
+    },
+    {
+      "id": "MC-008",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P2",
+      "title": "基座行业装配/技能 PG 集成单测在本仓形态下 6 条红（测试未跨仓可移植：期望本仓 hotel 包同时满足基座自服务包口径）",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-12b-unit-tests-ci-env.log",
+      "root_cause": "packages/base/bundles/bundles.test.ts:198@ed6056f",
+      "fix_plan": null,
+      "regression": "set -a && . ./.env && set +a && RUN_DB_TESTS=1 ./node_modules/.bin/vitest run packages/base"
+    },
+    {
+      "id": "MC-201",
+      "kind": "problem",
+      "state": "fixed",
+      "severity": "P0",
+      "title": "求值异常降级人审的步骤被当成「已完成」：审批通过后恢复运行直接跳过该步，线程 completed 1/2（假完成；并发下可绕过未决审批直接完成）",
+      "evidence": "packages/runtime/src/loop.ts:211-233@ed6056f",
+      "root_cause": "packages/runtime/src/loop.ts:226@ed6056f",
+      "fix_plan": null,
+      "regression": "SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts && SERVER_BASE=http://127.0.0.1:8820 ./node_modules/.bin/tsx --env-file=.env scripts/release-gate.ts"
+    },
+    {
+      "id": "MC-202",
+      "kind": "problem",
+      "state": "fixed",
+      "severity": "P1",
+      "title": "同一线程可被 dispatch 内联执行与调度器并发运行（无跨入口互斥）：响应仍 pending_review 时调度器已把线程标 completed(2/2)",
+      "evidence": "apps/server/src/runtime/scheduler.ts:57@ed6056f",
+      "root_cause": "apps/server/src/runtime/scheduler.ts:57@ed6056f",
+      "fix_plan": null,
+      "regression": "./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-concurrency-probe.mjs && SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts"
+    },
+    {
+      "id": "MC-203",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P1",
+      "title": "默认 mock 模型产出的空参计划优先于行业确定性规划器：参数型围栏全部求值异常→人工裁决，价带内 2% 调价也无法自动完成",
+      "evidence": "packages/runtime/src/loop.ts:94-138@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "root_cause": "packages/runtime/src/loop.ts:102@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "fix_plan": "计划校验增加业务参数完整性门槛：当步骤的工具/对象命中需要参数的规则（或行业 planner 覆盖该意图域）时，缺参直接改用 fallbackPlanner（或让行业 planner 优先），并在事件里标注 plan_source；空参计划不得静默进入执行。",
+      "regression": "M2_ONLY=A1,A4 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --fresh"
+    },
+    {
+      "id": "MC-204",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P1",
+      "title": "派活语义规则缺口碑/评价域：回复差评落到 competitor-agent，用 competitor.crawl 顶包并标 completed（假交付）",
+      "evidence": "apps/server/src/runtime/dispatch-routing.ts:31-90@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "root_cause": "apps/server/src/runtime/dispatch-routing.ts:31@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "fix_plan": "① RULES 增 review 域（差评|评价|口碑|回复|评论 → review-agent）；② 兜底改为按目标语义与岗位工具的匹配度排序，而非 Bundle 顺序；③ 收尾校验交付物语义（无 review.reply 执行事件不得置 completed，需 failed/needs_human）。",
+      "regression": "M2_ONLY=A1,A3 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --fresh"
+    },
+    {
+      "id": "MC-205",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P1",
+      "title": "并发派遣突破 L3.1 工作区并发上限：12 路并发全部放行（上限 10），串行对照第 10 条即 429",
+      "evidence": "apps/server/src/trpc/router.ts:1108-1120@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "root_cause": "apps/server/src/trpc/router.ts:1108@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "fix_plan": "把计数+插入放进带 pg_advisory_xact_lock(hashtext('thread-cap:'+workspaceId)) 的事务，或使用 DB 侧约束/信号量（插入前 SELECT ... FOR UPDATE 工作区行）；超限返回 429 并提示排队。",
+      "regression": "M2_ONLY=A1,B2 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --fresh"
+    },
+    {
+      "id": "MC-206",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P2",
+      "title": "安全网关对未分类动作直接放行（fail-open）：同一 ceo.briefing 在围栏规则装载前返回 200、装载后被 F2.10 拒 500（顺序依赖）",
+      "evidence": "packages/base/workdata/gateway.ts:169-183@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "root_cause": "packages/base/workdata/gateway.ts:172@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "fix_plan": "网关段①对 agent actor 采用 fail-closed：显式读动作（registerReadActions/动词表）放行，其余一律要求 fenceBindings；或把未分类兜底前移到网关（与 judge default_level 同源）。",
+      "regression": "bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --fresh  # 见 order-dependence.log"
+    },
+    {
+      "id": "MC-207",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P1",
+      "title": "触发器引擎空转：tickTriggers 无生产调用点，10 条种子 cron 触发器（巡检 07:00/夜班 22:00/CEO 4 节拍/差评 SLA/倒挂看门狗/FAQ 周萃取/断点率周报）永不自动触发",
+      "evidence": "packages/base/night-shift/triggers.ts:141@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "root_cause": "packages/base/night-shift/triggers.ts:141@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "fix_plan": "在 apps/server 起 tick 循环（默认 60s，可 WORKLOOM_TRIGGER_TICK_MS 关闭）：逐工作区调用 tickTriggers → 按 action.beat 走 captain.runBeat，按 action.dispatch/template 走派遣模板；失败写 trigger.fired.failed 事件并落日志。",
+      "regression": "M2_ONLY=A1,F3 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --no-reset"
+    },
+    {
+      "id": "MC-301",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P1",
+      "title": "同一「求值异常降级人审」事实在数字职场被渲染成遇阻（blocked）且 approvalId 丢失：审批队列说待批、剧场说撞墙，且无法从剧场直达审批",
+      "evidence": "packages/base/captain/floor.ts:170-180,242-250@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "root_cause": "packages/base/captain/floor.ts:170@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "fix_plan": "① W-01 降级时把 impacts 归一为 review（或加 downgraded_from 字段），blocked 语义只留给真熔断；② floor 的遇阻判定改为本工作区是否存在真熔断事件，pending 审批一律走 asking（保留 celebrating 共存逻辑）。",
+      "regression": "M3_ONLY=M3-A1,M3-A2 bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh"
+    },
+    {
+      "id": "MC-302",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P2",
+      "title": "驳回→遇阻 投影分支字段+归属双错配（floor 读 decision.params.gesture 且比对 who.id=员工，生产写的是 after.gesture 且 who=人类成员）→ 该分支确定性空转（守卫空转）",
+      "evidence": "packages/base/captain/floor.ts:178@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "root_cause": "packages/base/captain/floor.ts:178@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "fix_plan": "查询改为 decision.after.gesture='reject'，并以 links 溯源被审事件的主体（e.payload->'who'->>'id'）作为遇阻 actor；补一条回归断言（驳回后该员工 state=blocked）。",
+      "regression": "M3_ONLY=M3-A1,M3-A4 bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh"
+    },
+    {
+      "id": "MC-303",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P1",
+      "title": "两条官方启动路径下 C 端（对外客户入口）均不可用：出厂 .env 未声明 SERVICE_C_*；pnpm preview:all 写死 SERVICE_C_WORKSPACE_ID=ws-aipm-demo（酒店仓只有 ws-yunqi）→ /c/session 503",
+      "evidence": "scripts/preview-all.sh:15@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "root_cause": "scripts/preview-all.sh:15@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "fix_plan": "① preview-all.sh 从本仓 acceptance/profile.json 的 identity.workspaceSlug（yunqi-hotel）解析工作区 id（或直接 ws-yunqi），禁止写死他仓标识；② .env.example 增加 SERVICE_C_WORKSPACE_ID/SERVICE_C_WORKSPACE_MAP 与说明；③ bootstrap/preview 启动前校验目标工作区存在，缺失即提示先 seed。",
+      "regression": "bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh  # M3-B2"
+    },
+    {
+      "id": "MC-304",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P1",
+      "title": "ask 问答与问题无关：事实块按固定顺序装填 + 120 字硬闸，当前待审批等关键事实被系统统计挤掉；明细类与行业数据类无事实面",
+      "evidence": "packages/runtime/src/ask.ts:85-135,269-310@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "root_cause": "packages/runtime/src/ask.ts:278@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "fix_plan": "① 事实按问题相关性排序/裁剪（审批类问题先放 approvals 事实；问数类先放对应域），或把 120 字预算按相关性分配；② 为酒店包注册 ask 事实面（营收/渠道/夜班决策包/审批明细），并在回答里标注来源域。",
+      "regression": "M3_ONLY=M3-A1,M3-C1 bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh"
+    },
+    {
+      "id": "MC-305",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P2",
+      "title": "审批手势事件 session_id=NULL：裁决动作在任务事件流与 /events 账本页均不可见（且约 1/3 非线程事件在账本页整体缺失）",
+      "evidence": "packages/base/review-console/approvals.ts:254-275@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "root_cause": "packages/base/review-console/approvals.ts:254@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "fix_plan": "手势事件写入 sessionId=被审事件 session_id（links 已有该 event_id，可一条 SQL 回填）；账本页增加全量事件面或明确标注覆盖范围并支持按 action/actor 过滤。",
+      "regression": "M3_ONLY=M3-A1,M3-A3 bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh"
+    },
+    {
+      "id": "MC-208",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P2",
+      "title": "派遣无幂等键：同一目标重复提交（双击/重试）生成两条独立线程",
+      "evidence": "apps/server/src/trpc/router.ts:1060-1068@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "root_cause": "apps/server/src/trpc/router.ts:1060@ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
+      "fix_plan": "dispatch 接受 clientRequestId（客户端生成 UUID），workspace+requestId 唯一索引；重复提交返回既有 threadId 并标 deduped，客户端与事件都可见。",
+      "regression": "M2_ONLY=A1,C4 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --no-reset"
+    },
+    {
+      "id": "MC-104",
+      "kind": "fix",
+      "state": "fixed",
+      "severity": null,
+      "title": "止血 P0：续跑锚点改为「执行回执」判定 + completed 收尾双重校验 + 线程级执行互斥（advisory 锁）",
+      "evidence": "packages/runtime/src/loop.ts:211@6264944",
+      "root_cause": null,
+      "fix_plan": "① `existingStepIds` 从「按 basis 前缀排除挂起事件」改为「只认带 receipt 的执行事件」（与 E3.7 同源，历史前缀判定保留）；② `runQuest` 收尾 added 断言：全部步骤有回执 + 本线程无 pending 审批，否则回 pending_review；③ `runQuest` 外层加会话级 advisory 锁做跨入口/跨进程互斥，未获锁者返回 running 让位。",
+      "regression": "SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts && ./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-concurrency-probe.mjs && SERVER_BASE=http://127.0.0.1:8820 ./node_modules/.bin/tsx --env-file=.env scripts/release-gate.ts"
+    },
+    {
+      "id": "MC-401",
+      "kind": "problem",
+      "state": "fixed",
+      "severity": "P2",
+      "title": "围栏范围文案残留 R1–R20：README 面向用户正文与演示原型/文档注释未随 R1–R24 对齐（MC-005/MC-103 同类残留，M6 验收期发现）",
+      "evidence": "README.md:213@6264944",
+      "root_cause": "README.md:213@6264944",
+      "fix_plan": null,
+      "regression": "rg -n 'R1–R20' --glob '!node_modules' --glob '!outputs' --glob '!WORKLOOM_PRODUCT_CONTEXT.md' . | wc -l"
+    },
+    {
+      "id": "MC-402",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P1",
+      "title": "基座未回灌：packages/base/captain/loop.ts 属 sync/base-scope.json include，workloom-im origin/main 仍写死 CEO_ACTOR，下一次 full 波次会覆盖本仓修复（M6 验收期发现）",
+      "evidence": "packages/base/captain/loop.ts:26@6264944",
+      "root_cause": "packages/base/captain/loop.ts:23@dcc651e",
+      "fix_plan": null,
+      "regression": "cd ~/WorkLoom-fleet/workloom-im && git fetch origin main -q && git show origin/main:packages/base/captain/loop.ts | grep -c 'export async function ceoActor'"
+    }
+  ],
+  "acceptance_commands": [
+    "pnpm acceptance:profile:check",
+    "node scripts/acceptance/fleet-run.mjs --repo .wt-mineclear-hotel --env local-preview",
+    "node scripts/acceptance/fleet-run.mjs --repo .wt-mineclear-hotel --env local-preview --live-only   # 生产最小侵入档"
+  ],
+  "notes": "环境档位为 local-preview：报告只能写『本机预览结构验收』，不得写『生产实测通过』（RDAS v3.1 §0）"
+}

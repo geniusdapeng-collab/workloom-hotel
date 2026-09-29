@@ -1,0 +1,61 @@
+{
+  "id": "MC-401",
+  "kind": "problem",
+  "level": "L1",
+  "severity": "P2",
+  "batch": 3,
+  "state": "fixed",
+  "title": "围栏范围文案残留 R1–R20：README 面向用户正文与演示原型/文档注释未随 R1–R24 对齐（MC-005/MC-103 同类残留，M6 验收期发现）",
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "README.md:213@6264944",
+      "note": "面向用户的能力清单仍写「围栏引擎 R1–R20」，而 hotel-baseline.yml v3 实际为 R1–R24（is_baseline=true）"
+    },
+    {
+      "type": "code",
+      "ref": "demo/prototype/pc.html:118,212,482@6264944",
+      "note": "演示原型的页签/标题/基线卡片三处写 R1–R20"
+    },
+    {
+      "type": "code",
+      "ref": "docs/TWIN-COVERAGE.md:15@6264944",
+      "note": "孪生覆盖率表把 fence_rules 记作「R1–R20 ×active」"
+    },
+    {
+      "type": "code",
+      "ref": "scripts/seed.ts:6,674@6264944",
+      "note": "种子与孪生脚本注释同样残留（代码行为不受影响，属注释与实际不一致）"
+    }
+  ],
+  "root_cause": {
+    "file": "README.md",
+    "line": 213,
+    "commit": "6264944",
+    "symbol": "围栏范围文案"
+  },
+  "trigger_path": "客户/评审按 README 与演示原型理解能力边界时，会以为围栏只有 20 条（实际 24 条，含 R21–R24 低风险 auto 通道）",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "全仓（排除受控快照与 outputs）检索旧文案",
+      "expect": "`R1–R20` 命中 0 处；围栏范围文案与实际基线 R1–R24 一致",
+      "command": "rg -n 'R1–R20' --glob '!node_modules' --glob '!outputs' --glob '!WORKLOOM_PRODUCT_CONTEXT.md' . | wc -l",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-r1r24-grep.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意后续新增基线规则",
+      "expect": "面向用户文档中的围栏范围与实际 hotel-baseline.yml 的 rule_id 上限一致（生成器或人工核对均可）",
+      "command": "rg -c 'rule_id: R' bundles/hotel/fences/hotel-baseline.yml",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-r1r24-grep.log"
+    }
+  ],
+  "regression": {
+    "command": "rg -n 'R1–R20' --glob '!node_modules' --glob '!outputs' --glob '!WORKLOOM_PRODUCT_CONTEXT.md' . | wc -l",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-r1r24-grep.log"
+  },
+  "notes": "修复方式：把 README/demo/docs/scripts 中 11 处 `R1–R20` 统一为 `R1–R24`（受控快照 WORKLOOM_PRODUCT_CONTEXT.md 不动——它是快照副本，其 11 岗位/规则数描述由基座下次同步覆盖）。"
+}

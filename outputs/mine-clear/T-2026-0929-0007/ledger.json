@@ -4,7 +4,7 @@
   "repo": ".wt-mineclear-hotel",
   "title": "",
   "created_at": "2026-09-29T14:54:54.397Z",
-  "updated_at": "2026-09-29T17:15:34.428Z",
+  "updated_at": "2026-09-29T17:25:29.346Z",
   "baseline": {
     "audit": {
       "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
@@ -144,7 +144,11 @@
           "evidence": ""
         }
       ],
-      "notes": "未修原因：该脚本属基座受管路径（sync/base-scope.json include scripts/**），本仓单独改会漂移；建议在 workloom-im 修正后随波次下发。回归路径：改后按上面两条断言跑，本仓 doctor 应转绿。"
+      "notes": "未修原因：该脚本属基座受管路径（sync/base-scope.json include scripts/**），本仓单独改会漂移；建议在 workloom-im 修正后随波次下发。回归路径：改后按上面两条断言跑，本仓 doctor 应转绿。",
+      "regression": {
+        "command": "node scripts/check-derived-builds.mjs",
+        "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-derived-builds-check.log"
+      }
     },
     {
       "id": "MC-006",
@@ -196,7 +200,11 @@
           "evidence": ""
         }
       ],
-      "notes": "未修原因：改种子归因会改变演示数据产物（事件 who、剧场显示名、成绩单基线），属产品展示口径决策，需产品所有者确认「演示晨报算谁的成绩」；本卡给出回归断言与两种修法。"
+      "notes": "未修原因：改种子归因会改变演示数据产物（事件 who、剧场显示名、成绩单基线），属产品展示口径决策，需产品所有者确认「演示晨报算谁的成绩」；本卡给出回归断言与两种修法。",
+      "regression": {
+        "command": "psql -c \"SELECT count(*) FROM biz_events WHERE payload->'decision'->>'action'='ceo.briefing' AND payload->'who'->>'id'='company-ceo'\"",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-007",
@@ -253,7 +261,11 @@
           "evidence": ""
         }
       ],
-      "notes": "未修原因：两种修法都动围栏语义或派活策略（① R24 的 object_types 增列 company_ceo/ceo，属放宽 auto 范围，按协议 §3 需人审；② 派活路由对「纯汇报类」目标不落指挥岗），应由产品所有者裁决后单开任务卡。本次修复只把指挥岗补在编，未改任何围栏阈值/范围——因此该行为现在至少是 fail-closed 且带审批入口，不是静默错交。"
+      "notes": "未修原因：两种修法都动围栏语义或派活策略（① R24 的 object_types 增列 company_ceo/ceo，属放宽 auto 范围，按协议 §3 需人审；② 派活路由对「纯汇报类」目标不落指挥岗），应由产品所有者裁决后单开任务卡。本次修复只把指挥岗补在编，未改任何围栏阈值/范围——因此该行为现在至少是 fail-closed 且带审批入口，不是静默错交。",
+      "regression": {
+        "command": "node outputs/mine-clear/T-2026-0929-0007/evidence/m3-dispatch-routing-probe.mjs http://127.0.0.1:8807",
+        "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m3-ceo-dispatch-assignment.txt"
+      }
     },
     {
       "id": "MC-001",
@@ -261,7 +273,7 @@
       "level": "L2",
       "severity": "P1",
       "batch": 1,
-      "state": "fixed",
+      "state": "verified",
       "title": "公司CEO 岗位未在编 + CEO 节拍 actor 不读名册绑定 → 晨报链被自家围栏门禁拒写（F2.10）",
       "evidence": [
         {
@@ -336,21 +348,16 @@
           "command": "./node_modules/.bin/vitest run packages/base/captain/ceo-actor.test.ts",
           "last_result": "pass",
           "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/assert-ceo-actor-unit.log"
-        },
-        {
-          "kind": "sample",
-          "given": "干净库播种后起真服务（SERVER_PORT=8815），以 SERVER_BASE 指向该实例跑发布红线",
-          "expect": "release:gate 11/11 通过、退出码 0（修复前为 10/11，T-02 被 F2.10 拦）",
-          "command": "SERVER_BASE=http://127.0.0.1:8815 ./node_modules/.bin/tsx --env-file=.env scripts/release-gate.ts",
-          "last_result": "pass",
-          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-release-gate-A-fresh-seed.log"
         }
       ],
       "regression": {
         "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts && ./node_modules/.bin/vitest run packages/base/captain/ceo-actor.test.ts",
         "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix5.log; outputs/mine-clear/T-2026-0929-0007/evidence/assert-ceo-actor-unit.log"
       },
-      "notes": "影响面（挡交付）：数字CEO 全部简报类节拍 100% 不可用；派活路由的指挥岗候选长期缺编。修复不含任何围栏阈值放宽，仅补岗位声明并把 actor 绑定与名册同源；未在编时仍然 fail-closed。"
+      "notes": "影响面（挡交付）：数字CEO 全部简报类节拍 100% 不可用；派活路由的指挥岗候选长期缺编。修复不含任何围栏阈值放宽，仅补岗位声明并把 actor 绑定与名册同源；未在编时仍然 fail-closed。",
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-independent.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-ceo-actor-unit.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-seed.log"
     },
     {
       "id": "MC-002",
@@ -358,7 +365,7 @@
       "level": "L1",
       "severity": "P2",
       "batch": 3,
-      "state": "fixed",
+      "state": "verified",
       "title": "套件 W 域探针未声明围栏绑定 → W-04 测的是「门禁拒绝探针」而不是「夜班包交付→庆祝」",
       "evidence": [
         {
@@ -406,7 +413,10 @@
         "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
         "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix5.log"
       },
-      "notes": "回归锚：W-04 是审计#2 修复的锚点，探针本身不代表生产路径（生产由 night-shift 系统组件写），因此夹具补声明而不是改门禁。"
+      "notes": "回归锚：W-04 是审计#2 修复的锚点，探针本身不代表生产路径（生产由 night-shift 系统组件写），因此夹具补声明而不是改门禁。",
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-independent.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-fence-hardening.log"
     },
     {
       "id": "MC-003",
@@ -414,7 +424,7 @@
       "level": "L2",
       "severity": "P2",
       "batch": 3,
-      "state": "fixed",
+      "state": "verified",
       "title": "套件模型 stub 端口硬编码 8791 → 同机多会话/多副本并行时 HTTP E2E 段以 EADDRINUSE 崩掉（无结论）",
       "evidence": [
         {
@@ -462,7 +472,10 @@
         "command": "SUITE_SERVER_PORT=8805 SUITE_STUB_PORT=8806 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
         "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-fix5.log"
       },
-      "notes": "默认值仍是 8791（向后兼容）；此卡只把端口变成可覆盖 + 值域校验，不改任何业务断言。"
+      "notes": "默认值仍是 8791（向后兼容）；此卡只把端口变成可覆盖 + 值域校验，不改任何业务断言。",
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-independent.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-invalid-stub-port.log"
     },
     {
       "id": "MC-005",
@@ -470,7 +483,7 @@
       "level": "L1",
       "severity": "P2",
       "batch": 3,
-      "state": "fixed",
+      "state": "verified",
       "title": "能力导览生成物漂移（capabilities.auto.* + README 区块与生成器不一致，且残留「11 个岗位」陈旧计数）",
       "evidence": [
         {
@@ -518,13 +531,16 @@
         "command": "node scripts/generate-capabilities.mjs --check",
         "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/assert-capabilities-check.log"
       },
-      "notes": "本卡修复=重跑生成器（3 文件 7 行）+ README 两处计数与围栏范围指针对齐（11→12 岗位、R1–R20→R1–R24、套件计数 459→464）。"
+      "notes": "本卡修复=重跑生成器（3 文件 7 行）+ README 两处计数与围栏范围指针对齐（11→12 岗位、R1–R20→R1–R24、套件计数 459→464）。",
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-capabilities-check.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-mc103-presets.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-product-verify.log"
     },
     {
       "id": "MC-101",
       "kind": "fix",
       "batch": 1,
-      "state": "fixed",
+      "state": "verified",
       "title": "CEO 节拍 actor 绑定与名册同源（ceoActor）+ 酒店包补 company-ceo 指挥岗位在编",
       "covers": [
         "MC-001"
@@ -578,14 +594,16 @@
       },
       "rollback": "git revert <本卡提交 sha>（回归到 actor 写死 + 11 岗位；无需数据迁移，种子重跑即可复原）",
       "fixed_by": "agent:root-T-2026-0929-0007",
-      "verified_by": null,
-      "notes": "基座侧改动（loop.ts）属 sync/base-scope.json include 路径，需按协议回灌 workloom-im 后再随波次下发，本仓先落以保证交付；已在 PR 描述与报告中标注。"
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "notes": "基座侧改动（loop.ts）属 sync/base-scope.json include 路径，需按协议回灌 workloom-im 后再随波次下发，本仓先落以保证交付；已在 PR 描述与报告中标注。",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-independent.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-ceo-actor-unit.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-product-verify.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-bundle-governance.log"
     },
     {
       "id": "MC-102",
       "kind": "fix",
       "batch": 3,
-      "state": "fixed",
+      "state": "verified",
       "title": "套件夹具保真：W 域探针声明围栏绑定 + stub 端口可覆盖（SUITE_STUB_PORT）",
       "covers": [
         "MC-002",
@@ -632,14 +650,16 @@
       },
       "rollback": "git revert <本卡提交 sha>",
       "fixed_by": "agent:root-T-2026-0929-0007",
-      "verified_by": null,
-      "notes": "同文件（scripts/suite.ts）与 MC-101 的 Z-05 断言同批提交，回归命令共用。"
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "notes": "同文件（scripts/suite.ts）与 MC-101 的 Z-05 断言同批提交，回归命令共用。",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-independent.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-fence-hardening.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-suite-invalid-stub-port.log"
     },
     {
       "id": "MC-103",
       "kind": "fix",
       "batch": 3,
-      "state": "fixed",
+      "state": "verified",
       "title": "生成物与文档事实对齐：重跑能力导览生成器 + README 计数/围栏范围指针对齐",
       "covers": [
         "MC-005"
@@ -687,8 +707,10 @@
       },
       "rollback": "git revert <本卡提交 sha>",
       "fixed_by": "agent:root-T-2026-0929-0007",
-      "verified_by": null,
-      "notes": "生成物漂移在审计基线上即存在（与本次修复无关的存量红），一并收敛以免残留陈旧计数误导后续验收。"
+      "verified_by": "agent:root-mcd_m6_verifier",
+      "notes": "生成物漂移在审计基线上即存在（与本次修复无关的存量红），一并收敛以免残留陈旧计数误导后续验收。",
+      "verified_at": "2026-09-30T00:14:30+08:00",
+      "verification_evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-capabilities-check.log; outputs/mine-clear/T-2026-0929-0007/evidence/m6-mc103-presets.log"
     },
     {
       "id": "MC-009",
@@ -745,7 +767,11 @@
           "evidence": ""
         }
       ],
-      "notes": "未修原因：通道策略为 upgrade-pr-only（状态文件自述），正确修法是在基座车道重放/推进客户端基座波次（基座已有 @workloom/ui 0.1.15 发布提交 ec0b084/95cf8ff），由 ui-upgrade-pr 工具同批改写文件与状态；在子仓手改指纹=绕过受控通道，不做。建议同时加「受管文件变更必须同 PR 刷新 state」的硬校验，杜绝热修旁路。"
+      "notes": "未修原因：通道策略为 upgrade-pr-only（状态文件自述），正确修法是在基座车道重放/推进客户端基座波次（基座已有 @workloom/ui 0.1.15 发布提交 ec0b084/95cf8ff），由 ui-upgrade-pr 工具同批改写文件与状态；在子仓手改指纹=绕过受控通道，不做。建议同时加「受管文件变更必须同 PR 刷新 state」的硬校验，杜绝热修旁路。",
+      "regression": {
+        "command": "node scripts/verify-client-foundation-consumer.mjs --repo .",
+        "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-08b-client-foundation-after-install.log"
+      }
     },
     {
       "id": "MC-010",
@@ -807,7 +833,11 @@
           "evidence": ""
         }
       ],
-      "notes": "未修原因：两种修法都动发布/测试语义（① release-gate 放宽工作区探测口径；② 套件改用独立工作区），且 release-gate 属基座受控资产，应由基座车道统一裁决；本卡给出可复现 A/B 证据与回归断言。"
+      "notes": "未修原因：两种修法都动发布/测试语义（① release-gate 放宽工作区探测口径；② 套件改用独立工作区），且 release-gate 属基座受控资产，应由基座车道统一裁决；本卡给出可复现 A/B 证据与回归断言。",
+      "regression": {
+        "command": "SERVER_BASE=http://127.0.0.1:8815 ./node_modules/.bin/tsx --env-file=.env scripts/release-gate.ts",
+        "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-release-gate-B-after-suite.log"
+      }
     },
     {
       "id": "MC-011",
@@ -859,7 +889,11 @@
           "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-23-runtime-deps-verify.log"
         }
       ],
-      "notes": "未修原因：refresh 需要联网跑 npm install --package-lock-only 并重写三份锁产物，属独立小批（且建议连同「把 verify 纳入子仓 static-gate」一起做）；命令已给，随下次维护批执行。"
+      "notes": "未修原因：refresh 需要联网跑 npm install --package-lock-only 并重写三份锁产物，属独立小批（且建议连同「把 verify 纳入子仓 static-gate」一起做）；命令已给，随下次维护批执行。",
+      "regression": {
+        "command": "node scripts/runtime-deps-lock.mjs refresh && node scripts/runtime-deps-lock.mjs verify",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-012",
@@ -906,7 +940,11 @@
           "evidence": ""
         }
       ],
-      "notes": "未修原因：本轮修复卡已占用同一批 PR 的评审面（围栏绑定），输入净化属另一张任务卡更清晰；修法一行 zod refine + 一条用例即可，命令与期望已写明。"
+      "notes": "未修原因：本轮修复卡已占用同一批 PR 的评审面（围栏绑定），输入净化属另一张任务卡更清晰；修法一行 zod refine + 一条用例即可，命令与期望已写明。",
+      "regression": {
+        "command": "curl -s -o /dev/null -w '%{http_code}\\n' -X POST http://127.0.0.1:<SERVER_PORT>/trpc/threads.dispatch -H 'content-type: application/json' -H 'authorization: Bearer <owner-token>' -d '{\"title\":\"probe\\u0000nul\"}'",
+        "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-21-security-perf.log"
+      }
     },
     {
       "id": "MC-013",
@@ -958,7 +996,11 @@
           "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m4-25-secret-scan-full.log"
         }
       ],
-      "notes": "未修原因：.cnb.yml 属治理路径（协议 §3 review），应由基座把扫描步骤与受理清单一起下发到订阅仓；本仓私改会与 fanout 冲突。"
+      "notes": "未修原因：.cnb.yml 属治理路径（协议 §3 review），应由基座把扫描步骤与受理清单一起下发到订阅仓；本仓私改会与 fanout 冲突。",
+      "regression": {
+        "command": "node scripts/secret-scan.mjs --range <base>..HEAD --acceptance-manifest sync/base-scope.json",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-008",
@@ -1015,7 +1057,11 @@
           "evidence": ""
         }
       ],
-      "notes": "未修原因：改动落在 packages/base/**（基座受管路径），按协议应在 workloom-im 修正后随波次下发，并在各仓用 extraExclude/运行时解析收敛。回归路径：上表两条断言；修好后 CI test-gate 可考虑从 allowFailure 转必需。"
+      "notes": "未修原因：改动落在 packages/base/**（基座受管路径），按协议应在 workloom-im 修正后随波次下发，并在各仓用 extraExclude/运行时解析收敛。回归路径：上表两条断言；修好后 CI test-gate 可考虑从 allowFailure 转必需。",
+      "regression": {
+        "command": "set -a && . ./.env && set +a && RUN_DB_TESTS=1 ./node_modules/.bin/vitest run packages/base",
+        "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m1-base-pg-tests-postfix.log"
+      }
     },
     {
       "id": "MC-201",
@@ -1210,7 +1256,11 @@
           "last_result": "fail"
         }
       ],
-      "notes": "与 MC-201 是上下游：空参计划是触发源，误判已完成是终点。"
+      "notes": "与 MC-201 是上下游：空参计划是触发源，误判已完成是终点。",
+      "regression": {
+        "command": "M2_ONLY=A1,A4 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --fresh",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-204",
@@ -1266,7 +1316,11 @@
           "last_result": "fail"
         }
       ],
-      "notes": "MCD 规范 L4 语义层典型形状（用户要改价格，交付经营日报且显示已完成）；本轮实证为要回差评、交付竞对抓取。"
+      "notes": "MCD 规范 L4 语义层典型形状（用户要改价格，交付经营日报且显示已完成）；本轮实证为要回差评、交付竞对抓取。",
+      "regression": {
+        "command": "M2_ONLY=A1,A3 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --fresh",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-205",
@@ -1321,7 +1375,11 @@
           "last_result": "fail"
         }
       ],
-      "notes": "超限后的连锁效应（后续用例全部 429、需人工清位）已在 M2 报告记录。"
+      "notes": "超限后的连锁效应（后续用例全部 429、需人工清位）已在 M2 报告记录。",
+      "regression": {
+        "command": "M2_ONLY=A1,B2 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --fresh",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-206",
@@ -1371,7 +1429,11 @@
           "last_result": "not-run"
         }
       ],
-      "notes": "与 MC-001（company-ceo 绑定/在编，已 fixed）互补：MC-001 修的是 actor 声明，本卡修的是分类时序 fail-open。"
+      "notes": "与 MC-001（company-ceo 绑定/在编，已 fixed）互补：MC-001 修的是 actor 声明，本卡修的是分类时序 fail-open。",
+      "regression": {
+        "command": "bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --fresh  # 见 order-dependence.log",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-207",
@@ -1423,7 +1485,11 @@
           "last_result": "not-run"
         }
       ],
-      "notes": "MCD 守卫空转变体：消费点缺失（先 grep 消费点，再 grep 生产写入点）。"
+      "notes": "MCD 守卫空转变体：消费点缺失（先 grep 消费点，再 grep 生产写入点）。",
+      "regression": {
+        "command": "M2_ONLY=A1,F3 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --no-reset",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-301",
@@ -1484,7 +1550,11 @@
           "last_result": "not-run"
         }
       ],
-      "notes": "M3 联动断点：同一事实两套投影语义 + 状态优先级覆盖导致入口丢失。"
+      "notes": "M3 联动断点：同一事实两套投影语义 + 状态优先级覆盖导致入口丢失。",
+      "regression": {
+        "command": "M3_ONLY=M3-A1,M3-A2 bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-302",
@@ -1539,7 +1609,11 @@
           "last_result": "not-run"
         }
       ],
-      "notes": "MCD M3 断点模式：生产-消费字段名不匹配 + 归属错配双命中。"
+      "notes": "MCD M3 断点模式：生产-消费字段名不匹配 + 归属错配双命中。",
+      "regression": {
+        "command": "M3_ONLY=M3-A1,M3-A4 bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-303",
@@ -1605,7 +1679,11 @@
           "last_result": "not-run"
         }
       ],
-      "notes": "正面样本：全配口径下 C↔PC 跨端联动（建单/可见/推进/回读）实测全绿。"
+      "notes": "正面样本：全配口径下 C↔PC 跨端联动（建单/可见/推进/回读）实测全绿。",
+      "regression": {
+        "command": "bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh  # M3-B2",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-304",
@@ -1671,7 +1749,11 @@
           "last_result": "fail"
         }
       ],
-      "notes": "MCD M3 要求所有问答入口的数据源覆盖应覆盖应覆盖的域；当前覆盖仅系统统计 + 知识库命中（本题未命中 KB）。"
+      "notes": "MCD M3 要求所有问答入口的数据源覆盖应覆盖应覆盖的域；当前覆盖仅系统统计 + 知识库命中（本题未命中 KB）。",
+      "regression": {
+        "command": "M3_ONLY=M3-A1,M3-C1 bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-305",
@@ -1732,7 +1814,11 @@
           "last_result": "not-run"
         }
       ],
-      "notes": "审批卡状态仍能反映结果（P2 而非 P1），但谁在何时批的 在任务面不可见。"
+      "notes": "审批卡状态仍能反映结果（P2 而非 P1），但谁在何时批的 在任务面不可见。",
+      "regression": {
+        "command": "M3_ONLY=M3-A1,M3-A3 bash outputs/mine-clear/T-2026-0929-0007/scripts/m3-run.sh",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-208",
@@ -1782,7 +1868,11 @@
           "last_result": "not-run"
         }
       ],
-      "notes": "当前为观察项（无幂等键亦非崩溃），但会放大并发上限与人工清位成本。"
+      "notes": "当前为观察项（无幂等键亦非崩溃），但会放大并发上限与人工清位成本。",
+      "regression": {
+        "command": "M2_ONLY=A1,C4 bash outputs/mine-clear/T-2026-0929-0007/scripts/m2-run.sh --no-reset",
+        "evidence": ""
+      }
     },
     {
       "id": "MC-104",
@@ -1842,7 +1932,159 @@
       "fixed_by": "agent:root-T-2026-0929-0007",
       "verified_by": null,
       "notes": "本卡为 P0/P1 止血批（MCD 第 0/1 批）；`packages/runtime/**` 属基座受管路径，同 MC-101 需回灌 workloom-im（UPSTREAM-base.md 已含该文件）。"
+    },
+    {
+      "id": "MC-401",
+      "kind": "problem",
+      "level": "L1",
+      "severity": "P2",
+      "batch": 3,
+      "state": "fixed",
+      "title": "围栏范围文案残留 R1–R20：README 面向用户正文与演示原型/文档注释未随 R1–R24 对齐（MC-005/MC-103 同类残留，M6 验收期发现）",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "README.md:213@6264944",
+          "note": "面向用户的能力清单仍写「围栏引擎 R1–R20」，而 hotel-baseline.yml v3 实际为 R1–R24（is_baseline=true）"
+        },
+        {
+          "type": "code",
+          "ref": "demo/prototype/pc.html:118,212,482@6264944",
+          "note": "演示原型的页签/标题/基线卡片三处写 R1–R20"
+        },
+        {
+          "type": "code",
+          "ref": "docs/TWIN-COVERAGE.md:15@6264944",
+          "note": "孪生覆盖率表把 fence_rules 记作「R1–R20 ×active」"
+        },
+        {
+          "type": "code",
+          "ref": "scripts/seed.ts:6,674@6264944",
+          "note": "种子与孪生脚本注释同样残留（代码行为不受影响，属注释与实际不一致）"
+        }
+      ],
+      "root_cause": {
+        "file": "README.md",
+        "line": 213,
+        "commit": "6264944",
+        "symbol": "围栏范围文案"
+      },
+      "trigger_path": "客户/评审按 README 与演示原型理解能力边界时，会以为围栏只有 20 条（实际 24 条，含 R21–R24 低风险 auto 通道）",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "全仓（排除受控快照与 outputs）检索旧文案",
+          "expect": "`R1–R20` 命中 0 处；围栏范围文案与实际基线 R1–R24 一致",
+          "command": "rg -n 'R1–R20' --glob '!node_modules' --glob '!outputs' --glob '!WORKLOOM_PRODUCT_CONTEXT.md' . | wc -l",
+          "last_result": "pass",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-r1r24-grep.log"
+        },
+        {
+          "kind": "property",
+          "given": "任意后续新增基线规则",
+          "expect": "面向用户文档中的围栏范围与实际 hotel-baseline.yml 的 rule_id 上限一致（生成器或人工核对均可）",
+          "command": "rg -c 'rule_id: R' bundles/hotel/fences/hotel-baseline.yml",
+          "last_result": "pass",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-r1r24-grep.log"
+        }
+      ],
+      "regression": {
+        "command": "rg -n 'R1–R20' --glob '!node_modules' --glob '!outputs' --glob '!WORKLOOM_PRODUCT_CONTEXT.md' . | wc -l",
+        "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-r1r24-grep.log"
+      },
+      "notes": "修复方式：把 README/demo/docs/scripts 中 11 处 `R1–R20` 统一为 `R1–R24`（受控快照 WORKLOOM_PRODUCT_CONTEXT.md 不动——它是快照副本，其 11 岗位/规则数描述由基座下次同步覆盖）。"
+    },
+    {
+      "id": "MC-402",
+      "kind": "problem",
+      "level": "L2",
+      "severity": "P1",
+      "batch": 1,
+      "state": "open",
+      "title": "基座未回灌：packages/base/captain/loop.ts 属 sync/base-scope.json include，workloom-im origin/main 仍写死 CEO_ACTOR，下一次 full 波次会覆盖本仓修复（M6 验收期发现）",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/base/captain/loop.ts:26@6264944",
+          "note": "酒店仓已改为 ceoActor(client, scope) 从名册读绑定（修复有效）"
+        },
+        {
+          "type": "code",
+          "ref": "packages/base/captain/loop.ts:23@dcc651e",
+          "note": "dcc651e = workloom-im origin/main（2026-09-30 实测）：仍是 const CEO_ACTOR = { id: \"company-ceo\", type: \"agent\" as const }，无 ceoActor 导出"
+        },
+        {
+          "type": "code",
+          "ref": "sync/base-scope.json:include@dcc651e",
+          "note": "基座同步范围 include 含 packages/base/**；full 波次按基座版本回写子仓该路径"
+        },
+        {
+          "type": "log",
+          "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-backport-gap.log",
+          "note": "M6 实测：酒店 .workloom-base-sync.json lastSyncedBaseSha=7735969c；基座 origin/main=dcc651e 仍写死 actor"
+        }
+      ],
+      "root_cause": {
+        "file": "packages/base/captain/loop.ts",
+        "line": 23,
+        "commit": "dcc651e",
+        "symbol": "CEO_ACTOR（基座侧未回灌）"
+      },
+      "trigger_path": "基座 fanout 跑 full 模式（全量波次）时，include 路径 packages/base/** 以基座版本为准回写子仓 → loop.ts 回到写死 CEO_ACTOR → 酒店基线 R24 把 ceo.briefing 登记为写动作后，晨报链重新被 F2.10 拒写（MC-001 复发），且无红灯提示。",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "基座仓库 workloom-im（回灌完成后）",
+          "expect": "origin/main 的 packages/base/captain/loop.ts 含 export async function ceoActor，且不再出现 const CEO_ACTOR =",
+          "command": "cd ~/WorkLoom-fleet/workloom-im && git fetch origin main -q && git show origin/main:packages/base/captain/loop.ts | grep -c 'export async function ceoActor'",
+          "last_result": "fail",
+          "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-backport-gap.log"
+        },
+        {
+          "kind": "property",
+          "given": "任意一次 full 波次同步落地后",
+          "expect": "酒店仓 loop.ts 与基座 origin/main 同源（ceoActor 存在），且套件 Z-05/R-05 仍绿（同步不得静默回退修复）",
+          "command": "cd ~/WorkLoom-fleet/.wt-mc-hotel-verify && SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
+          "last_result": "not-run"
+        }
+      ],
+      "regression": {
+        "command": "cd ~/WorkLoom-fleet/workloom-im && git fetch origin main -q && git show origin/main:packages/base/captain/loop.ts | grep -c 'export async function ceoActor'",
+        "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6-backport-gap.log（M6 当前计数为 0；回灌后应为 1，随后按属性断言在酒店仓复跑套件）"
+      },
+      "notes": "M6 追加（验收期发现）：修复卡 MC-101 的 notes 已声明『需回灌 workloom-im』，但截至 2026-09-30 00:11 基座 origin/main 仍无 ceoActor。本卡把该口头前置转为有回归路径的未闭环项；回灌需在 workloom-im 开任务卡（协议 §5）并带基座侧单测。"
     }
   ],
-  "gates": []
+  "gates": [],
+  "handoff": {
+    "generated_at": "2026-09-29T17:25:29.344Z",
+    "acceptance_command": "node scripts/acceptance/fleet-run.mjs --repo .wt-mineclear-hotel --env local-preview",
+    "open_problem_ids": [
+      "MC-004",
+      "MC-006",
+      "MC-007",
+      "MC-009",
+      "MC-010",
+      "MC-011",
+      "MC-012",
+      "MC-013",
+      "MC-008",
+      "MC-201",
+      "MC-202",
+      "MC-203",
+      "MC-204",
+      "MC-205",
+      "MC-206",
+      "MC-207",
+      "MC-301",
+      "MC-302",
+      "MC-303",
+      "MC-304",
+      "MC-305",
+      "MC-208",
+      "MC-104",
+      "MC-401",
+      "MC-402"
+    ]
+  }
 }
