@@ -237,8 +237,15 @@ async function existingStepIds(gateway: pg.Pool, scope: { tenantId: string; work
       const basis = Array.isArray(decision.basis) ? decision.basis as string[] : [];
       const isBlocked = basis.some((b) => b.startsWith("熔断："));
       const isReview = basis.some((b) => b.startsWith("越围栏挂起："));
-      // 执行证据：receipt 字段（E3.7 规定未核实也要写 receipt + synced:false，故 receipt 存在=工具真的跑过）
-      const hasReceipt = typeof decision.receipt === "object" && decision.receipt !== null;
+      /**
+       * 执行证据：**五元事件顶层 `payload.receipt`**（不是 decision.receipt）——
+       * 执行路径按 `EventDraft.receipt` 写（见本文件「receipt: { ...out.receipt, synced: verified }」），
+       * E3.7 规定未核实也要写 receipt + synced:false，故"receipt 存在"=工具真的跑过。
+       * 独立验收实测（M6-B A5）：写成 decision.receipt 会恒为空 → 续跑时把已完成步骤全部重跑
+       * （写动作重复执行的回归），此处按顶层字段判定。
+       */
+      const hasReceipt = typeof (row.payload as { receipt?: unknown }).receipt === "object"
+        && (row.payload as { receipt?: unknown }).receipt !== null;
       if (typeof sid === "string" && hasReceipt && !isBlocked && !isReview) set.add(sid);
     }
     return set;
