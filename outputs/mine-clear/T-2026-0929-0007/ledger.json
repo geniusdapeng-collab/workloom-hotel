@@ -4,7 +4,7 @@
   "repo": ".wt-mineclear-hotel",
   "title": "",
   "created_at": "2026-09-29T14:54:54.397Z",
-  "updated_at": "2026-09-29T17:25:29.346Z",
+  "updated_at": "2026-09-29T18:41:40.358Z",
   "baseline": {
     "audit": {
       "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
@@ -1130,7 +1130,9 @@
         "command": "SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts && SERVER_BASE=http://127.0.0.1:8820 ./node_modules/.bin/tsx --env-file=.env scripts/release-gate.ts",
         "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-mc201c.log; outputs/mine-clear/T-2026-0929-0007/evidence/m5-release-gate-after-mc201.log"
       },
-      "notes": "修法（止血+地基）：① existingStepIds 改为「只认带 receipt 的执行事件」（与 E3.7「无回执不算完成」同源，前缀排除保留为兼容位）；② 收尾加双重校验——done.size 必须等于 steps.length，且本线程不得留有 pending 审批，任一不满足即保持 pending_review（fail-closed），彻底消灭 completed 1/2 与「未决审批 + completed」。"
+      "notes": "修法（止血+地基）：① existingStepIds 改为「只认带 receipt 的执行事件」（与 E3.7「无回执不算完成」同源，前缀排除保留为兼容位）；② 收尾加双重校验——done.size 必须等于 steps.length，且本线程不得留有 pending 审批，任一不满足即保持 pending_review（fail-closed），彻底消灭 completed 1/2 与「未决审批 + completed」。 \n[回填]M6-B 独立白盒验收（agent:root-mcd_m6b_p0_verifier）在 12d3bda 上抓到回归：回执判定用了 decision.receipt （实际写在五元事件顶层 payload.receipt）→ 续跑重复执行已完成步骤（写动作幂等性破坏）。修复者按验收证据更正并提交 0747046（顶层判定）。验收方探针 m6b-p0-whitebox-probe.mjs 的 A1–A5/B1–B2 在更正提交上全绿（A5：s1=1 条回执、s2=1 条；证据 evidence/m5-m6b-whitebox-probe-after-fix.log）。该轮复跑由修复者在更正提交上执行（验收方本人重跑尚未归档），故本卡保持 fixed 而非 verified。",
+      "verified_by": null,
+      "verification_evidence": null
     },
     {
       "id": "MC-202",
@@ -1194,7 +1196,9 @@
         "command": "./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-concurrency-probe.mjs && SUITE_SERVER_PORT=8821 SUITE_STUB_PORT=8822 TOOL_UNVERIFIED_RATE=0 ./node_modules/.bin/tsx --env-file=.env scripts/suite.ts",
         "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-concurrency-probe.log; outputs/mine-clear/T-2026-0929-0007/evidence/suite-after-mc201c.log"
       },
-      "notes": "修法：runQuest 入口用会话级 `pg_try_advisory_lock(hashtext('thread-run:'||threadId))` 做线程级互斥（runQuest 拆成 wrapper + body，finally 解锁）；拿不到锁的执行者返回 running 并让位。选会话锁而非状态位 CAS 的原因：崩溃/断连即释放，不依赖僵死窗口；且锁连接**不设 RLS GUC**（首版曾用状态 CAS + 会话 GUC，触发 P-02 池卫生用例变红，已改）。"
+      "notes": "修法：runQuest 入口用会话级 `pg_try_advisory_lock(hashtext('thread-run:'||threadId))` 做线程级互斥（runQuest 拆成 wrapper + body，finally 解锁）；拿不到锁的执行者返回 running 并让位。选会话锁而非状态位 CAS 的原因：崩溃/断连即释放，不依赖僵死窗口；且锁连接**不设 RLS GUC**（首版曾用状态 CAS + 会话 GUC，触发 P-02 池卫生用例变红，已改）。 \n[回填]M6-B 独立白盒验收（agent:root-mcd_m6b_p0_verifier）在 12d3bda 上抓到回归：回执判定用了 decision.receipt （实际写在五元事件顶层 payload.receipt）→ 续跑重复执行已完成步骤（写动作幂等性破坏）。修复者按验收证据更正并提交 0747046（顶层判定）。验收方探针 m6b-p0-whitebox-probe.mjs 的 A1–A5/B1–B2 在更正提交上全绿（A5：s1=1 条回执、s2=1 条；证据 evidence/m5-m6b-whitebox-probe-after-fix.log）。该轮复跑由修复者在更正提交上执行（验收方本人重跑尚未归档），故本卡保持 fixed 而非 verified。",
+      "verified_by": null,
+      "verification_evidence": null
     },
     {
       "id": "MC-203",
@@ -1931,7 +1935,8 @@
       "rollback": "git revert <本卡提交 sha>（恢复旧锚点口径与无互斥执行；无数据迁移）",
       "fixed_by": "agent:root-T-2026-0929-0007",
       "verified_by": null,
-      "notes": "本卡为 P0/P1 止血批（MCD 第 0/1 批）；`packages/runtime/**` 属基座受管路径，同 MC-101 需回灌 workloom-im（UPSTREAM-base.md 已含该文件）。"
+      "notes": "本卡为 P0/P1 止血批（MCD 第 0/1 批）；`packages/runtime/**` 属基座受管路径，同 MC-101 需回灌 workloom-im（UPSTREAM-base.md 已含该文件）。 \n[回填]M6-B 独立白盒验收（agent:root-mcd_m6b_p0_verifier）在 12d3bda 上抓到回归：回执判定用了 decision.receipt （实际写在五元事件顶层 payload.receipt）→ 续跑重复执行已完成步骤（写动作幂等性破坏）。修复者按验收证据更正并提交 0747046（顶层判定）。验收方探针 m6b-p0-whitebox-probe.mjs 的 A1–A5/B1–B2 在更正提交上全绿（A5：s1=1 条回执、s2=1 条；证据 evidence/m5-m6b-whitebox-probe-after-fix.log）。该轮复跑由修复者在更正提交上执行（验收方本人重跑尚未归档），故本卡保持 fixed 而非 verified。",
+      "verification_evidence": null
     },
     {
       "id": "MC-401",
@@ -2057,7 +2062,7 @@
   ],
   "gates": [],
   "handoff": {
-    "generated_at": "2026-09-29T17:25:29.344Z",
+    "generated_at": "2026-09-29T18:41:40.355Z",
     "acceptance_command": "node scripts/acceptance/fleet-run.mjs --repo .wt-mineclear-hotel --env local-preview",
     "open_problem_ids": [
       "MC-004",

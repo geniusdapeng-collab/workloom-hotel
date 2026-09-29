@@ -155,8 +155,10 @@ M2 动态排雷新上账（详表见 `M2-M3-REPORT.md` §3.1 与 `evidence/m2-m3
 | 验收对象 | 结论 | 关键证据 |
 |---|---|---|
 | 原问题是否还在 | 不在（第一轮：独立复跑套件 464/464；第二轮：MC-201/202 的反例在修复前复现、修复后转绿） | `m6-suite-independent.log`、`m6b-*.log` |
-| 是否引入新问题 | 无新增（第一轮：static-gate 各步骤逐个复跑，唯一失败步 = 存量受管文件指纹漂移 MC-009，且基线同样红） | `m6-static-gate-rootcause.log` |
-| 客户旅程是否走得通 | 通（晨报节拍 / 审批三手势 / 派活建任务 + 发布红线 11/11） | `m1-release-gate-A-fresh-seed.log`、`m5-release-gate-after-mc201.log`、`m6b-*` |
+| 是否引入新问题 | **第二轮抓到并已修复 1 处回归**：`existingStepIds` 误读 `decision.receipt`（回执实际在五元事件顶层 `payload.receipt`）→ 续跑时已完成步骤被重复执行；修复者按验收证据改为顶层判定并提交 `0747046`，验收方重跑 A5 确认每步恰好 1 条回执 | `m6b-09-p0-whitebox-probe.log`、`m5-resume-once-probe.log` |
+| 客户旅程是否走得通 | 通（晨报节拍 / 审批三手势 / 派活建任务 + 发布红线 11/11） | `m1-release-gate-A-fresh-seed.log`、`m5-release-gate-after-receipt-fix.log`、`m6b-*` |
+
+> 独立验收的价值在此实锤：修复者自测（套件 + 探针）全绿的情况下，验收方的白盒断言仍抓到「写动作重复执行」这一 MCD 明列的**假修复/回归**形态；处置方式是「验收给证据 → 修复者改 → 验收重跑」，而非由修复者自证。
 
 ## 7. 证据分级
 
