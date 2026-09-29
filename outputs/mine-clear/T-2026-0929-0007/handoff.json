@@ -2,7 +2,7 @@
   "schema": "workloom.mine-clear/handoff@1",
   "task_id": "T-2026-0929-0007",
   "repo": ".wt-mineclear-hotel",
-  "generated_at": "2026-09-29T18:42:10.393Z",
+  "generated_at": "2026-09-29T18:43:58.479Z",
   "audit_baseline": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
   "repair_baseline": "0747046",
   "acceptance_baseline": "0747046",
@@ -514,6 +514,28 @@
       "root_cause": "packages/base/captain/loop.ts:23@dcc651e",
       "fix_plan": null,
       "regression": "cd ~/WorkLoom-fleet/workloom-im && git fetch origin main -q && git show origin/main:packages/base/captain/loop.ts | grep -c 'export async function ceoActor'"
+    },
+    {
+      "id": "MC-501",
+      "kind": "problem",
+      "state": "fixed",
+      "severity": "P1",
+      "title": "续跑回执锚点字段错位（读 decision.receipt，实际写 payload.receipt）→ 锚点恒空，续跑重复执行全部已完成步骤（含写步骤）",
+      "evidence": "packages/runtime/src/loop.ts:241@12d3bda",
+      "root_cause": "packages/runtime/src/loop.ts:241@12d3bda",
+      "fix_plan": "hasReceipt 改判 payload.receipt（或 `decision.receipt ?? payload.receipt`）；补断言「续跑后每 step_id 的回执事件恰 1 条」（现有 A2/E5 断言只查终态，查不出该回归）",
+      "regression": "./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-resume-once-probe.mjs"
+    },
+    {
+      "id": "MC-502",
+      "kind": "problem",
+      "state": "open",
+      "severity": "P2",
+      "title": "种子「审批样例」按最近两条 review 事件挂审批，重播种时可绑到运行时已完成线程 → 污染「completed 线程无 pending 审批」属性并让收尾校验②误拦重跑",
+      "evidence": "scripts/seed.ts:898-920@12d3bda",
+      "root_cause": "scripts/seed.ts:900@12d3bda",
+      "fix_plan": "样例审批仅绑定 E-SEED-* 事件（或显式构造样例事件），不得扫描运行时事件",
+      "regression": "psql <db> -c \"…completed+pending(含 step_id/gate)…\""
     }
   ],
   "acceptance_commands": [

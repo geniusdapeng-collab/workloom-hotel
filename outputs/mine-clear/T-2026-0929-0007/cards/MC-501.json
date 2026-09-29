@@ -1,0 +1,64 @@
+{
+  "id": "MC-501",
+  "kind": "problem",
+  "level": "L3",
+  "severity": "P1",
+  "state": "fixed",
+  "title": "续跑回执锚点字段错位（读 decision.receipt，实际写 payload.receipt）→ 锚点恒空，续跑重复执行全部已完成步骤（含写步骤）",
+  "found_by": "agent:root-mcd_m6b_p0_verifier",
+  "found_at": "2026-09-30T01:45:00+08:00",
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "packages/runtime/src/loop.ts:241@12d3bda",
+      "note": "hasReceipt 判 decision.receipt；同文件 :705 把回执写在事件顶层 receipt（EventDraft.receipt）"
+    },
+    {
+      "type": "runtime",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m6b-13-postfix-ab-probe.log",
+      "note": "同一计划两跑：s1（写步骤 review.reply）回执 1→2；pre-fix 对照 s1 恒为 1"
+    },
+    {
+      "type": "runtime",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m6b-10-price-flow-probe.log",
+      "note": "真实 HTTP 调价流续跑：s1/s2 各 2 条回执（不同 snapshot_uri=两次真实执行）"
+    },
+    {
+      "type": "runtime",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m6b-15-p0-http-probe-fixed.log",
+      "note": "差评流 T-151 续跑 s1 重复执行"
+    }
+  ],
+  "root_cause": {
+    "file": "packages/runtime/src/loop.ts",
+    "line": 241,
+    "commit": "12d3bda",
+    "symbol": "existingStepIds.hasReceipt"
+  },
+  "trigger_path": "任一续跑（批准恢复 / threads.run / 调度器重试）：existingStepIds 恒空 → 已执行步骤再次执行",
+  "blast_radius": "所有线程续跑；写步骤重复产生外部动作/重复写回/重复计费。默认确定性规划器把读步骤排前（重复读为主），真实模型/行业规划器顺序不受约束",
+  "fix_plan": "hasReceipt 改判 payload.receipt（或 `decision.receipt ?? payload.receipt`）；补断言「续跑后每 step_id 的回执事件恰 1 条」（现有 A2/E5 断言只查终态，查不出该回归）",
+  "regression": {
+    "command": "./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-resume-once-probe.mjs",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-resume-once-probe.log"
+  },
+  "notes": "[处置] 已由 0747046 修复（顶层 receipt 判定）；续跑幂等探针 s1=1/s2=1 通过。",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "2 步 Quest（写步骤 s1 auto + 写步骤 s2 缺参→人审）→ 批准 → 续跑",
+      "expect": "s1 与 s2 各恰好 1 条带回执的执行事件；线程 completed 且 progress 2/2",
+      "command": "./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m5-resume-once-probe.mjs",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-resume-once-probe.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意线程连续续跑 N 次",
+      "expect": "每个 step_id 的回执事件数恒为 1（幂等），写步骤不得重复执行",
+      "command": "./node_modules/.bin/tsx --env-file=.env outputs/mine-clear/T-2026-0929-0007/scripts/m6b-p0-whitebox-probe.mjs",
+      "last_result": "pass",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m5-m6b-whitebox-probe-after-fix.log"
+    }
+  ]
+}

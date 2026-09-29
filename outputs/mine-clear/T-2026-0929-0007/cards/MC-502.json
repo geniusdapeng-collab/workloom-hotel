@@ -1,0 +1,53 @@
+{
+  "id": "MC-502",
+  "kind": "problem",
+  "level": "L1",
+  "severity": "P2",
+  "state": "open",
+  "title": "种子「审批样例」按最近两条 review 事件挂审批，重播种时可绑到运行时已完成线程 → 污染「completed 线程无 pending 审批」属性并让收尾校验②误拦重跑",
+  "found_by": "agent:root-mcd_m6b_p0_verifier",
+  "found_at": "2026-09-30T01:45:00+08:00",
+  "evidence": [
+    {
+      "type": "code",
+      "ref": "scripts/seed.ts:898-920@12d3bda",
+      "note": "SELECT … rule_impact @> '[{\"result\":\"review\"}]' ORDER BY seq DESC LIMIT 2 → INSERT approvals（status=pending/approved）"
+    },
+    {
+      "type": "runtime",
+      "ref": "outputs/mine-clear/T-2026-0929-0007/evidence/m6b-16-sql-property-evidence.log",
+      "note": "apr-e-10796：绑定 E-10796（套件线程已完成执行的 review.reply 事件），snapshot 无 step_id/gate，创建时间晚于被绑事件 107s，未消耗新事件号"
+    }
+  ],
+  "root_cause": {
+    "file": "scripts/seed.ts",
+    "line": 900,
+    "commit": "12d3bda",
+    "symbol": "审批样例选取"
+  },
+  "fix_plan": "样例审批仅绑定 E-SEED-* 事件（或显式构造样例事件），不得扫描运行时事件",
+  "regression": {
+    "command": "psql <db> -c \"…completed+pending(含 step_id/gate)…\"",
+    "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6b-16-sql-property-evidence.log"
+  },
+  "trigger_path": "任意一次「先跑套件、后重播种」的流程：seed 按 rule_impact @> [{\"result\":\"review\"}] 取最近两条事件挂演示审批，可能绑到套件运行时事件（snapshot 无 step_id/gate），给已完成线程挂上 pending 审批 → 污染属性断言并让收尾校验②对该线程 fail-closed。",
+  "notes": "[映射说明] 原 P3（建议级）在 MCD 台账 schema 中映射为 P2。",
+  "assertions": [
+    {
+      "kind": "sample",
+      "given": "先跑套件、再重播种（或反之）后扫描属性",
+      "expect": "不存在「completed 线程仍挂 pending 审批（snapshot 含 step_id/gate）」；种子样例审批只落在 E-SEED-* 事件上",
+      "command": "psql <db> -c \"SELECT count(*) FROM threads t WHERE t.status='completed' AND EXISTS (SELECT 1 FROM approvals a JOIN biz_events e ON e.event_id=a.event_id AND e.workspace_id=a.workspace_id WHERE a.status='pending' AND e.session_id=t.id AND (a.snapshot ? 'step_id' OR a.snapshot ? 'gate'))\"",
+      "last_result": "fail",
+      "evidence": "outputs/mine-clear/T-2026-0929-0007/evidence/m6b-16-sql-property-evidence.log"
+    },
+    {
+      "kind": "property",
+      "given": "任意次迁移+种子",
+      "expect": "种子演示审批与运行时线程解耦（跑套件不会把 pending 审批挂到已完成线程）",
+      "command": "./node_modules/.bin/tsx --env-file=.env scripts/seed.ts && psql <db> -c \"…上条 SQL…\"",
+      "last_result": "not-run",
+      "evidence": ""
+    }
+  ]
+}
