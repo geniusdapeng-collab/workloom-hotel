@@ -2,10 +2,10 @@
   "schema": "workloom.mine-clear/handoff@1",
   "task_id": "T-2026-0929-0007",
   "repo": ".wt-mineclear-hotel",
-  "generated_at": "2026-09-29T18:41:40.355Z",
+  "generated_at": "2026-09-29T18:42:10.393Z",
   "audit_baseline": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
-  "repair_baseline": null,
-  "acceptance_baseline": null,
+  "repair_baseline": "0747046",
+  "acceptance_baseline": "0747046",
   "environment_claim": "local-preview",
   "invariants": [
     {

@@ -4,7 +4,7 @@
   "repo": ".wt-mineclear-hotel",
   "title": "",
   "created_at": "2026-09-29T14:54:54.397Z",
-  "updated_at": "2026-09-29T18:41:40.358Z",
+  "updated_at": "2026-09-29T18:42:10.395Z",
   "baseline": {
     "audit": {
       "commit": "ed6056fa3ad8869133d70fc614c966c8ceb0b31c",
@@ -14,12 +14,13 @@
       "notes": "工作树不干净（1 项未提交改动）：排雷结论只对已提交内容成立"
     },
     "repair": {
-      "commit": null,
+      "commit": "0747046",
       "reverified_problem_ids": []
     },
     "acceptance": {
-      "commit": null,
-      "is_descendant_of_repair": null
+      "commit": "0747046",
+      "is_descendant_of_repair": true,
+      "note": "代码提交；其后仅台账/报告类提交"
     }
   },
   "environment": {
@@ -2062,7 +2063,7 @@
   ],
   "gates": [],
   "handoff": {
-    "generated_at": "2026-09-29T18:41:40.355Z",
+    "generated_at": "2026-09-29T18:42:10.393Z",
     "acceptance_command": "node scripts/acceptance/fleet-run.mjs --repo .wt-mineclear-hotel --env local-preview",
     "open_problem_ids": [
       "MC-004",
