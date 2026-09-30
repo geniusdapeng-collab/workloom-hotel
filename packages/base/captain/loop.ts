@@ -7,7 +7,7 @@
  * 全部写路径：app 池单事务 + 事务级双 GUC（D16 同构）；事件均带 basis（治理 §九.3 依据链强制）。
  */
 import type pg from "pg";
-import { gatewayAppendOnClient, type ActorInfo } from "@workloom/base/workdata";
+import { gatewayAppendOnClient } from "@workloom/base/workdata";
 import {
   parseCharter, transition, canExecute, isShadow, isExpired,
   evalCircuitBreaker, tightenAutonomy, effectiveAutonomy, type Charter,
@@ -20,35 +20,7 @@ import { generateBriefing, buildMemo, type BriefingKind } from "./briefing.js";
 
 export interface Scope { tenantId: string; workspaceId: string }
 
-const CEO_ACTOR_ID = "company-ceo";
-
-/**
- * CEO 节拍的归因主体（actor）必须携带**本工作区 company-ceo 岗位声明的围栏绑定**。
- *
- * 网关段①（F2.10）会拒绝「未声明 fence_bindings 的 Agent 发起写类动作」，而 CEO 节拍的
- * 写动作（ceo.briefing / ceo.decision / captain.mode_change …）在行业围栏包把动作登记为
- * 显式写之后一律按写处理（网关 `registerWriteActions`；MCD 二次修复口径 HP-02）。
- * 因此 actor 与事实源必须同源：岗位绑定哪几条，就从 `agents` 表读哪几条。
- *
- * 未在编（工作区没有 company-ceo 岗位）时留空绑定 → 网关按「未声明围栏」拒绝（fail-closed，
- * 不偷放）。实测（workloom-hotel 2026-09-29）：旧实现把 actor 写死成不带绑定的
- * `{ id, type }`，酒店基线 R24 登记 `ceo.briefing` 为写类动作后，整条晨报链被自家门禁拦下
- * （`Agent「company-ceo」未声明 fence_bindings，系统级禁写（F2.10）`，套件 R-05/R-13…R-16/R-27）。
- */
-export async function ceoActor(client: pg.PoolClient, scope: Scope): Promise<ActorInfo> {
-  const r = await client.query<{ readonly: boolean; fence_bindings: string[] }>(
-    `SELECT readonly, fence_bindings FROM agents
-      WHERE workspace_id=$1 AND preset_key=$2 LIMIT 1`,
-    [scope.workspaceId, CEO_ACTOR_ID],
-  );
-  const row = r.rows[0];
-  return {
-    id: CEO_ACTOR_ID,
-    type: "agent",
-    readonly: row?.readonly ?? false,
-    fenceBindings: row?.fence_bindings ?? [],
-  };
-}
+const CEO_ACTOR = { id: "company-ceo", type: "agent" as const };
 
 /* ================= 宪章读写 ================= */
 
@@ -99,12 +71,10 @@ async function emitCeoEvent(
   decision: { params?: Record<string, unknown>; after?: Record<string, unknown>; basis: string[] },
   opts?: { dryRun?: boolean },
 ): Promise<string> {
-  // 同源绑定：actor 从名册读（ceoActor），不写死——见 ceoActor 注释（F2.10 复查位）
-  const actor = await ceoActor(client, scope);
   const res = await gatewayAppendOnClient(client, {
-    ...scope, actor, sessionId: `ceo-${scope.workspaceId}`,
+    ...scope, actor: CEO_ACTOR, sessionId: `ceo-${scope.workspaceId}`,
   }, {
-    who: { type: "agent", id: actor.id },
+    who: { type: "agent", id: CEO_ACTOR.id },
     context: { tenant_id: scope.tenantId, workspace_id: scope.workspaceId, time: new Date().toISOString() },
     object: { type: "company_ceo", id: scope.workspaceId },
     decision: {
@@ -172,6 +142,9 @@ export async function runQueueBeat(
     }>(
       `SELECT a.approval_id, a.event_id, a.snapshot
        FROM approvals a WHERE a.workspace_id=$1 AND a.status='pending' AND a.tier='l2_captain'
+         -- B-03 修复（端口 growth 排雷 T-2026-0929-0003）：AI 裁决节拍不得批准已过期审批
+         -- （与 review-console.decide() 的过期检查同口径）
+         AND (a.snapshot->>'expires_at' IS NULL OR (a.snapshot->>'expires_at')::timestamptz > now())
        ORDER BY a.approval_id LIMIT 20`,
       [scope.workspaceId],
     );
@@ -251,7 +224,7 @@ ${item.action} ${JSON.stringify(item.params)}
           `UPDATE approvals SET status=$3, gesture=$4::jsonb, decided_by=$5, decided_at=now()
            WHERE approval_id=$1 AND workspace_id=$2 AND status='pending'`,
           [row.approval_id, scope.workspaceId, verdict.kind === "approve" ? "approved" : "rejected",
-           JSON.stringify({ type: verdict.kind, weight: 1, reason_text: verdict.rationale }), CEO_ACTOR_ID],
+           JSON.stringify({ type: verdict.kind, weight: 1, reason_text: verdict.rationale }), CEO_ACTOR.id],
         );
         applied = (u.rowCount ?? 0) > 0;
         if (applied) decided++;
@@ -476,7 +449,7 @@ export async function runHrReviewBeat(
           `INSERT INTO approvals (approval_id, tenant_id, workspace_id, event_id, channel, status, snapshot, tier)
            VALUES ($1,$2,$3,$4,'inapp','pending',$5,'l4_chairman') ON CONFLICT (event_id, channel) DO NOTHING`,
           [`apr-${evId.toLowerCase()}`, scope.tenantId, scope.workspaceId, evId,
-           JSON.stringify({ kind: "hr.replacement", agent_id: card.agentId, design: replacement, title: `汰换 ${card.agentId} → ${replacement.newPreset.name}` })],
+           JSON.stringify({ kind: "hr.replacement", agent_id: card.agentId, design: replacement, title: `汰换 ${card.agentId} → ${replacement.newPreset.name}`, high_risk: true })],
         );
       }
     });
@@ -576,7 +549,7 @@ export async function runOrgScanBeat(
         `INSERT INTO approvals (approval_id, tenant_id, workspace_id, event_id, channel, status, snapshot, tier)
          VALUES ($1,$2,$3,$4,'inapp','pending',$5,'l4_chairman') ON CONFLICT (event_id, channel) DO NOTHING`,
         [`apr-${evId.toLowerCase()}`, scope.tenantId, scope.workspaceId, evId,
-         JSON.stringify({ kind: "org.hiring", role: proposal.role, jd: proposal.jd, title: `招聘提案：${proposal.role}` })],
+         JSON.stringify({ kind: "org.hiring", role: proposal.role, jd: proposal.jd, title: `招聘提案：${proposal.role}`, high_risk: true })],
       );
     }
   });

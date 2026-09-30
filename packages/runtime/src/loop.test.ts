@@ -93,12 +93,6 @@ beforeEach(() => {
         if (sql.includes("SELECT plan, plan_version FROM threads")) return { rows: [] };
         // N-14 挂起去重 + review 分支写审批：旧用例关注回执行语义，这里补最小桩
         if (sql.includes("INSERT INTO approvals")) return { rows: [] };
-        /**
-         * 本仓 MC-202（排雷 T-2026-0929-0007）：runQuest 入口用 `pg_try_advisory_lock`
-         * 做线程级互斥；本用例聚焦循环语义，桩恒返回「拿到锁」，释放语句返回空行即可。
-         */
-        if (sql.includes("pg_try_advisory_lock")) return { rows: [{ ok: true }] };
-        if (sql.includes("pg_advisory_unlock")) return { rows: [] };
         if (sql.includes("FROM fence_rules") || sql.includes("FROM approvals")) return { rows: [] };
         throw new Error(`测试未定义的 SQL：${sql}`);
       },
