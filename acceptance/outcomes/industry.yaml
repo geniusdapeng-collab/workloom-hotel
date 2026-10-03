@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "workloom.outcome-suite/v1",
+  "role": "owner-cockpit",
+  "agentPreset": "owner-cockpit",
+  "trials": 5,
+  "businessScope": "酒店跨店经营摘要",
+  "deliverableUnit": "跨店核查摘要",
+  "minimumSubstance": "OCC/ADR/RevPAR 的口径与来源、待核实项、待人工审批项；不制造经营数字",
+  "notes": "正常任务仅请求行业核查摘要，禁止执行实际业务写入；执行器仍会创建带 marker 的验收线程。配置有效不证明经营指标、生产能力或完整RDAS通过。",
+  "tasks": [
+    {
+      "id": "INDUSTRY-NORMAL",
+      "scenario": "normal",
+      "criticality": "P0",
+      "title": "酒店跨店经营摘要",
+      "input": "当前酒店业主驾驶舱应如何核对各门店 OCC、ADR、RevPAR 与待审批事项？请用“门店”标注来源与缺失数据，只提供核查摘要，不批准、不改价。",
+      "trials": 5,
+      "thread_asserts": [
+        {
+          "field": "preset_key",
+          "equals": "owner-cockpit"
+        }
+      ],
+      "event_asserts": [
+        {
+          "action": "ask.answer",
+          "field": "decision.after.text",
+          "contains": "门店",
+          "minLength": 12
+        }
+      ],
+      "receipt": {
+        "require": true,
+        "source": "thread-events"
+      }
+    },
+    {
+      "id": "INDUSTRY-FAILURE",
+      "scenario": "failure",
+      "criticality": "P0",
+      "title": "酒店跨店经营摘要：公开入口拒绝超长标题",
+      "input": "超长输入应在创建线程前拒绝。",
+      "trials": 1,
+      "invalidInput": "title-too-long",
+      "expect": {
+        "status": 400,
+        "code": "BAD_REQUEST",
+        "noThreadCreated": true
+      }
+    },
+    {
+      "id": "INDUSTRY-PERMISSION",
+      "scenario": "permission",
+      "criticality": "P0",
+      "title": "酒店跨店经营摘要：无身份派单拒绝",
+      "input": "无身份派单应拒绝且不得创建线程。",
+      "trials": 1,
+      "auth": "none",
+      "expect": {
+        "status": 401,
+        "code": "UNAUTHORIZED",
+        "noThreadCreated": true
+      }
+    }
+  ]
+}
