@@ -56,7 +56,7 @@ import {
 import { creditsRouter, modelFeedbackRouter } from "./credits-router.js";
 import { overlayRouter } from "./overlay-router.js";
 import { accountsRouter } from "./accounts-router.js";
-import { searchKB } from "../service/kb.js";
+import { applyKbPublishAfterApprovalOn, searchKB } from "../service/kb.js";
 import { acquisitionQuestPlanner } from "../industry/hotel/acquisition-planner.js";
 import { runRouterReviewBeat } from "@workloom/base/model-router";
 import {
@@ -77,10 +77,11 @@ import {
 } from "@workloom/base/night-shift";
 import {
   activateRuleVersion,
-  confirmDryRun,
+  confirmDryRunOnTx,
   createDryRun,
   fenceActivationFromProposal,
-  fenceRuleRowId,
+  nextRuleRowIdentity,
+  type RuleRowIdentity,
 } from "@workloom/base/fence-engine";
 import { MAX_CONCURRENT_THREADS, PLAN_TIERS } from "@workloom/shared";
 import {
@@ -151,6 +152,7 @@ import {
 import { serviceRouter } from "../service/router.js";
 import { hotelTwinRouter } from "../industry/hotel/twin-router.js";
 import { appendEventOn } from "../service/events.js";
+import { runWithServiceScope } from "../service/scope.js";
 import {
   advanceWizardDraftOn,
   assignWizardDraft,
@@ -1201,6 +1203,7 @@ const threadsRouter = router({
         // 事务级 RLS 上下文必须在显式事务内设置：autocommit 下 set_config(...,true) 语句结束即失效
         await client.query("BEGIN");
         await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
+        await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
         const r = await client.query(
           `SELECT id, title, mode, status, progress_done, progress_total, created_by, agent_id, created_at, updated_at,
                   /**
@@ -1319,6 +1322,7 @@ const threadsRouter = router({
       try {
         await client.query("BEGIN");
         await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
+        await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
         const t = await client.query<{ mode: string; agent_id: string | null; title: string }>(`SELECT mode, agent_id, title FROM threads WHERE id=$1 AND workspace_id=$2`, [input.threadId, scope.workspaceId]);
         if (!t.rows[0]) throw new TRPCError({ code: "NOT_FOUND", message: "任务不存在或无权访问" });
         selectedAgent = await runnableAgentOn(client, scope.workspaceId, input.presetKey ?? t.rows[0].agent_id);
@@ -1421,6 +1425,8 @@ const approvalsRouter = router({
           { memberNo: ctx.identity.memberNo, role: ctx.identity.role },
           input.approvalId,
           { type: input.gesture, reasonEnum: input.reasonEnum, reasonText: input.reasonText, editedAfter: input.editedAfter, editKind: input.editKind },
+          undefined,
+          { onDecidedInTx: (client, id) => applyKbPublishAfterApprovalOn(client, scopeOf(ctx.identity), id) },
         );
         // E1 联调接线（PF.5/F2.4）：fence.rule.propose 手势通过 → 激活规则版本
         if (!res.deduped && res.status === "approved") {
@@ -1432,6 +1438,7 @@ const approvalsRouter = router({
           try {
             await c2.query("BEGIN");
             await c2.query("SELECT set_config('app.workspace_id', $1, true)", [scope2.workspaceId]);
+            await c2.query("SELECT set_config('app.tenant_id', $1, true)", [scope2.tenantId]);
             const snap = await c2.query<{ snapshot: Record<string, unknown> }>(
               `SELECT snapshot FROM approvals WHERE approval_id=$1`, [input.approvalId],
             );
@@ -1469,6 +1476,7 @@ const approvalsRouter = router({
           scopeOf(ctx.identity),
           { memberNo: ctx.identity.memberNo, role: ctx.identity.role },
           input.approvalIds,
+          { onDecidedInTx: (client, id) => applyKbPublishAfterApprovalOn(client, scopeOf(ctx.identity), id) },
         );
         // E1 联调接线（PF.5/F2.4）：批量采纳通过项同样触发围栏激活接线（防御性；围栏提案标记 high_risk 本不可批量）
         for (const id of res.approved) {
@@ -1895,6 +1903,7 @@ async function instanceProfileOf(scope: { tenantId: string; workspaceId: string 
   try {
     await client.query("BEGIN");
     await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
+    await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
     const r = await client.query<{ industry: string | null }>(`SELECT industry FROM workspaces WHERE id=$1`, [scope.workspaceId]);
     await client.query("COMMIT");
     return {
@@ -1951,6 +1960,7 @@ const workspaceRouter = router({
       // 事务级 RLS 上下文必须在显式事务内设置：autocommit 下 set_config(...,true) 语句结束即失效
       await client.query("BEGIN");
       await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
+      await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
       const r = await client.query<{
         id: string; preset_key: string; name: string; version: string; kind: string;
         readonly: boolean; status: string; meta: { night_shift?: boolean };
@@ -2016,6 +2026,7 @@ const nightShiftRouter = router({
       // 事务级 RLS 上下文必须在显式事务内设置：autocommit 下 set_config(...,true) 语句结束即失效
       await client.query("BEGIN");
       await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
+      await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
       const r = await client.query<{
         id: string; status: string; run_date: string; fence_snapshot_version: string | null;
         candidate_count: number; started_at: Date | null;
@@ -2157,6 +2168,7 @@ const fenceRouter = router({
       // 事务级 RLS 上下文必须在显式事务内设置：autocommit 下 set_config(...,true) 语句结束即失效
       await client.query("BEGIN");
       await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
+      await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
       const r = await client.query(
         `SELECT version, status, count(*) AS rules, min(created_at) AS created_at
          FROM fence_rules WHERE (workspace_id=$1 OR workspace_id='*')
@@ -2208,9 +2220,8 @@ const fenceRouter = router({
     }))
     .mutation(async ({ ctx, input }) => {
       const scope = scopeOf(ctx.identity);
-      await confirmDryRun(getAppPool(), scope, input.dryRunId);
       // 规则草稿进 pending_approval（激活须审批事件 ID，activateRuleVersion 在 P4 手势后调用——E1 已接线，见下方 decide/batchApprove）
-      // D16（#1/A）：规则草稿行、提案事件、审批行三者同一事务同一 COMMIT
+      // D16（MC-009/109）：dry-run 确认、规则草稿、提案事件、审批行同一事务同一 COMMIT；失败后报告仍可重试。
       const app = getAppPool();
       const client = await app.connect();
       let ev: { eventId: string };
@@ -2218,22 +2229,41 @@ const fenceRouter = router({
         await client.query("BEGIN");
         await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
         await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
-        const rowId = fenceRuleRowId(input.rule.ruleId, scope.workspaceId);
-        await client.query(
-          `INSERT INTO fence_rules (id, rule_id, version, workspace_id, name, level, match_spec, action, is_baseline, status, created_by)
-           VALUES ($1,$2,'v-next',$3,$4,$5,$6,$7,false,'pending_approval',$8)
-           ON CONFLICT (id) DO NOTHING`,
-          [rowId, input.rule.ruleId, scope.workspaceId, input.rule.name, input.rule.level,
-           JSON.stringify({ object_types: input.rule.objectTypes, actions: input.rule.actions, when: input.rule.when }),
-           JSON.stringify({ result: input.rule.level }), ctx.identity.memberNo],
-        );
+        await confirmDryRunOnTx(client, scope, input.dryRunId);
+        // 行身份必须消费真实历史版本；并发提案占用候选版本时重新取号，不能静默丢弃内容。
+        let identity: RuleRowIdentity | null = null;
+        for (let attempt = 0; attempt < 5 && !identity; attempt += 1) {
+          const candidate = await nextRuleRowIdentity(client, scope, input.rule.ruleId);
+          const inserted = await client.query(
+            `INSERT INTO fence_rules (id, rule_id, version, workspace_id, name, level, match_spec, action, is_baseline, status, created_by)
+             VALUES ($1,$2,$3,$4,$5,$6,$7,$8,false,'pending_approval',$9)
+             ON CONFLICT (id) DO NOTHING`,
+            [candidate.rowId, input.rule.ruleId, candidate.version, scope.workspaceId, input.rule.name, input.rule.level,
+             JSON.stringify({ object_types: input.rule.objectTypes, actions: input.rule.actions, when: input.rule.when }),
+             JSON.stringify({ result: input.rule.level }), ctx.identity.memberNo],
+          );
+          if (inserted.rowCount === 1) identity = candidate;
+        }
+        if (!identity) {
+          throw new TRPCError({
+            code: "CONFLICT",
+            message: `规则 ${input.rule.ruleId} 的提案行版本连续冲突，未落地；请重试`,
+          });
+        }
         ev = await gatewayAppendOnClient(client, {
           ...scope, actor: { id: ctx.identity.memberNo, type: "human" },
         }, {
           who: { type: "human", id: ctx.identity.memberNo },
           context: { tenant_id: scope.tenantId, workspace_id: scope.workspaceId, time: new Date().toISOString(), channel: "inapp" },
           object: { type: "staff", id: input.rule.ruleId },
-          decision: { action: "fence.rule.propose", after: { ...input.rule, dryRunId: input.dryRunId } },
+          decision: {
+            action: "fence.rule.propose",
+            after: {
+              ...input.rule, dryRunId: input.dryRunId,
+              ruleRowId: identity.rowId, version: identity.version,
+              inheritedBaseline: identity.inheritedBaseline,
+            },
+          },
           rule_impact: [],
         });
         // E1 联调接线（PF.5/F2.4）：围栏变更提案进 P4 决断队列——高危（不可批量采纳，须逐条手势，F5.4/G6）
@@ -2243,7 +2273,7 @@ const fenceRouter = router({
            VALUES ($1,$2,$3,$4,'inapp','pending',$5)
            ON CONFLICT (event_id, channel) DO NOTHING`,
           [`apr-${ev.eventId.toLowerCase()}`, scope.tenantId, scope.workspaceId, ev.eventId,
-           JSON.stringify({ after: input.rule, high_risk: true })],
+           JSON.stringify({ after: input.rule, ruleRowId: identity.rowId, version: identity.version, high_risk: true })],
         );
         await client.query("COMMIT");
       } catch (err) {
@@ -2658,7 +2688,7 @@ const imRouter = router({
   /** 手势回调（F5.4 手势回写多通道；decide 内聚 L5.1/L5.2/L5.3/E5.3 全纪律）
    *  P0-1 通道验签：secret 已配置 → x-channel-signature 必须通过；开发缺省 secret 降级为
    *  「仅允许会话成员本人操作」（operatorOpenId 必须等于当前会话成员在该通道绑定的 openid），响应标注 unsigned:true */
-  callback: writeProcedure
+  callback: actionProcedure("approval.decide")
     .input(
       z.object({
         channel: z.enum(["dingtalk", "wecom", "feishu"]),
@@ -2696,6 +2726,7 @@ const imRouter = router({
           scope,
           input,
           mockDriverFor(input.channel),
+          { onDecidedInTx: (client, id) => applyKbPublishAfterApprovalOn(client, scope, id) },
         );
         return { ...r, unsigned: sig.unsigned };
       } catch (err) {
@@ -2876,8 +2907,8 @@ function llmCall(scene = "generic", scope?: { tenantId: string; workspaceId: str
 }
 
 /** 模型策略只认经过完整性校验的活动 Bundle，不读取可漂移的行业字段。 */
-async function workspaceIndustry(scope: { workspaceId: string }): Promise<string | null> {
-  const active = await resolveWorkspaceActiveBundle(scope.workspaceId);
+async function workspaceIndustry(scope: { tenantId: string; workspaceId: string }): Promise<string | null> {
+  const active = await runWithServiceScope(scope, () => resolveWorkspaceActiveBundle(scope.workspaceId));
   return active.state === "ready" ? active.bundleId : null;
 }
 
@@ -2921,6 +2952,7 @@ const captainRouter = router({
     try {
       await client.query("BEGIN");
       await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
+      await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
       const t = await client.query<{ tier: string; n: string }>(
         `SELECT tier, count(*)::text AS n FROM approvals WHERE workspace_id=$1 AND status='pending' GROUP BY 1`,
         [scope.workspaceId],
@@ -3101,6 +3133,7 @@ const captainRouter = router({
               try {
                 await c.query("BEGIN");
                 await c.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
+                await c.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
                 const q = await c.query<{ payload: Record<string, unknown> }>(`SELECT payload FROM biz_events WHERE event_id=$1`, [r.eventId]);
                 await c.query("COMMIT");
                 return q.rows[0]?.payload;
@@ -3159,6 +3192,7 @@ const captainRouter = router({
       try {
         await client.query("BEGIN");
         await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
+        await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
         const r = await client.query<{ event_id: string; payload: Record<string, unknown>; created_at: string }>(
           `SELECT event_id, payload, created_at FROM biz_events
            WHERE workspace_id=$1 AND payload->'decision'->>'action' IN ('ceo.briefing','ceo.decision','ceo.circuit_breaker','initiative.launch')
@@ -3183,6 +3217,7 @@ const captainRouter = router({
     try {
       await client.query("BEGIN");
       await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
+      await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
       const r = await client.query<{
         approval_id: string; event_id: string; snapshot: Record<string, unknown>; payload: Record<string, unknown>;
       }>(
@@ -3257,6 +3292,7 @@ const captainRouter = router({
     try {
       await client.query("BEGIN");
       await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
+      await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
       const tiers = await client.query<{ tier: string; n: string }>(
         `SELECT tier, count(*)::text AS n FROM approvals WHERE workspace_id=$1 AND status='pending' GROUP BY 1`,
         [scope.workspaceId],
@@ -3487,7 +3523,7 @@ export type { IntelItem, RepoPulse } from "../service/aipm.js";
  */
 registerIndustryQuestPlanner((goal) => acquisitionQuestPlanner(goal));
 registerAskKbSearch(async (scope, question, limit) => {
-  const hits = await searchKB({ workspaceId: scope.workspaceId, query: question, limit });
+  const hits = await runWithServiceScope(scope, () => searchKB({ workspaceId: scope.workspaceId, query: question, limit }));
   return hits.map((hit) => ({
     content: hit.content,
     ...(hit.heading ? { heading: hit.heading } : {}),

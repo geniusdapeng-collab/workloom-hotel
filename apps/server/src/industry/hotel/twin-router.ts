@@ -195,12 +195,14 @@ export const hotelTwinRouter = router({
     const scope = scopeOf(ctx.identity);
     const app = getAppPool();
     const client = await app.connect();
+    let releaseError: Error | undefined;
     try {
       await client.query("BEGIN");
       await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
+      await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
       const wss = await client.query<{ id: string; name: string }>(
-        `SELECT id, name FROM workspaces WHERE tenant_id=$1 ORDER BY created_at`,
-        [scope.tenantId],
+        `SELECT id, name FROM public.workloom_authorized_tenant_workspaces($1,$2,$3)`,
+        [ctx.identity.memberId, ctx.identity.memberNo, "hotel.stores.read"],
       );
       const out: Array<Record<string, unknown>> = [];
       for (const ws of wss.rows) {
@@ -231,10 +233,15 @@ export const hotelTwinRouter = router({
       await client.query("COMMIT");
       return out;
     } catch (err) {
-      await client.query("ROLLBACK").catch(() => undefined);
+      try {
+        await client.query("ROLLBACK");
+      } catch (rollback) {
+        releaseError = rollback instanceof Error ? rollback : new Error(String(rollback));
+        throw new AggregateError([err, rollback], "多店读取失败且事务回滚失败");
+      }
       throw err;
     } finally {
-      client.release();
+      client.release(releaseError);
     }
   }),
 

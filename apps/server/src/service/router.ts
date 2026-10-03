@@ -8,7 +8,9 @@
  * 全部写操作落五元事件；LLM 调用走 model-router（llm.ts，缺 key 自动降级）。
  */
 import { z } from "zod";
+import type pg from "pg";
 import { TRPCError } from "@trpc/server";
+import { GESTURE_WEIGHT } from "@workloom/shared";
 import {
   actionProcedure,
   navigationPermissionProcedure,
@@ -22,11 +24,12 @@ import {
   createCollectionOn, listCollections, listDocuments, setDocumentStatusOn, upsertDocumentOn,
   registerSiteSourceOn, crawlAndStructure, diffScan, searchKB,
 } from "./kb.js";
-import { assignTicketOn, advanceTicketOn, completeTicketOn, listTickets, slaScanOn, ticketTimeline } from "./ticket.js";
+import { ServiceHttpError, assignTicketOn, advanceTicketOn, completeTicketOn, listTickets, slaScanOn, ticketTimeline } from "./ticket.js";
 import { pushMessage } from "./channels.js";
 import { appendEventOn, serviceTx, svcQuery } from "./events.js";
 import { llmCall } from "./llm.js";
 import { ensureServiceSchema } from "./store.js";
+import { memberAccessGrants } from "./access-authority.js";
 import {
   activeInstall, clearBundle, clearPreview, confirmAndAssembleStaffing, customizationStatus, generateStaffing,
   onboardingExam, rollbackSnapshot,
@@ -56,6 +59,117 @@ import {
   listReminders as secListReminders, memoryPanel as secMemoryPanel,
   remember as secRemember, forget as secForget, chat as secChat,
 } from "./secretary.js";
+
+/**
+ * MC-112：服务层语义错误映射。
+ *
+ * 服务层用 ServiceHttpError 表达 404/409/503 等**契约**语义（与 C 端网关 fail() 同一口径），
+ * 但 tRPC 过程里直接抛出会被兜成 INTERNAL_SERVER_ERROR：客户端只看到「服务内部错误（已记录，ref=…）」
+ * （MC-206 脱敏之后连原文都拿不到），把「工单状态机非法迁移」这类可判定语义伪装成服务故障。
+ * 这里在写过程外层统一收敛成对应的 tRPC 码；非语义错误原样抛出（5xx 仍走 errorFormatter 脱敏 + ref）。
+ */
+function toTrpcServiceError(err: unknown): never {
+  if (err instanceof ServiceHttpError) {
+    const code =
+      err.status === 403 ? "FORBIDDEN" :
+      err.status === 404 ? "NOT_FOUND" :
+      err.status === 409 ? "CONFLICT" :
+      err.status === 503 ? "SERVICE_UNAVAILABLE" :
+      err.status >= 500 ? "INTERNAL_SERVER_ERROR" : "BAD_REQUEST";
+    throw new TRPCError({ code, message: err.message });
+  }
+  throw err;
+}
+
+/**
+ * tRPC v11 的中间件不会收到下游抛出的异常（callRecursive 把异常收敛成 `{ok:false,error}` 结果），
+ * 因此必须检查 `next()` 的返回值，从 `error.cause` 取回原始错误再映射语义码。
+ */
+function remapServiceErrorResult(result: { ok: boolean; error?: unknown }): void {
+  if (result.ok) return;
+  const cause = (result.error as { cause?: unknown } | null | undefined)?.cause;
+  // 仅映射服务层语义；Zod 校验和显式 TRPCError 必须保留框架已有的错误码与 cause。
+  if (cause instanceof ServiceHttpError) toTrpcServiceError(cause);
+}
+
+/** 写过程基座：workspace.write 守卫 + 服务层语义错误映射 */
+const svcWriteProcedure = writeProcedure.use(async ({ next }) => {
+  const result = await next();
+  remapServiceErrorResult(result);
+  return result;
+});
+
+/**
+ * 知识文档「发布」留痕（MC-110 单一实现点）：文档置 active + kb.publish 五元事件 +
+ * **已裁决**审批行（approved + decided_by/decided_at），三写同一 COMMIT（调用方自带 serviceTx）。
+ *
+ * 修复前的断面（真机实测）：先把文档置 active，再 INSERT 一条 status='pending' 的 kb.publish 审批——
+ * 审批台里出现「动作已执行却仍在待办」的幽灵条目，且在该行上点驳回不回滚任何东西
+ * （approval=rejected 而文档仍 active、检索仍命中），审批台/知识库/客户问答三面互相矛盾。
+ * 现在：待审区的「批准生效」就是**逐条人审动作本身**（INV-4：发布必须人审），审批行按既有
+ * 三手势口径直接落 approved（gesture/decided_by/decided_at 齐备）——审批台显示为一条带决策人的
+ * 完成记录，而不是待办；撤回走知识库「停用」（同样写事件留痕）。
+ * 先锁定文档，再按当前版本与不可变事件回读已批准回执；重复请求返回同一非空回执。
+ */
+async function publishKbDocumentInTx(
+  client: pg.PoolClient,
+  sc: { tenantId: string; workspaceId: string },
+  actor: { memberNo: string },
+  documentId: string,
+  allowDisabled = false,
+): Promise<{ eventId: string; approvalId: string; deduped: boolean }> {
+  const doc = await client.query<{ title: string; version: number; hash: string | null; status: string }>(
+    `SELECT title,version,hash,status FROM kb_documents WHERE workspace_id=$1 AND id=$2 FOR UPDATE`,
+    [sc.workspaceId, documentId],
+  );
+  const row = doc.rows[0];
+  if (!row) throw new TRPCError({ code: "NOT_FOUND", message: `文档不存在：${documentId}` });
+  if (row.status === "disabled" && !allowDisabled) {
+    throw new TRPCError({ code: "PRECONDITION_FAILED", message: "文档已停用，请在文档抽屉中重新启用并逐条审阅。" });
+  }
+  if (row.status === "active") {
+    const previous = await client.query<{ approval_id: string; event_id: string }>(
+      `SELECT a.approval_id,a.event_id FROM approvals a
+         JOIN biz_events e ON e.event_id=a.event_id AND e.workspace_id=a.workspace_id AND e.tenant_id=a.tenant_id
+        WHERE a.tenant_id=$1 AND a.workspace_id=$2 AND a.status IN ('approved','edited')
+          AND a.decided_by IS NOT NULL AND a.decided_at IS NOT NULL
+          AND e.payload->'object'->>'type'='kb_document' AND e.payload->'object'->>'id'=$3
+          AND e.payload->'decision'->>'action'='kb.publish'
+          AND e.payload->'decision'->'after'->>'version'=$4
+          AND (e.payload->'decision'->'after'->>'documentId' IS NULL OR e.payload->'decision'->'after'->>'documentId'=$3)
+          AND (e.payload->'decision'->'after'->>'hash' IS NULL OR e.payload->'decision'->'after'->>'hash'=$5)
+        ORDER BY e.seq DESC LIMIT 1`,
+      [sc.tenantId, sc.workspaceId, documentId, String(row.version), row.hash],
+    );
+    if (previous.rows[0]) return { eventId: previous.rows[0].event_id, approvalId: previous.rows[0].approval_id, deduped: true };
+  }
+  await client.query(`UPDATE kb_documents SET status='active' WHERE workspace_id=$1 AND id=$2`, [sc.workspaceId, documentId]);
+  const ev = await appendEventOn(client, sc, { id: actor.memberNo, type: "human" }, {
+    objectType: "kb_document", objectId: documentId, action: "kb.publish",
+    after: { documentId, title: row.title, version: row.version, hash: row.hash, status: "active", approved_by: actor.memberNo },
+    basis: [
+      "待审区逐条人审后发布：文档进入客户问答检索范围（INV-4）",
+      "审批记录与文档生效同一 COMMIT 落库（MC-110：不再产生「已执行却待办」的幽灵条目）",
+    ],
+  });
+  const approvalId = `apr-${ev.eventId.toLowerCase()}`;
+  await client.query(
+    `INSERT INTO approvals (approval_id, tenant_id, workspace_id, event_id, channel, status, gesture, decided_by, decided_at, snapshot)
+     VALUES ($1,$2,$3,$4,'inapp','approved',$5,$6,now(),$7)`,
+    [
+      approvalId, sc.tenantId, sc.workspaceId, ev.eventId,
+      JSON.stringify({ type: "approve", weight: GESTURE_WEIGHT.approve, reason_text: "待审区「批准生效」（逐条人审）" }),
+      actor.memberNo,
+      JSON.stringify({
+        after: { documentId, version: row.version, hash: row.hash, fence_action: "kb.publish" },
+        post_hoc: true,
+        high_risk: false,
+        basis: "当前版本逐条人审的当场留痕；撤回请走知识库「停用」，同样写事件留痕",
+      }),
+    ],
+  );
+  return { eventId: ev.eventId, approvalId, deduped: false };
+}
 
 const kbRouter = router({
   listCollections: protectedProcedure.query(async ({ ctx }) => {
@@ -107,13 +221,23 @@ const kbRouter = router({
     .input(z.object({ documentId: z.string(), status: z.enum(["active", "pending_review", "disabled"]) }))
     .mutation(async ({ ctx, input }) => {
       const scope = scopeOf(ctx.identity);
+      if (input.status === "active") {
+        const grants = memberAccessGrants({ role: ctx.identity.role, plan: ctx.identity.plan, guest: ctx.identity.memberNo === "GUEST", permissions: ctx.memberPermissions });
+        if (!grants.actionPermissions.includes("approval.decide")) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "当前成员没有“审批裁决”权限。" });
+        }
+      }
       return serviceTx(scope.workspaceId, async (client, sc) => {
+        if (input.status === "active") {
+          const receipt = await publishKbDocumentInTx(client, sc, { memberNo: ctx.identity.memberNo }, input.documentId, true);
+          return { ok: true, status: "active", ...receipt };
+        }
         await setDocumentStatusOn(client, { workspaceId: scope.workspaceId, documentId: input.documentId, status: input.status });
         await appendEventOn(client, sc, { id: ctx.identity.memberNo, type: "human" }, {
           objectType: "kb_document", objectId: input.documentId, action: "kb.document.status",
           after: { status: input.status },
         });
-        return { ok: true };
+        return { ok: true, status: input.status, eventId: null, approvalId: null, deduped: false };
       });
     }),
 
@@ -178,31 +302,17 @@ const kbRouter = router({
     return { documents: rows };
   }),
 
-  /** 批准生效：文档状态 + 五元事件 + approvals 行 三写同一 COMMIT（围栏动作 'kb.publish'，审批台可见） */
-  approveDocument: writeProcedure
+  /**
+   * 批准生效（MC-110）：文档状态 + 五元事件 + approvals 行 三写同一 COMMIT（围栏动作 'kb.publish'，审批台可见）。
+   * 审批行直接落 approved（逐条人审的当场留痕），不再产生「已执行却待办」的幽灵条目；重复点击幂等。
+   */
+  approveDocument: actionProcedure("approval.decide")
     .input(z.object({ documentId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       const scope = scopeOf(ctx.identity);
       return serviceTx(scope.workspaceId, async (client, sc) => {
-        const doc = await client.query(
-          `UPDATE kb_documents SET status='active'
-           WHERE workspace_id=$1 AND id=$2 RETURNING title, version`,
-          [scope.workspaceId, input.documentId],
-        );
-        if (!doc.rows[0]) throw new TRPCError({ code: "NOT_FOUND", message: `文档不存在：${input.documentId}` });
-        const ev = await appendEventOn(client, sc, { id: ctx.identity.memberNo, type: "human" }, {
-          objectType: "kb_document", objectId: input.documentId, action: "kb.publish",
-          after: { title: (doc.rows[0] as Record<string, unknown>).title, version: (doc.rows[0] as Record<string, unknown>).version, status: "active" },
-        });
-        // 联动 approvals 审批台（approvals INSERT 范式：UNIQUE(event_id, channel) 冲突丢弃，L5.3）
-        await client.query(
-          `INSERT INTO approvals (approval_id, tenant_id, workspace_id, event_id, channel, status, snapshot)
-           VALUES ($1,$2,$3,$4,'inapp','pending',$5)
-           ON CONFLICT (event_id, channel) DO NOTHING`,
-          [`apr-${ev.eventId.toLowerCase()}`, sc.tenantId, sc.workspaceId, ev.eventId,
-           JSON.stringify({ after: { documentId: input.documentId, fence_action: "kb.publish" }, high_risk: false })],
-        );
-        return { ok: true, eventId: ev.eventId };
+        const receipt = await publishKbDocumentInTx(client, sc, { memberNo: ctx.identity.memberNo }, input.documentId);
+        return { ok: true, status: "active", ...receipt };
       });
     }),
 });
@@ -220,22 +330,28 @@ const ticketsRouter = router({
       return { timeline: await ticketTimeline({ workspaceId: scopeOf(ctx.identity).workspaceId, ticketId: input.ticketId }) };
     }),
 
-  assign: writeProcedure
+  assign: svcWriteProcedure
     .input(z.object({ ticketId: z.string(), dept: z.string().optional(), assignee: z.string().optional() }))
     .mutation(async ({ ctx, input }) => {
       const scope = scopeOf(ctx.identity);
       const t = await serviceTx(scope.workspaceId, async (client, sc) => {
-        const t2 = await assignTicketOn(client, { workspaceId: scope.workspaceId, ...input });
-        await appendEventOn(client, sc, { id: ctx.identity.memberNo, type: "human" }, {
-          objectType: "ticket", objectId: t2.id, action: "service.ticket.assign",
-          after: { dept: t2.dept, assignee: t2.assignee },
-        });
-        return t2;
+        const { ticket, changed } = await assignTicketOn(client, { workspaceId: scope.workspaceId, ...input });
+        /**
+         * MC-112：同值重复派单是幂等 no-op（`changed:false`）——不再往事件账本写一条语义相同的人工动作；
+         * 真正的改派（部门/受理人变化）仍逐条留痕，供工单时间线与审计下钻。
+         */
+        if (changed) {
+          await appendEventOn(client, sc, { id: ctx.identity.memberNo, type: "human" }, {
+            objectType: "ticket", objectId: ticket.id, action: "service.ticket.assign",
+            after: { dept: ticket.dept, assignee: ticket.assignee },
+          });
+        }
+        return ticket;
       });
       return { ticket: t };
     }),
 
-  advance: writeProcedure
+  advance: svcWriteProcedure
     .input(z.object({
       ticketId: z.string(), action: z.string().min(1).max(40),
       detail: z.record(z.string(), z.unknown()).optional(),
@@ -257,7 +373,7 @@ const ticketsRouter = router({
     }),
 
   /** 完结：结果通知 C 端（pushMessage；无真实通道 mock:true） */
-  complete: writeProcedure
+  complete: svcWriteProcedure
     .input(z.object({ ticketId: z.string(), result: z.string().min(1).max(1000) }))
     .mutation(async ({ ctx, input }) => {
       const scope = scopeOf(ctx.identity);
@@ -282,7 +398,7 @@ const ticketsRouter = router({
     }),
 
   /** SLA 扫描（超时升级；演示手动触发，生产挂定时器） */
-  slaScan: writeProcedure.mutation(async ({ ctx }) => {
+  slaScan: svcWriteProcedure.mutation(async ({ ctx }) => {
     const scope = scopeOf(ctx.identity);
     const r = await serviceTx(scope.workspaceId, async (client, sc) => {
       const r2 = await slaScanOn(client, { workspaceId: scope.workspaceId });

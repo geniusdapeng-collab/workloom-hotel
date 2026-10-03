@@ -435,9 +435,9 @@
   },
   "integrity": {
     "algorithm": "sha256",
-    "digest": "88e791c8265b9ed2439dd4515aa061352e6aad64141ce5e992eda4d690d03fd6",
+    "digest": "c1c13b49116d8c6e2a36abc64f0c55d2bb11df68d2fbbb8e25f55bdcbaeefd61",
     "assets": {
-      "agent-capabilities.json": "25e57337fa975c79e18430f3f7f106f982cd306bc0f64c9bcc8677bf990771e9",
+      "agent-capabilities.json": "9d12f8f5296988f30451384cc49dbf1a0d1b8ed7b5314a11c7e000550f99e98f",
       "eval/questions.json": "c51d1b0f1053f60431da9be3e817d30d2a885861a5a0af8fe459a05641ec207a",
       "fences/hotel-baseline.yml": "6f18209c72c1a2d9383dada5054860f3da4e526704251c74ad10adfb47ca3f99",
       "fences/patches/audit-only-patch.yml": "d16e0a3c4a6d1ddb919d48abfbcdaeb33db2a0fe614cf02f95d6a59977b0d514",

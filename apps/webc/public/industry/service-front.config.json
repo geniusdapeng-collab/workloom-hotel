@@ -111,7 +111,7 @@
     "bundleId": "hotel",
     "bundleVersion": "3.3.0",
     "contractVersion": "2.0.0",
-    "uiVersion": "0.1.14",
-    "manifestDigest": "c63bb5fbe8836c500af929406c6ef3ffd48d6536e8b676ff0b73c60e62204992"
+    "uiVersion": "0.1.19",
+    "manifestDigest": "c1c13b49116d8c6e2a36abc64f0c55d2bb11df68d2fbbb8e25f55bdcbaeefd61"
   }
 }
