@@ -109,6 +109,13 @@
         pnpm config set store-dir /cnb-cache/pnpm-store
         pnpm install --frozen-lockfile
 
+    - name: 四项专属 PostgreSQL 回归（独立 Unix socket + 旧数据升级）
+      script: |
+        set -eu
+        pnpm -C packages/industry-contract build
+        node --test scripts/test-owned-pg-contract.test.mjs
+        node scripts/test-owned-pg.mjs --repo hotel
+
     - name: 启动 PostgreSQL 17 + pgvector
       script: |
         set -eu
@@ -213,7 +220,7 @@
           export "$line"
         done < .env
         set +a
-        pnpm test
+        WORKLOOM_GENERIC_DB_CI=1 pnpm test
 
     - name: 全场景套件（非阻断）
       script: |
