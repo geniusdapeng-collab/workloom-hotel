@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 184,
+  "revision": 186,
   "tasks": {
     "98": {
       "number": 98,
@@ -267,16 +267,16 @@
         "owner": "admission/pr-99",
         "generation": {}
       },
-      "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/99 :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
+      "error": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
       "repairRequired": {
         "provider": "codex",
-        "headSha": "b006c7a39939643019ba76495642054c1b214802",
-        "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
+        "headSha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
+        "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
         "reason": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
-        "at": 1791315565943
+        "at": 1791320411169
       },
       "recoveryIntent": null,
-      "blockedUntil": 1791320110809,
+      "blockedUntil": 1791321011169,
       "recoveryCount": 0,
       "reviewFailures": null,
       "candidate": null
@@ -8859,6 +8859,39 @@
       },
       "previous": "4400d6c9dcd2e8cfd71441b7e098415bd7f742c0b12c5933347f639967adaf8a",
       "digest": "8b70e20fabfadc9b49955d7f92fc4a4bde200beac336859e27b83233fa873a35"
+    },
+    {
+      "sequence": 185,
+      "at": "2026-10-06T21:00:11.169Z",
+      "kind": "task",
+      "data": {
+        "number": 99,
+        "patch": {
+          "status": "parked",
+          "error": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
+          "repairRequired": {
+            "provider": "codex",
+            "headSha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
+            "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+            "reason": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
+            "at": 1791320411169
+          },
+          "recoveryIntent": null,
+          "blockedUntil": 1791321011169
+        }
+      },
+      "previous": "8b70e20fabfadc9b49955d7f92fc4a4bde200beac336859e27b83233fa873a35",
+      "digest": "e2ed9d0eeaae191a8f35977cdb465fc39f176648e855c8e94514b29fe7446d86"
+    },
+    {
+      "sequence": 186,
+      "at": "2026-10-06T21:00:15.167Z",
+      "kind": "transaction",
+      "data": {
+        "id": "f679d9c9-b74c-45a2-92f2-bdafd4d8d9ba"
+      },
+      "previous": "e2ed9d0eeaae191a8f35977cdb465fc39f176648e855c8e94514b29fe7446d86",
+      "digest": "2c3f2d06fc3aef4e9c37862406bad68e0a57e64781419597f5fdb2237637fb0c"
     }
   ]
 }
