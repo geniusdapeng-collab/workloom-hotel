@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 71,
+  "revision": 76,
   "tasks": {
     "98": {
       "number": 98,
@@ -1638,18 +1638,18 @@
         ],
         "owner": "admission/pr-104",
         "generation": {
-          "protocol": 6
+          "protocol": 7
         }
       },
-      "updatedAt": 1791312714654
+      "updatedAt": 1791312716106
     }
   },
   "leases": {
     "protocol": {
       "owner": null,
-      "generation": 6,
-      "acquiredAt": 1791312714654,
-      "expiresAt": 1791312714654
+      "generation": 7,
+      "acquiredAt": 1791312716106,
+      "expiresAt": 1791312716106
     },
     "dependencies": {
       "owner": null,
@@ -4863,6 +4863,93 @@
       },
       "previous": "0f8282ec0bf17aed900f1a7149713597dd45135c575918b4e26bcdc64c2d5a96",
       "digest": "524b3a258218ab4c53a4289a5702ee15e1f5869a73cc54e7a7ce605e8b2e34a0"
+    },
+    {
+      "sequence": 72,
+      "at": "2026-10-06T18:51:56.106Z",
+      "kind": "lease_acquire",
+      "data": {
+        "scopes": [
+          "protocol"
+        ],
+        "owner": "admission/pr-104",
+        "generation": {
+          "protocol": 7
+        }
+      },
+      "previous": "524b3a258218ab4c53a4289a5702ee15e1f5869a73cc54e7a7ce605e8b2e34a0",
+      "digest": "99794f9461a32f05d7c9a36ace4c63d6ea92d06becc7148453b9dbbbf22d6fa6"
+    },
+    {
+      "sequence": 73,
+      "at": "2026-10-06T18:51:56.106Z",
+      "kind": "lease_release",
+      "data": {
+        "scopes": [
+          "protocol"
+        ],
+        "owner": "admission/pr-104",
+        "generation": {
+          "protocol": 7
+        }
+      },
+      "previous": "99794f9461a32f05d7c9a36ace4c63d6ea92d06becc7148453b9dbbbf22d6fa6",
+      "digest": "931da0744f63278cc77911fab7e3001d267b8c3997af7c9cf83ffd48f89927dc"
+    },
+    {
+      "sequence": 74,
+      "at": "2026-10-06T18:51:56.106Z",
+      "kind": "source_admitted",
+      "data": {
+        "number": 104,
+        "headSha": "2d8ceff00cdc402519f12301ed482d6f90e95789",
+        "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
+        "filesHash": "7d9d594424ecc8b2fa088ea1928230b39fbcfa4352d81ac7446e6b2eeafa5a9b",
+        "scopes": [
+          "protocol"
+        ],
+        "owner": "admission/pr-104",
+        "generation": {
+          "protocol": 7
+        }
+      },
+      "previous": "931da0744f63278cc77911fab7e3001d267b8c3997af7c9cf83ffd48f89927dc",
+      "digest": "63f09dce718d80cf1bcf661a3007b7ebed8af676d16b94995c1f7146f57350d1"
+    },
+    {
+      "sequence": 75,
+      "at": "2026-10-06T18:51:56.106Z",
+      "kind": "task",
+      "data": {
+        "number": 104,
+        "patch": {
+          "admission": {
+            "number": 104,
+            "headSha": "2d8ceff00cdc402519f12301ed482d6f90e95789",
+            "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
+            "filesHash": "7d9d594424ecc8b2fa088ea1928230b39fbcfa4352d81ac7446e6b2eeafa5a9b",
+            "scopes": [
+              "protocol"
+            ],
+            "owner": "admission/pr-104",
+            "generation": {
+              "protocol": 7
+            }
+          }
+        }
+      },
+      "previous": "63f09dce718d80cf1bcf661a3007b7ebed8af676d16b94995c1f7146f57350d1",
+      "digest": "ce8b55fc6ae04c310ed9c873c571d657a19c8d6e70363c744dedc7b57ae3dee9"
+    },
+    {
+      "sequence": 76,
+      "at": "2026-10-06T18:51:55.859Z",
+      "kind": "transaction",
+      "data": {
+        "id": "source-admit:104:2d8ceff00cdc402519f12301ed482d6f90e95789:a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564"
+      },
+      "previous": "ce8b55fc6ae04c310ed9c873c571d657a19c8d6e70363c744dedc7b57ae3dee9",
+      "digest": "70cfaf2c595420b834db9cb00e4d1a789057e3cabbc74fa5c4df31953cf98a02"
     }
   ]
 }
