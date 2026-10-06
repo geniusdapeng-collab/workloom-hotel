@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 130,
+  "revision": 132,
   "tasks": {
     "98": {
       "number": 98,
@@ -231,10 +231,10 @@
     },
     "99": {
       "number": 99,
-      "status": "aligning",
+      "status": "waiting_ci",
       "firstSeen": 1791310519195,
       "attempts": {},
-      "headSha": "b006c7a39939643019ba76495642054c1b214802",
+      "headSha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
       "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
       "branch": "task/T-2026-1003-9104",
       "intent": {
@@ -247,20 +247,16 @@
         "apps/server/src/trpc/fence-proposal.pg.test.ts",
         "apps/server/src/trpc/router.ts"
       ],
-      "ciSince": 1791310519195,
+      "ciSince": 1791315587949,
       "updatedAt": 1791315587949,
       "alignmentCount": 1,
-      "alignmentIntent": {
-        "headSha": "b006c7a39939643019ba76495642054c1b214802",
-        "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
-        "at": 1791315587949
-      },
+      "alignmentIntent": null,
       "developerReview": null,
       "alignment": {
-        "sha": "b006c7a39939643019ba76495642054c1b214802",
-        "previousHead": "c60d3f2c6b96532cbc378f00bedf8935741c5100",
-        "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
-        "verifiedAt": "2026-10-06T18:15:27.089Z"
+        "sha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
+        "previousHead": "b006c7a39939643019ba76495642054c1b214802",
+        "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "verifiedAt": "2026-10-06T19:39:55.057Z"
       },
       "admission": {
         "number": 99,
@@ -6947,6 +6943,38 @@
       },
       "previous": "d07fdce4e43ba30b01834ef526c9e4353eb5a853ebe760f3b8ef1e5e54ea2fdb",
       "digest": "1ea46cdab4b219521ae6de819988540003ba189d078982449577b2e0dec8d094"
+    },
+    {
+      "sequence": 131,
+      "at": "2026-10-06T19:39:47.949Z",
+      "kind": "task",
+      "data": {
+        "number": 99,
+        "patch": {
+          "status": "waiting_ci",
+          "alignment": {
+            "sha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
+            "previousHead": "b006c7a39939643019ba76495642054c1b214802",
+            "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+            "verifiedAt": "2026-10-06T19:39:55.057Z"
+          },
+          "alignmentIntent": null,
+          "headSha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
+          "ciSince": 1791315587949
+        }
+      },
+      "previous": "1ea46cdab4b219521ae6de819988540003ba189d078982449577b2e0dec8d094",
+      "digest": "ae36e002a9f7c9a335b8a0f4001d18251440439a3369d0302b23be434b989e99"
+    },
+    {
+      "sequence": 132,
+      "at": "2026-10-06T19:39:55.088Z",
+      "kind": "transaction",
+      "data": {
+        "id": "e644dc78-a612-4473-9c9b-9f9d373ba3ae"
+      },
+      "previous": "ae36e002a9f7c9a335b8a0f4001d18251440439a3369d0302b23be434b989e99",
+      "digest": "f9b5b97d34be092362eebd66a8702c0b1ca1c576b0e1fe860f05e9f36cf02814"
     }
   ]
 }
