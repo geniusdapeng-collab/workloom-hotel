@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 58,
+  "revision": 61,
   "tasks": {
     "98": {
       "number": 98,
@@ -235,7 +235,7 @@
         "apps/server/src/trpc/router.ts"
       ],
       "ciSince": 1791310519195,
-      "updatedAt": 1791310519195,
+      "updatedAt": 1791310543883,
       "alignmentCount": 1,
       "alignmentIntent": null,
       "developerReview": null,
@@ -244,6 +244,15 @@
         "previousHead": "c60d3f2c6b96532cbc378f00bedf8935741c5100",
         "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
         "verifiedAt": "2026-10-06T18:15:27.089Z"
+      },
+      "admission": {
+        "number": 99,
+        "headSha": "b006c7a39939643019ba76495642054c1b214802",
+        "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
+        "filesHash": "36b5fb2484cfb695bef7db7272dfbd865cdcdbc479a8543a47a3ea4bc5436046",
+        "scopes": [],
+        "owner": "admission/pr-99",
+        "generation": {}
       }
     },
     "101": {
@@ -4448,6 +4457,53 @@
       },
       "previous": "957d922711e7f7d84d3dbf4a84986af32bcc4dd87cf03174570c4a4f705d85ec",
       "digest": "86623af3d15c653de88ee7cf99f1dfb10c8ff7b7ad1cca4fa82705ba03f5baf1"
+    },
+    {
+      "sequence": 59,
+      "at": "2026-10-06T18:15:43.883Z",
+      "kind": "source_admitted",
+      "data": {
+        "number": 99,
+        "headSha": "b006c7a39939643019ba76495642054c1b214802",
+        "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
+        "filesHash": "36b5fb2484cfb695bef7db7272dfbd865cdcdbc479a8543a47a3ea4bc5436046",
+        "scopes": [],
+        "owner": "admission/pr-99",
+        "generation": {}
+      },
+      "previous": "86623af3d15c653de88ee7cf99f1dfb10c8ff7b7ad1cca4fa82705ba03f5baf1",
+      "digest": "a37fb3750e0a33c12c9446cd0c65e24153694e60178fe463ea3b0efa124d4104"
+    },
+    {
+      "sequence": 60,
+      "at": "2026-10-06T18:15:43.883Z",
+      "kind": "task",
+      "data": {
+        "number": 99,
+        "patch": {
+          "admission": {
+            "number": 99,
+            "headSha": "b006c7a39939643019ba76495642054c1b214802",
+            "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
+            "filesHash": "36b5fb2484cfb695bef7db7272dfbd865cdcdbc479a8543a47a3ea4bc5436046",
+            "scopes": [],
+            "owner": "admission/pr-99",
+            "generation": {}
+          }
+        }
+      },
+      "previous": "a37fb3750e0a33c12c9446cd0c65e24153694e60178fe463ea3b0efa124d4104",
+      "digest": "7a72d95c8ac77a7860054c1f1b5f08e9a334b33f6f3880ea3ed0a7227359121a"
+    },
+    {
+      "sequence": 61,
+      "at": "2026-10-06T18:15:43.644Z",
+      "kind": "transaction",
+      "data": {
+        "id": "source-admit:99:b006c7a39939643019ba76495642054c1b214802:a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564"
+      },
+      "previous": "7a72d95c8ac77a7860054c1f1b5f08e9a334b33f6f3880ea3ed0a7227359121a",
+      "digest": "bfb2dd1b336b6e4b30c5a078876d77cd1aebbd5e39d97e75c48cd283e3ed6405"
     }
   ]
 }
