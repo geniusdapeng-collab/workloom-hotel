@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 132,
+  "revision": 137,
   "tasks": {
     "98": {
       "number": 98,
@@ -188,7 +188,7 @@
         "scripts/vite-pc-page-registry.mjs"
       ],
       "ciSince": 1791315587949,
-      "updatedAt": 1791315587949,
+      "updatedAt": 1791315597823,
       "alignmentCount": 1,
       "alignmentIntent": null,
       "developerReview": null,
@@ -200,8 +200,8 @@
       },
       "admission": {
         "number": 98,
-        "headSha": "f008369a68e59d70965e43c05849f2709bc6598f",
-        "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
+        "headSha": "b1db263af476e1a838bf21cfdd7601e41c71fb52",
+        "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
         "filesHash": "3b46db65b62aa43389462e711c82b40eb9c49227a3eecac75c6f5ea45759044d",
         "scopes": [
           "dependencies",
@@ -210,9 +210,9 @@
         ],
         "owner": "admission/pr-98",
         "generation": {
-          "dependencies": 1,
-          "migrations": 1,
-          "protocol": 5
+          "dependencies": 2,
+          "migrations": 2,
+          "protocol": 10
         }
       },
       "error": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
@@ -1988,21 +1988,21 @@
   "leases": {
     "protocol": {
       "owner": null,
-      "generation": 9,
-      "acquiredAt": 1791315565943,
-      "expiresAt": 1791315565943
+      "generation": 10,
+      "acquiredAt": 1791315597823,
+      "expiresAt": 1791315597823
     },
     "dependencies": {
       "owner": null,
-      "generation": 1,
-      "acquiredAt": 1791310531071,
-      "expiresAt": 1791310531071
+      "generation": 2,
+      "acquiredAt": 1791315597823,
+      "expiresAt": 1791315597823
     },
     "migrations": {
       "owner": null,
-      "generation": 1,
-      "acquiredAt": 1791310531071,
-      "expiresAt": 1791310531071
+      "generation": 2,
+      "acquiredAt": 1791315597823,
+      "expiresAt": 1791315597823
     }
   },
   "releases": {},
@@ -6975,6 +6975,109 @@
       },
       "previous": "ae36e002a9f7c9a335b8a0f4001d18251440439a3369d0302b23be434b989e99",
       "digest": "f9b5b97d34be092362eebd66a8702c0b1ca1c576b0e1fe860f05e9f36cf02814"
+    },
+    {
+      "sequence": 133,
+      "at": "2026-10-06T19:39:57.823Z",
+      "kind": "lease_acquire",
+      "data": {
+        "scopes": [
+          "dependencies",
+          "migrations",
+          "protocol"
+        ],
+        "owner": "admission/pr-98",
+        "generation": {
+          "dependencies": 2,
+          "migrations": 2,
+          "protocol": 10
+        }
+      },
+      "previous": "f9b5b97d34be092362eebd66a8702c0b1ca1c576b0e1fe860f05e9f36cf02814",
+      "digest": "5b4d670cc1a0b40e022391d5ae041199d4ef96f86e94d2b5f521ad8b7f83d8ad"
+    },
+    {
+      "sequence": 134,
+      "at": "2026-10-06T19:39:57.823Z",
+      "kind": "lease_release",
+      "data": {
+        "scopes": [
+          "dependencies",
+          "migrations",
+          "protocol"
+        ],
+        "owner": "admission/pr-98",
+        "generation": {
+          "dependencies": 2,
+          "migrations": 2,
+          "protocol": 10
+        }
+      },
+      "previous": "5b4d670cc1a0b40e022391d5ae041199d4ef96f86e94d2b5f521ad8b7f83d8ad",
+      "digest": "72b477217bace952aa51bf8f8459c43a55128183526c24218a61cc5bbefdb7a3"
+    },
+    {
+      "sequence": 135,
+      "at": "2026-10-06T19:39:57.823Z",
+      "kind": "source_admitted",
+      "data": {
+        "number": 98,
+        "headSha": "b1db263af476e1a838bf21cfdd7601e41c71fb52",
+        "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "filesHash": "3b46db65b62aa43389462e711c82b40eb9c49227a3eecac75c6f5ea45759044d",
+        "scopes": [
+          "dependencies",
+          "migrations",
+          "protocol"
+        ],
+        "owner": "admission/pr-98",
+        "generation": {
+          "dependencies": 2,
+          "migrations": 2,
+          "protocol": 10
+        }
+      },
+      "previous": "72b477217bace952aa51bf8f8459c43a55128183526c24218a61cc5bbefdb7a3",
+      "digest": "11fd140f4b8db1f6bb3deea9996a595fae665060fcdfb16d2509b84cc239d051"
+    },
+    {
+      "sequence": 136,
+      "at": "2026-10-06T19:39:57.823Z",
+      "kind": "task",
+      "data": {
+        "number": 98,
+        "patch": {
+          "admission": {
+            "number": 98,
+            "headSha": "b1db263af476e1a838bf21cfdd7601e41c71fb52",
+            "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+            "filesHash": "3b46db65b62aa43389462e711c82b40eb9c49227a3eecac75c6f5ea45759044d",
+            "scopes": [
+              "dependencies",
+              "migrations",
+              "protocol"
+            ],
+            "owner": "admission/pr-98",
+            "generation": {
+              "dependencies": 2,
+              "migrations": 2,
+              "protocol": 10
+            }
+          }
+        }
+      },
+      "previous": "11fd140f4b8db1f6bb3deea9996a595fae665060fcdfb16d2509b84cc239d051",
+      "digest": "3e42c7b48f2c80ed8b5ffffcf223bf9a483d461fb7c464d92eaded02dd743b6c"
+    },
+    {
+      "sequence": 137,
+      "at": "2026-10-06T19:39:57.496Z",
+      "kind": "transaction",
+      "data": {
+        "id": "source-admit:98:b1db263af476e1a838bf21cfdd7601e41c71fb52:5a04120a225dc3734415c8cc23e9c5f9474170c0"
+      },
+      "previous": "3e42c7b48f2c80ed8b5ffffcf223bf9a483d461fb7c464d92eaded02dd743b6c",
+      "digest": "d13446691b404b81a1703d24dd9981d7ba76387ba7d106e1d103957a17e6104d"
     }
   ]
 }
