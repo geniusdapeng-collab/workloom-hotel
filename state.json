@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 37,
+  "revision": 39,
   "tasks": {
     "101": {
       "number": 101,
@@ -3672,6 +3672,28 @@
       },
       "previous": "30fff22a3c4009c3121df5a3d0e592c3898fda6ddc176f57db2bf2d6e05d9e9e",
       "digest": "4683de91633813de7daaabc6a5d07c74ad59cc9989b4b92996254e31a6743d6c"
+    },
+    {
+      "sequence": 38,
+      "at": "2026-10-06T18:09:40.023Z",
+      "kind": "installer_replacement_closed",
+      "data": {
+        "number": 101,
+        "replacement": 102,
+        "sha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564"
+      },
+      "previous": "4683de91633813de7daaabc6a5d07c74ad59cc9989b4b92996254e31a6743d6c",
+      "digest": "9663fc2a8acfd20f83a1ea3909e5a5a70e7360f859235bdae11f8ea15fd3560b"
+    },
+    {
+      "sequence": 39,
+      "at": "2026-10-06T18:09:39.369Z",
+      "kind": "transaction",
+      "data": {
+        "id": "installer-replacement-closed:101:102"
+      },
+      "previous": "9663fc2a8acfd20f83a1ea3909e5a5a70e7360f859235bdae11f8ea15fd3560b",
+      "digest": "880ce1c0861e421f1f86975c78c97b18d4579603d2b390dd053f51af8c8cc7d5"
     }
   ]
 }
