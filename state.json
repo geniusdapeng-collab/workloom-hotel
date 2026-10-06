@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 118,
+  "revision": 120,
   "tasks": {
     "98": {
       "number": 98,
@@ -1951,7 +1951,12 @@
           "mergedBy": "cnb.dYiF05kxAGA",
           "verifiedAt": "2026-10-06T19:39:37.888Z"
         }
-      ]
+      ],
+      "issueReceipt": {
+        "issue": 103,
+        "marker": "delivery-receipt:104:5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "verifiedAt": 1791315565943
+      }
     },
     "105": {
       "number": 105,
@@ -6561,6 +6566,33 @@
       },
       "previous": "ac3970a960ff7ab79d3da686a901516db729eb2cbcd44fc9b71a2ffbdbe5f17f",
       "digest": "c70f0f40191ce40802c7e4c15635341e7a6a52c114e11e4f2ab549e4e3f34201"
+    },
+    {
+      "sequence": 119,
+      "at": "2026-10-06T19:39:25.943Z",
+      "kind": "task",
+      "data": {
+        "number": 104,
+        "patch": {
+          "issueReceipt": {
+            "issue": 103,
+            "marker": "delivery-receipt:104:5a04120a225dc3734415c8cc23e9c5f9474170c0",
+            "verifiedAt": 1791315565943
+          }
+        }
+      },
+      "previous": "c70f0f40191ce40802c7e4c15635341e7a6a52c114e11e4f2ab549e4e3f34201",
+      "digest": "526a7ccbc9b95df72ab2553b64f8b1d48776853cf310e9443a6640debcdbf32d"
+    },
+    {
+      "sequence": 120,
+      "at": "2026-10-06T19:39:40.710Z",
+      "kind": "transaction",
+      "data": {
+        "id": "cc462c8e-09a5-4c57-9e89-bec585992939"
+      },
+      "previous": "526a7ccbc9b95df72ab2553b64f8b1d48776853cf310e9443a6640debcdbf32d",
+      "digest": "63c8003b4490508699d981a8babe7e3684f41017b273fb51c78381794c71c2cd"
     }
   ]
 }
