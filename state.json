@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 140,
+  "revision": 142,
   "tasks": {
     "98": {
       "number": 98,
@@ -7125,6 +7125,35 @@
       },
       "previous": "ce5cd7cffc2c52f0fc99b2ec4ced9f6bf55a3fa78158491ad7bbfff9764ae580",
       "digest": "e66718f601d1ee79329e81bc4759d43b92da70833642945f5582066a9ea9b70b"
+    },
+    {
+      "sequence": 141,
+      "at": "2026-10-06T19:47:08.825Z",
+      "kind": "installation_updated",
+      "data": {
+        "installer": 104,
+        "merge": {
+          "sha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+          "sourceSha": "2d8ceff00cdc402519f12301ed482d6f90e95789",
+          "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
+          "checkSha": "fcb7d9ce67d39f80ba7e3975f675b92e4b943827",
+          "mergedBy": "cnb.dYiF05kxAGA",
+          "verifiedAt": "2026-10-06T19:47:05.008Z"
+        },
+        "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0"
+      },
+      "previous": "e66718f601d1ee79329e81bc4759d43b92da70833642945f5582066a9ea9b70b",
+      "digest": "916f712ec44f31c604253bcc4f1d5be4b97565a5e4ac69410be51f4c44e7d02e"
+    },
+    {
+      "sequence": 142,
+      "at": "2026-10-06T19:47:08.018Z",
+      "kind": "transaction",
+      "data": {
+        "id": "install-updated:104:5a04120a225dc3734415c8cc23e9c5f9474170c0"
+      },
+      "previous": "916f712ec44f31c604253bcc4f1d5be4b97565a5e4ac69410be51f4c44e7d02e",
+      "digest": "a105ff258573f7c43c925dd30fe2ab0fff5a63afc6962227d09b00918c0ff096"
     }
   ]
 }
