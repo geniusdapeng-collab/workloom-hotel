@@ -1,11 +1,11 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 122,
+  "revision": 124,
   "tasks": {
     "98": {
       "number": 98,
-      "status": "parked",
+      "status": "aligning",
       "firstSeen": 1791310519195,
       "attempts": {},
       "headSha": "f008369a68e59d70965e43c05849f2709bc6598f",
@@ -189,8 +189,12 @@
       ],
       "ciSince": 1791310519195,
       "updatedAt": 1791315587949,
-      "alignmentCount": 0,
-      "alignmentIntent": null,
+      "alignmentCount": 1,
+      "alignmentIntent": {
+        "headSha": "f008369a68e59d70965e43c05849f2709bc6598f",
+        "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "at": 1791315587949
+      },
       "developerReview": null,
       "alignment": {
         "sha": "f008369a68e59d70965e43c05849f2709bc6598f",
@@ -6805,6 +6809,36 @@
       },
       "previous": "d7a11e9af83b497f0f74d97e6c1154bc0016e1c19226e3bed73d8a2d7a8818b0",
       "digest": "3d50f90744556d15eac95ae2011b356099405726f62e0adf898560fc6f42961f"
+    },
+    {
+      "sequence": 123,
+      "at": "2026-10-06T19:39:47.949Z",
+      "kind": "task",
+      "data": {
+        "number": 98,
+        "patch": {
+          "status": "aligning",
+          "alignmentCount": 1,
+          "alignmentIntent": {
+            "headSha": "f008369a68e59d70965e43c05849f2709bc6598f",
+            "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+            "at": 1791315587949
+          },
+          "developerReview": null
+        }
+      },
+      "previous": "3d50f90744556d15eac95ae2011b356099405726f62e0adf898560fc6f42961f",
+      "digest": "4ed71fb5f87718bfa7923e111606f110d1e25c15861bf4992e6a6778dc8dedfa"
+    },
+    {
+      "sequence": 124,
+      "at": "2026-10-06T19:39:49.721Z",
+      "kind": "transaction",
+      "data": {
+        "id": "5f3f8aee-db81-4420-b650-662d54c14eda"
+      },
+      "previous": "4ed71fb5f87718bfa7923e111606f110d1e25c15861bf4992e6a6778dc8dedfa",
+      "digest": "5ad190d0c5ff057e3a2cbb9e67da86016680480259a37d4d1a19c87168f53ef1"
     }
   ]
 }
