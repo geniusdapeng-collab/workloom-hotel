@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 137,
+  "revision": 140,
   "tasks": {
     "98": {
       "number": 98,
@@ -248,7 +248,7 @@
         "apps/server/src/trpc/router.ts"
       ],
       "ciSince": 1791315587949,
-      "updatedAt": 1791315587949,
+      "updatedAt": 1791315609584,
       "alignmentCount": 1,
       "alignmentIntent": null,
       "developerReview": null,
@@ -260,8 +260,8 @@
       },
       "admission": {
         "number": 99,
-        "headSha": "b006c7a39939643019ba76495642054c1b214802",
-        "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
+        "headSha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
+        "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
         "filesHash": "36b5fb2484cfb695bef7db7272dfbd865cdcdbc479a8543a47a3ea4bc5436046",
         "scopes": [],
         "owner": "admission/pr-99",
@@ -7078,6 +7078,53 @@
       },
       "previous": "3e42c7b48f2c80ed8b5ffffcf223bf9a483d461fb7c464d92eaded02dd743b6c",
       "digest": "d13446691b404b81a1703d24dd9981d7ba76387ba7d106e1d103957a17e6104d"
+    },
+    {
+      "sequence": 138,
+      "at": "2026-10-06T19:40:09.584Z",
+      "kind": "source_admitted",
+      "data": {
+        "number": 99,
+        "headSha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
+        "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "filesHash": "36b5fb2484cfb695bef7db7272dfbd865cdcdbc479a8543a47a3ea4bc5436046",
+        "scopes": [],
+        "owner": "admission/pr-99",
+        "generation": {}
+      },
+      "previous": "d13446691b404b81a1703d24dd9981d7ba76387ba7d106e1d103957a17e6104d",
+      "digest": "1f92081d20cb2505cd5d7e350222319457ffb0cafb5978c2e90a6bc36ed84232"
+    },
+    {
+      "sequence": 139,
+      "at": "2026-10-06T19:40:09.584Z",
+      "kind": "task",
+      "data": {
+        "number": 99,
+        "patch": {
+          "admission": {
+            "number": 99,
+            "headSha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
+            "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+            "filesHash": "36b5fb2484cfb695bef7db7272dfbd865cdcdbc479a8543a47a3ea4bc5436046",
+            "scopes": [],
+            "owner": "admission/pr-99",
+            "generation": {}
+          }
+        }
+      },
+      "previous": "1f92081d20cb2505cd5d7e350222319457ffb0cafb5978c2e90a6bc36ed84232",
+      "digest": "ce5cd7cffc2c52f0fc99b2ec4ced9f6bf55a3fa78158491ad7bbfff9764ae580"
+    },
+    {
+      "sequence": 140,
+      "at": "2026-10-06T19:40:09.299Z",
+      "kind": "transaction",
+      "data": {
+        "id": "source-admit:99:03b0197221f991c5d6fe1f0790b61d8fcee40c87:5a04120a225dc3734415c8cc23e9c5f9474170c0"
+      },
+      "previous": "ce5cd7cffc2c52f0fc99b2ec4ced9f6bf55a3fa78158491ad7bbfff9764ae580",
+      "digest": "e66718f601d1ee79329e81bc4759d43b92da70833642945f5582066a9ea9b70b"
     }
   ]
 }
