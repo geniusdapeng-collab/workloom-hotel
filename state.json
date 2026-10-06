@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 174,
+  "revision": 176,
   "tasks": {
     "98": {
       "number": 98,
@@ -215,16 +215,16 @@
           "protocol": 10
         }
       },
-      "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/98/commit-statuses :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
+      "error": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
       "repairRequired": {
         "provider": "codex",
-        "headSha": "f008369a68e59d70965e43c05849f2709bc6598f",
-        "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
+        "headSha": "b1db263af476e1a838bf21cfdd7601e41c71fb52",
+        "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
         "reason": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
-        "at": 1791315565943
+        "at": 1791319510809
       },
       "recoveryIntent": null,
-      "blockedUntil": 1791318317646,
+      "blockedUntil": 1791320110809,
       "recoveryCount": 0,
       "reviewFailures": null,
       "candidate": null
@@ -8528,6 +8528,39 @@
       },
       "previous": "20a9d358658043252a3299e12dd37193430d094756ab3bcc37b0189883e7d89f",
       "digest": "54984f1ae33fc6f3deec28acb9751f8e0c40f52d82c6247f89af148a53514b6a"
+    },
+    {
+      "sequence": 175,
+      "at": "2026-10-06T20:45:10.809Z",
+      "kind": "task",
+      "data": {
+        "number": 98,
+        "patch": {
+          "status": "parked",
+          "error": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
+          "repairRequired": {
+            "provider": "codex",
+            "headSha": "b1db263af476e1a838bf21cfdd7601e41c71fb52",
+            "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+            "reason": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
+            "at": 1791319510809
+          },
+          "recoveryIntent": null,
+          "blockedUntil": 1791320110809
+        }
+      },
+      "previous": "54984f1ae33fc6f3deec28acb9751f8e0c40f52d82c6247f89af148a53514b6a",
+      "digest": "56a5dbab1dc798c266be034390189f41c48d93aa79f859dbc3581bc7a656b2f9"
+    },
+    {
+      "sequence": 176,
+      "at": "2026-10-06T20:45:12.738Z",
+      "kind": "transaction",
+      "data": {
+        "id": "20ac978a-4c51-487e-868b-a1e042c3ec94"
+      },
+      "previous": "56a5dbab1dc798c266be034390189f41c48d93aa79f859dbc3581bc7a656b2f9",
+      "digest": "9798ab8bf9a63c5732361841f0b84c66ec0f5e61ce74e5ae3be3c2eaf078c354"
     }
   ]
 }
