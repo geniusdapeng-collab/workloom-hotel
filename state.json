@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 128,
+  "revision": 130,
   "tasks": {
     "98": {
       "number": 98,
@@ -231,7 +231,7 @@
     },
     "99": {
       "number": 99,
-      "status": "parked",
+      "status": "aligning",
       "firstSeen": 1791310519195,
       "attempts": {},
       "headSha": "b006c7a39939643019ba76495642054c1b214802",
@@ -249,8 +249,12 @@
       ],
       "ciSince": 1791310519195,
       "updatedAt": 1791315587949,
-      "alignmentCount": 0,
-      "alignmentIntent": null,
+      "alignmentCount": 1,
+      "alignmentIntent": {
+        "headSha": "b006c7a39939643019ba76495642054c1b214802",
+        "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "at": 1791315587949
+      },
       "developerReview": null,
       "alignment": {
         "sha": "b006c7a39939643019ba76495642054c1b214802",
@@ -6913,6 +6917,36 @@
       },
       "previous": "1db14338240d445df0661da506c106401d0b454b73d60b9f496efc34b4557605",
       "digest": "b28fc7c844ef219ab1dce1b39671ac482e138f4cae9baf9ecc0265f3cc336da3"
+    },
+    {
+      "sequence": 129,
+      "at": "2026-10-06T19:39:47.949Z",
+      "kind": "task",
+      "data": {
+        "number": 99,
+        "patch": {
+          "status": "aligning",
+          "alignmentCount": 1,
+          "alignmentIntent": {
+            "headSha": "b006c7a39939643019ba76495642054c1b214802",
+            "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+            "at": 1791315587949
+          },
+          "developerReview": null
+        }
+      },
+      "previous": "b28fc7c844ef219ab1dce1b39671ac482e138f4cae9baf9ecc0265f3cc336da3",
+      "digest": "d07fdce4e43ba30b01834ef526c9e4353eb5a853ebe760f3b8ef1e5e54ea2fdb"
+    },
+    {
+      "sequence": 130,
+      "at": "2026-10-06T19:39:53.078Z",
+      "kind": "transaction",
+      "data": {
+        "id": "a56c4294-52a6-4df2-8c1c-e236792401d7"
+      },
+      "previous": "d07fdce4e43ba30b01834ef526c9e4353eb5a853ebe760f3b8ef1e5e54ea2fdb",
+      "digest": "1ea46cdab4b219521ae6de819988540003ba189d078982449577b2e0dec8d094"
     }
   ]
 }
