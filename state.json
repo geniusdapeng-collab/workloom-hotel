@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 47,
+  "revision": 49,
   "tasks": {
     "98": {
       "number": 98,
@@ -201,7 +201,7 @@
     },
     "99": {
       "number": 99,
-      "status": "waiting_ci",
+      "status": "aligning",
       "firstSeen": 1791310519195,
       "attempts": {},
       "headSha": "c60d3f2c6b96532cbc378f00bedf8935741c5100",
@@ -218,7 +218,14 @@
         "apps/server/src/trpc/router.ts"
       ],
       "ciSince": 1791310519195,
-      "updatedAt": 1791310519195
+      "updatedAt": 1791310519195,
+      "alignmentCount": 1,
+      "alignmentIntent": {
+        "headSha": "c60d3f2c6b96532cbc378f00bedf8935741c5100",
+        "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
+        "at": 1791310519195
+      },
+      "developerReview": null
     },
     "101": {
       "number": 101,
@@ -4213,6 +4220,36 @@
       },
       "previous": "bca50e2e5259a226e31e395f10f5bd08a6ab473e099a42fdd4cfc917cb7b36c5",
       "digest": "88431355b75b3529ce265f615145ffe4ef152a75b9e6d33215f40d4c2ddaf78f"
+    },
+    {
+      "sequence": 48,
+      "at": "2026-10-06T18:15:19.195Z",
+      "kind": "task",
+      "data": {
+        "number": 99,
+        "patch": {
+          "status": "aligning",
+          "alignmentCount": 1,
+          "alignmentIntent": {
+            "headSha": "c60d3f2c6b96532cbc378f00bedf8935741c5100",
+            "mainSha": "a3af9cd51effc5f3b64ebc136b1aba3e6d9b3564",
+            "at": 1791310519195
+          },
+          "developerReview": null
+        }
+      },
+      "previous": "88431355b75b3529ce265f615145ffe4ef152a75b9e6d33215f40d4c2ddaf78f",
+      "digest": "6c62696160b2cc34a815c00fd302e7d9f361c18e09c8683eb50b87ec93fb676f"
+    },
+    {
+      "sequence": 49,
+      "at": "2026-10-06T18:15:25.126Z",
+      "kind": "transaction",
+      "data": {
+        "id": "5ba41dd4-75f9-4fee-a6d3-36d73d5f9550"
+      },
+      "previous": "6c62696160b2cc34a815c00fd302e7d9f361c18e09c8683eb50b87ec93fb676f",
+      "digest": "95285ced87f492f8b4205471b9349b6bf01bd6d03aba5975051c60a028aa7743"
     }
   ]
 }
