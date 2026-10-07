@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 988,
+  "revision": 990,
   "tasks": {
     "98": {
       "number": 98,
@@ -188,7 +188,7 @@
         "scripts/vite-pc-page-registry.mjs"
       ],
       "ciSince": 1791315587949,
-      "updatedAt": 1791416109179,
+      "updatedAt": 1791416413736,
       "alignmentCount": 1,
       "alignmentIntent": null,
       "developerReview": null,
@@ -215,7 +215,7 @@
           "protocol": 10
         }
       },
-      "error": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
+      "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/98 :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
       "repairRequired": {
         "provider": "codex",
         "headSha": "b1db263af476e1a838bf21cfdd7601e41c71fb52",
@@ -224,7 +224,7 @@
         "at": 1791416109179
       },
       "recoveryIntent": null,
-      "blockedUntil": 1791416709179,
+      "blockedUntil": 1791417013736,
       "recoveryCount": 0,
       "reviewFailures": null,
       "candidate": null
@@ -35847,6 +35847,31 @@
       },
       "previous": "0187935316155e5757f5cdaf5999576c837a146122c0ceea265f3670a111aaaf",
       "digest": "b8bdc739f42d2eaa8676db5ad5d06c2815b2e56471622332d255c5efac312622"
+    },
+    {
+      "sequence": 989,
+      "at": "2026-10-07T23:40:13.736Z",
+      "kind": "task",
+      "data": {
+        "number": 98,
+        "patch": {
+          "status": "parked",
+          "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/98 :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
+          "blockedUntil": 1791417013736
+        }
+      },
+      "previous": "b8bdc739f42d2eaa8676db5ad5d06c2815b2e56471622332d255c5efac312622",
+      "digest": "7c9507e82d2ee32d614468f5b833173144c5774482595ee4ef6e8fad71a95d16"
+    },
+    {
+      "sequence": 990,
+      "at": "2026-10-07T23:40:19.659Z",
+      "kind": "transaction",
+      "data": {
+        "id": "c3c27863-57a7-49b7-8e58-b755f2c62302"
+      },
+      "previous": "7c9507e82d2ee32d614468f5b833173144c5774482595ee4ef6e8fad71a95d16",
+      "digest": "60450519515b2bd21dbd606540dc367f3e432ea887eb13bb31b1ceb7edcefc05"
     }
   ]
 }
