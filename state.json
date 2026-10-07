@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 964,
+  "revision": 966,
   "tasks": {
     "98": {
       "number": 98,
@@ -188,7 +188,7 @@
         "scripts/vite-pc-page-registry.mjs"
       ],
       "ciSince": 1791315587949,
-      "updatedAt": 1791413109993,
+      "updatedAt": 1791413415319,
       "alignmentCount": 1,
       "alignmentIntent": null,
       "developerReview": null,
@@ -215,7 +215,7 @@
           "protocol": 10
         }
       },
-      "error": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
+      "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/98/commit-statuses :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
       "repairRequired": {
         "provider": "codex",
         "headSha": "b1db263af476e1a838bf21cfdd7601e41c71fb52",
@@ -224,7 +224,7 @@
         "at": 1791413109993
       },
       "recoveryIntent": null,
-      "blockedUntil": 1791413709993,
+      "blockedUntil": 1791414015319,
       "recoveryCount": 0,
       "reviewFailures": null,
       "candidate": null
@@ -34969,6 +34969,31 @@
       },
       "previous": "b40941a6db79e262889471694f768924b71e1a70796245bc597f8c78c4d67306",
       "digest": "e596fdf0e558b5805bd6092dec19b9ca97e32a7ca2f86c22990675a68accb315"
+    },
+    {
+      "sequence": 965,
+      "at": "2026-10-07T22:50:15.319Z",
+      "kind": "task",
+      "data": {
+        "number": 98,
+        "patch": {
+          "status": "parked",
+          "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/98/commit-statuses :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
+          "blockedUntil": 1791414015319
+        }
+      },
+      "previous": "e596fdf0e558b5805bd6092dec19b9ca97e32a7ca2f86c22990675a68accb315",
+      "digest": "d34b8f5f6f994b536a7f71c95ea2847e7240c71da0a57db05582d30f99e7440a"
+    },
+    {
+      "sequence": 966,
+      "at": "2026-10-07T22:50:25.254Z",
+      "kind": "transaction",
+      "data": {
+        "id": "877c19c1-eb0a-4dcb-bd5e-9a75db3ec2eb"
+      },
+      "previous": "d34b8f5f6f994b536a7f71c95ea2847e7240c71da0a57db05582d30f99e7440a",
+      "digest": "6b4fd64f318739053dae77e07ab4d759baddf54ced5c6e3bae0b0950d4f46e55"
     }
   ]
 }
