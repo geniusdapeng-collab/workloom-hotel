@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 442,
+  "revision": 444,
   "tasks": {
     "98": {
       "number": 98,
@@ -273,10 +273,10 @@
         "headSha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
         "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
         "reason": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
-        "at": 1791349215239
+        "at": 1791350112161
       },
       "recoveryIntent": null,
-      "blockedUntil": 1791349815239,
+      "blockedUntil": 1791350712161,
       "recoveryCount": 0,
       "reviewFailures": null,
       "candidate": null
@@ -17426,6 +17426,39 @@
       },
       "previous": "4a3ce99714abb105ee3cd085137e9f792e4438cebd1352c5ae340d6283a7544b",
       "digest": "63fd14b7f16f0b965132ff9fb8396f1c820e3a39ea7f0511592558bdbb32f464"
+    },
+    {
+      "sequence": 443,
+      "at": "2026-10-07T05:15:12.161Z",
+      "kind": "task",
+      "data": {
+        "number": 99,
+        "patch": {
+          "status": "parked",
+          "error": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
+          "repairRequired": {
+            "provider": "codex",
+            "headSha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
+            "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+            "reason": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
+            "at": 1791350112161
+          },
+          "recoveryIntent": null,
+          "blockedUntil": 1791350712161
+        }
+      },
+      "previous": "63fd14b7f16f0b965132ff9fb8396f1c820e3a39ea7f0511592558bdbb32f464",
+      "digest": "b29874ea208e31a4d256033114779e40d9bce3c54d4395a1bda663daeb1fec5f"
+    },
+    {
+      "sequence": 444,
+      "at": "2026-10-07T05:15:21.619Z",
+      "kind": "transaction",
+      "data": {
+        "id": "9dacfdfa-74a4-460b-876a-6d6740daf7e2"
+      },
+      "previous": "b29874ea208e31a4d256033114779e40d9bce3c54d4395a1bda663daeb1fec5f",
+      "digest": "9528736145f836c2eaa55328c7e83ccb4c6afe821f9733eccb885ea3901694b1"
     }
   ]
 }
