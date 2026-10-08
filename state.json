@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 1158,
+  "revision": 1160,
   "tasks": {
     "98": {
       "number": 98,
@@ -188,7 +188,7 @@
         "scripts/vite-pc-page-registry.mjs"
       ],
       "ciSince": 1791315587949,
-      "updatedAt": 1791436217439,
+      "updatedAt": 1791436518075,
       "alignmentCount": 1,
       "alignmentIntent": null,
       "developerReview": null,
@@ -215,7 +215,7 @@
           "protocol": 10
         }
       },
-      "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/98 :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
+      "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/98/commit-statuses :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
       "repairRequired": {
         "provider": "codex",
         "headSha": "b1db263af476e1a838bf21cfdd7601e41c71fb52",
@@ -224,7 +224,7 @@
         "at": 1791435917280
       },
       "recoveryIntent": null,
-      "blockedUntil": 1791436817439,
+      "blockedUntil": 1791437118075,
       "recoveryCount": 0,
       "reviewFailures": null,
       "candidate": null
@@ -40756,6 +40756,31 @@
       },
       "previous": "34d708b89855baccfe3defec4d25bc1e06b4e9f6a99279a4ba72bfabd2b4b1c6",
       "digest": "40c6c38936167f6b998e57957d9d98f663e5934a894c436ef6dc9e7b07fe4ab6"
+    },
+    {
+      "sequence": 1159,
+      "at": "2026-10-08T05:15:18.075Z",
+      "kind": "task",
+      "data": {
+        "number": 98,
+        "patch": {
+          "status": "parked",
+          "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/98/commit-statuses :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
+          "blockedUntil": 1791437118075
+        }
+      },
+      "previous": "40c6c38936167f6b998e57957d9d98f663e5934a894c436ef6dc9e7b07fe4ab6",
+      "digest": "ef409e59ed14623019418a614adee9203746b124ad50e377eebd5be0e2339c80"
+    },
+    {
+      "sequence": 1160,
+      "at": "2026-10-08T05:15:29.775Z",
+      "kind": "transaction",
+      "data": {
+        "id": "62e6ee24-03a2-4c82-9891-687e9ef0aa28"
+      },
+      "previous": "ef409e59ed14623019418a614adee9203746b124ad50e377eebd5be0e2339c80",
+      "digest": "a4a9138bbefbe72b09ee826f7a20569aa7137a10fd7c27ea09abaa26a5fda1b1"
     }
   ]
 }
