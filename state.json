@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 1338,
+  "revision": 1340,
   "tasks": {
     "98": {
       "number": 98,
@@ -248,7 +248,7 @@
         "apps/server/src/trpc/router.ts"
       ],
       "ciSince": 1791315587949,
-      "updatedAt": 1791455712443,
+      "updatedAt": 1791456312905,
       "alignmentCount": 1,
       "alignmentIntent": null,
       "developerReview": null,
@@ -267,7 +267,7 @@
         "owner": "admission/pr-99",
         "generation": {}
       },
-      "error": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
+      "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/99/commit-statuses :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
       "repairRequired": {
         "provider": "codex",
         "headSha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
@@ -276,7 +276,7 @@
         "at": 1791455712443
       },
       "recoveryIntent": null,
-      "blockedUntil": 1791456312443,
+      "blockedUntil": 1791456912905,
       "recoveryCount": 0,
       "reviewFailures": null,
       "candidate": null
@@ -47484,6 +47484,31 @@
       },
       "previous": "691e5cb044b84f6ce3f2b8e2274b6d7b991bbba8357b46dcc13da2096ab6b9e0",
       "digest": "71c788b9cba07532b9c873982497c6c8792cb87355442d9ccccaf8089438e1d4"
+    },
+    {
+      "sequence": 1339,
+      "at": "2026-10-08T10:45:12.905Z",
+      "kind": "task",
+      "data": {
+        "number": 99,
+        "patch": {
+          "status": "parked",
+          "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/99/commit-statuses :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
+          "blockedUntil": 1791456912905
+        }
+      },
+      "previous": "71c788b9cba07532b9c873982497c6c8792cb87355442d9ccccaf8089438e1d4",
+      "digest": "e694de0fd628574dfbc32716eb0c9c0e91ef5de0929a12e6dae99eca7752bf74"
+    },
+    {
+      "sequence": 1340,
+      "at": "2026-10-08T10:45:23.495Z",
+      "kind": "transaction",
+      "data": {
+        "id": "f17c3f2a-fda6-4fcc-b641-74e991eadb41"
+      },
+      "previous": "e694de0fd628574dfbc32716eb0c9c0e91ef5de0929a12e6dae99eca7752bf74",
+      "digest": "e67949318d148052fb7bef6ca3232fc1e78e5562bd8ecb1422f1ab06e169cd38"
     }
   ]
 }
