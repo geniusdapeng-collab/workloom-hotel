@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 1354,
+  "revision": 1356,
   "tasks": {
     "98": {
       "number": 98,
@@ -188,7 +188,7 @@
         "scripts/vite-pc-page-registry.mjs"
       ],
       "ciSince": 1791315587949,
-      "updatedAt": 1791457817107,
+      "updatedAt": 1791458415149,
       "alignmentCount": 1,
       "alignmentIntent": null,
       "developerReview": null,
@@ -215,7 +215,7 @@
           "protocol": 10
         }
       },
-      "error": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
+      "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/98 :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
       "repairRequired": {
         "provider": "codex",
         "headSha": "b1db263af476e1a838bf21cfdd7601e41c71fb52",
@@ -224,7 +224,7 @@
         "at": 1791457817107
       },
       "recoveryIntent": null,
-      "blockedUntil": 1791458417107,
+      "blockedUntil": 1791459015149,
       "recoveryCount": 0,
       "reviewFailures": null,
       "candidate": null
@@ -48056,6 +48056,31 @@
       },
       "previous": "76b11d9ef3c8e6e3950f83e70fc7940bf6c8ec2ce2e1606842fa8ec1c1af7ed9",
       "digest": "a86944079bda7e3427e15ea4a61aff0229149070f0b3d49c1d1883b97e987450"
+    },
+    {
+      "sequence": 1355,
+      "at": "2026-10-08T11:20:15.149Z",
+      "kind": "task",
+      "data": {
+        "number": 98,
+        "patch": {
+          "status": "parked",
+          "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/98 :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
+          "blockedUntil": 1791459015149
+        }
+      },
+      "previous": "a86944079bda7e3427e15ea4a61aff0229149070f0b3d49c1d1883b97e987450",
+      "digest": "a4eae48abf3854e28c1b4c45135b73fd0367ca1dfc785f69d1569db5b83bdb26"
+    },
+    {
+      "sequence": 1356,
+      "at": "2026-10-08T11:20:21.965Z",
+      "kind": "transaction",
+      "data": {
+        "id": "22b1c39f-71bf-4193-99c9-e2683379d751"
+      },
+      "previous": "a4eae48abf3854e28c1b4c45135b73fd0367ca1dfc785f69d1569db5b83bdb26",
+      "digest": "c2e09d8dc9fba9de46e7c5fed4e20fb53d625f0d39e21d0954eae20765333491"
     }
   ]
 }
