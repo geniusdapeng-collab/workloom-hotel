@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 1740,
+  "revision": 1742,
   "tasks": {
     "98": {
       "number": 98,
@@ -248,7 +248,7 @@
         "apps/server/src/trpc/router.ts"
       ],
       "ciSince": 1791315587949,
-      "updatedAt": 1791501911695,
+      "updatedAt": 1791502515291,
       "alignmentCount": 1,
       "alignmentIntent": null,
       "developerReview": null,
@@ -61917,6 +61917,43 @@
       },
       "previous": "ebbf2ad58fdb7ea6b1ebd3ab98a808a7c943fd4c0a71f45dcf1457c9d6dffd34",
       "digest": "5379241f2bd4f7b6685cbed017d22bff4a5e423e184d040a4cf7da0cc68ab8aa"
+    },
+    {
+      "sequence": 1741,
+      "at": "2026-10-08T23:35:15.291Z",
+      "kind": "task",
+      "data": {
+        "number": 99,
+        "patch": {
+          "headSha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
+          "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+          "branch": "task/T-2026-1003-9104",
+          "intent": {
+            "taskId": "T-2026-1003-9104",
+            "dependsOn": [],
+            "releases": []
+          },
+          "originalBody": "原主分支的围栏提案入口与底层版本身份契约不一致，重复提案会静默丢弃，且 dry-run 确认在事务外提前消耗。本次复用已有版本递增与基线单调守卫，让 dry-run、提案行、事件、审批同事务提交；同一 pending dry-run 使用行锁，失败完整回滚。\n\n本 PR 续接已关闭的 #97，原修复源码 c60d3f2c6b96532cbc378f00bedf8935741c5100 完整保留，任务卡 https://cnb.cool/workloom-ai/workloom-hotel/-/issues/96。产品所有者明确要求改为 #98 之后的较高编号继续推进。#98 优先发布；本 PR 作为后到者等待其完成后，再对齐最新 main、重跑门禁。旧 #97 保持关闭，避免重新占用前序文件锁。\n\n本轮在同一 source SHA 上重新验证：server/web 类型检查通过；真实隔离 PostgreSQL/RLS 上 16 项回归通过、0 失败、0 跳过。覆盖重复/并发提案、同 dry-run 并发、跨工作区/错规则/非 pending 拒绝、基线拒绝后重试、事件/审批绑定及写入失败整体回滚。成员权威和故障使用模拟夹具，不连接经营库。\n\n风险与放行：涉及围栏、事件、审批。产品所有者已在当前会话明确放行本修复续提与合并；CNB 的实际平台审查和当前状态检查仍按回读执行，不把聊天授权或 risk 标签充当平台批准。此前普通及管理员单次合并被 CNB 拒绝的事实保留在原任务回执。\n\n已有扩展回归债务、test-gate 的 allowFailure、签名和跨平台实测继续按原回执跟进；不宣称全业务测试通过。回滚采用 revert 本 PR，无数据库 schema 或依赖改动。\n\n变更仅两份文件：\n- `apps/server/src/trpc/router.ts`\n- `apps/server/src/trpc/fence-proposal.pg.test.ts`",
+          "files": [
+            "apps/server/src/trpc/fence-proposal.pg.test.ts",
+            "apps/server/src/trpc/router.ts"
+          ],
+          "status": "parked",
+          "ciSince": 1791315587949
+        }
+      },
+      "previous": "5379241f2bd4f7b6685cbed017d22bff4a5e423e184d040a4cf7da0cc68ab8aa",
+      "digest": "95ce53d49947f8c98853dd6d09eb2d73c102c50d4dfb8b769a740b68feea4635"
+    },
+    {
+      "sequence": 1742,
+      "at": "2026-10-08T23:35:27.067Z",
+      "kind": "transaction",
+      "data": {
+        "id": "7eeb41a1-1bd5-403e-9ce0-9d3e6f68572c"
+      },
+      "previous": "95ce53d49947f8c98853dd6d09eb2d73c102c50d4dfb8b769a740b68feea4635",
+      "digest": "aa45d2775d82fbd0ab00f2c879cda21801c757878fc9cc22b5e7b581e1f2fc4b"
     }
   ]
 }
