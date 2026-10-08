@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 1202,
+  "revision": 1204,
   "tasks": {
     "98": {
       "number": 98,
@@ -248,7 +248,7 @@
         "apps/server/src/trpc/router.ts"
       ],
       "ciSince": 1791315587949,
-      "updatedAt": 1791440422275,
+      "updatedAt": 1791441318429,
       "alignmentCount": 1,
       "alignmentIntent": null,
       "developerReview": null,
@@ -276,7 +276,7 @@
         "at": 1791438024218
       },
       "recoveryIntent": null,
-      "blockedUntil": 1791441022275,
+      "blockedUntil": 1791441918429,
       "recoveryCount": 0,
       "reviewFailures": null,
       "candidate": null
@@ -42110,6 +42110,31 @@
       },
       "previous": "f723d8e8af9f513e15de179064afcad25b50a50d00cd36b3fe09437709df965e",
       "digest": "f2e9e31ff3f0941f5a9acec5fb3d2ea0b02d7781631b831b1b4f20f4b060dec0"
+    },
+    {
+      "sequence": 1203,
+      "at": "2026-10-08T06:35:18.429Z",
+      "kind": "task",
+      "data": {
+        "number": 99,
+        "patch": {
+          "status": "parked",
+          "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/99 :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
+          "blockedUntil": 1791441918429
+        }
+      },
+      "previous": "f2e9e31ff3f0941f5a9acec5fb3d2ea0b02d7781631b831b1b4f20f4b060dec0",
+      "digest": "6b1d06ab685a38f4aad918285a2f448d371e520b192b1cadc68ba7661b8c82cf"
+    },
+    {
+      "sequence": 1204,
+      "at": "2026-10-08T06:35:30.126Z",
+      "kind": "transaction",
+      "data": {
+        "id": "8bc96f8b-3954-46b4-9583-9eda199c8878"
+      },
+      "previous": "6b1d06ab685a38f4aad918285a2f448d371e520b192b1cadc68ba7661b8c82cf",
+      "digest": "3e89e129862b94e0b91bff18853a2c7a410d3c8ad36d1959910edf1d70aa198b"
     }
   ]
 }
