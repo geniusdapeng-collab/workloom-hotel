@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "repo": "workloom-ai/workloom-hotel",
-  "revision": 1568,
+  "revision": 1570,
   "tasks": {
     "98": {
       "number": 98,
@@ -267,16 +267,16 @@
         "owner": "admission/pr-99",
         "generation": {}
       },
-      "error": "CNB 429 https://api.cnb.cool/workloom-ai/workloom-hotel/-/pulls/99 :: {\"errcode\":8,\"errmsg\":\"Too many requests. Please try again later.\"}\n",
+      "error": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
       "repairRequired": {
         "provider": "codex",
         "headSha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
         "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
         "reason": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
-        "at": 1791477613740
+        "at": 1791482110180
       },
       "recoveryIntent": null,
-      "blockedUntil": 1791481816188,
+      "blockedUntil": 1791482710180,
       "recoveryCount": 0,
       "reviewFailures": null,
       "candidate": null
@@ -55879,6 +55879,39 @@
       },
       "previous": "4c0900750538888e5d6235b9731aa23bddf6f3aa5b6788a90d8e59464403c674",
       "digest": "b3954eda7e2f97f107ad54f938d76afe7b8b7f9ee50301278041495bd6cfd9d6"
+    },
+    {
+      "sequence": 1569,
+      "at": "2026-10-08T17:55:10.180Z",
+      "kind": "task",
+      "data": {
+        "number": 99,
+        "patch": {
+          "status": "parked",
+          "error": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
+          "repairRequired": {
+            "provider": "codex",
+            "headSha": "03b0197221f991c5d6fe1f0790b61d8fcee40c87",
+            "mainSha": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+            "reason": "检查/评审阻断：Developer has not handed off; Codex review identity differs from the exact repository/source/main/policy",
+            "at": 1791482110180
+          },
+          "recoveryIntent": null,
+          "blockedUntil": 1791482710180
+        }
+      },
+      "previous": "b3954eda7e2f97f107ad54f938d76afe7b8b7f9ee50301278041495bd6cfd9d6",
+      "digest": "d23859a63aee717f027dafd5d5b93da6b4c416643d9944923c0885bcf0f95f19"
+    },
+    {
+      "sequence": 1570,
+      "at": "2026-10-08T17:55:15.770Z",
+      "kind": "transaction",
+      "data": {
+        "id": "a258da59-9079-43b8-8a88-b11ac77d18a1"
+      },
+      "previous": "d23859a63aee717f027dafd5d5b93da6b4c416643d9944923c0885bcf0f95f19",
+      "digest": "008f363dd169962ab205ea5b85dab2787f6ecd008ca9f8afd9b965deefa6eda1"
     }
   ]
 }
