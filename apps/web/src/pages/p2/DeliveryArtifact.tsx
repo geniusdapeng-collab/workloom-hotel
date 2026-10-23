@@ -60,7 +60,7 @@ export function DeliveryArtifact({
     <article id={`event-${eventId}`} data-delivery-kind={data.kind} data-delivery-digest={data.digest} className="min-w-0 scroll-mt-8">
       <AgentActionMessage sender={actorText(senderId)} version={version}
         action={data.kind === "summary" ? "多岗位成果汇总" : "岗位分析与草稿"}
-        eventId={eventId} receipt={receipt} credits={credits}>
+        eventId={eventId} receipt={receipt} credits={credits} fullWidth>
         <div className="min-w-0 space-y-3" data-delivery-document="complete">
           <div className="flex flex-wrap gap-1.5 text-body">
             <span className="rounded border border-holo/40 bg-holo/5 px-2 py-0.5 text-holo">内部成果已入账</span>

@@ -49,7 +49,7 @@ export function SimBanner() {
   // V4 §2：示例版银带（深空银辉语义——不是警告，是身份说明；与黄色模拟态警示分色）
   if (st.bundle?.isExample) {
     return (
-      <div className="relative z-30 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-line bg-bg800/90 px-4 py-1.5 text-body text-ink2 backdrop-blur">
+      <div className="relative z-30 grid grid-cols-[15px_minmax(0,1fr)] items-start gap-x-3 gap-y-2 border-b border-line bg-bg800/90 px-4 py-1.5 text-body text-ink2 backdrop-blur sm:grid-cols-[15px_minmax(0,1fr)_auto] sm:items-center">
         <Icon name="star" size={15} className="text-gold" />
         <span className="min-w-0 flex-1 break-words">
           当前运行：<b className="text-ink">行业示例版</b>（{st.workspace.name}）——这是基座的示例装配，数据与团队可真实操作；
@@ -57,7 +57,7 @@ export function SimBanner() {
         </span>
         <a
           href="/onboarding?mode=customize"
-          className="shrink-0 rounded border border-gline bg-bg700 px-3 py-1 font-bold text-ink no-underline transition-colors hover:bg-bg700"
+          className="col-start-2 justify-self-start rounded border border-gline bg-bg700 px-3 py-1 font-bold text-ink no-underline transition-colors hover:bg-bg700 sm:col-start-auto"
         >
           定制我的行业版 →
         </a>
@@ -68,7 +68,7 @@ export function SimBanner() {
   const mockLlm = !st.llm.real;
   if (!simData && !mockLlm) return null;
   return (
-    <div className="relative z-30 flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-amber-500/50 bg-amber-100/80 px-4 py-2 text-body text-amber-800 backdrop-blur">
+    <div className="relative z-30 grid grid-cols-[16px_minmax(0,1fr)] items-start gap-x-3 gap-y-2 border-b border-amber-500/50 bg-amber-100/80 px-4 py-2 text-body text-amber-800 backdrop-blur sm:grid-cols-[16px_minmax(0,1fr)_auto] sm:items-center">
       <Icon name="warning" size={16} />
       <span className="min-w-0 flex-1 break-words">
         {st.persistedDataMode === "real" && (!st.formalActivationRecorded || (st.activationGate && !st.activationGate.canActivate)) && (
@@ -87,7 +87,7 @@ export function SimBanner() {
       </span>
       <a
         href="/onboarding"
-        className="shrink-0 rounded border border-amber-500/60 bg-amber-200/60 px-3 py-1 font-bold text-amber-900 no-underline transition-colors hover:bg-amber-300/60"
+        className="col-start-2 justify-self-start rounded border border-amber-500/60 bg-amber-200/60 px-3 py-1 font-bold text-amber-900 no-underline transition-colors hover:bg-amber-300/60 sm:col-start-auto"
       >
         接入真实数据 →
       </a>

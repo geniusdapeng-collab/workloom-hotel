@@ -38,6 +38,7 @@ export function AgentActionMessage({
   rules = [],
   credits,
   memoryRefs = [],
+  fullWidth = false,
   children,
 }: {
   sender: string;
@@ -48,17 +49,18 @@ export function AgentActionMessage({
   rules?: string[];
   credits?: number;
   memoryRefs?: string[];
+  fullWidth?: boolean;
   children?: ReactNode;
 }) {
   const rm = RECEIPT_META[receipt];
   return (
     <div className="flex justify-start">
-      <div className="max-w-[82%] rounded-msg rounded-tl-[4px] border border-line bg-card px-3.5 py-2.5">
-        <div className="mb-1 flex items-center gap-2">
+      <div className={`${fullWidth ? "w-full max-w-full" : "max-w-[82%]"} min-w-0 rounded-msg rounded-tl-[4px] border border-line bg-card px-3.5 py-2.5`}>
+        <div className="mb-1 flex flex-wrap items-center gap-2">
           <span className="text-body font-bold text-ink">{clientChineseText(sender, "数字员工")}</span>
-          {version && <span className="text-body text-ink3">{versionText(version)}</span>}
+          {version && <span className="shrink-0 text-body text-ink3">{versionText(version)}</span>}
           <EventIdChip id={eventId} />
-          <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0.5 text-body font-bold ${rm.cls}`}>
+          <span className={`inline-flex shrink-0 items-center gap-1 rounded border px-1.5 py-0.5 text-body font-bold ${rm.cls}`}>
             <Icon name={rm.icon} size={13} /> {rm.label}
           </span>
         </div>
