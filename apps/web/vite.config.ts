@@ -1,7 +1,8 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
-// vitest/config 复用 Vite 的 defineConfig 并额外接受 test 段；生产构建行为不变。
-import { defineConfig } from "vitest/config";
+// Test options augment Vite types only; the self-contained production runtime does not ship Vitest.
+import { defineConfig, type UserConfig } from "vite";
+import type { TestUserConfig } from "vitest/config";
 import { workloomProductVite } from "../../scripts/vite-product.mjs";
 
 const product = workloomProductVite("B 端工作台");
@@ -12,7 +13,7 @@ const trpcProxy = {
   target: `http://localhost:${Number(process.env.SERVER_PORT ?? 8787)}`,
   changeOrigin: true,
 };
-export default defineConfig({
+const config: UserConfig & { test: TestUserConfig } = {
   define: product.define,
   plugins: [product.plugin, react(), tailwindcss()],
   server: {
@@ -30,4 +31,5 @@ export default defineConfig({
     // 让 vitest 用 Vite 的解析链内联处理它，前端单测才不会整片挂在 ERR_MODULE_NOT_FOUND。
     server: { deps: { inline: ["@workloom/ui"] } },
   },
-});
+};
+export default defineConfig(config);
