@@ -335,17 +335,30 @@ export async function activateRuleVersion(
     if (!gesture.rows[0]) {
       throw new Error(`审批事件 ${input.approvalEventId} 与围栏变更提案未绑定（伪造/未绑定引用，拒绝激活）`);
     }
+    // 和提案期共用规则级锁：多个待审版本的激活与新版本分配按同一顺序串行。
+    const target = await client.query<{ rule_id: string }>(
+      `SELECT rule_id FROM fence_rules WHERE id=$1 AND workspace_id=$2`,
+      [input.ruleRowId, scope.workspaceId],
+    );
+    if (!target.rows[0]) throw new Error(`规则 ${input.ruleRowId} 状态不允许激活`);
+    await client.query("SELECT pg_advisory_xact_lock(hashtext($1))", [`fence-proposal:${scope.workspaceId}:${target.rows[0].rule_id.toLowerCase()}`]);
     // ② 候选行 + 基线单调守卫（HP-02：checkMonotonic 此前只在测试里被调用）
     const cand = await client.query<{
       rule_id: string; version: string; name: string; level: RuntimeRule["level"]; is_baseline: boolean;
+      status: string; approved_event_id: string | null;
       match_spec: { object_types?: string[]; actions?: string[]; when?: string };
     }>(
-      `SELECT rule_id, version, name, level, is_baseline, match_spec FROM fence_rules
-        WHERE id=$1 AND workspace_id=$2 AND status IN ('draft','pending_approval')`,
+      `SELECT rule_id, version, name, level, is_baseline, status, approved_event_id, match_spec FROM fence_rules
+        WHERE id=$1 AND workspace_id=$2 AND status IN ('draft','pending_approval','active') FOR UPDATE`,
       [input.ruleRowId, scope.workspaceId],
     );
     const row = cand.rows[0];
     if (!row) throw new Error(`规则 ${input.ruleRowId} 状态不允许激活`);
+    if (row.status === "active") {
+      if (row.approved_event_id !== input.approvalEventId) throw new Error(`规则 ${input.ruleRowId} 已由另一审批激活`);
+      await client.query("COMMIT");
+      return { version: row.version };
+    }
     const current = await loadActiveRulesInTx(client, scope, input.ruleRowId);
     const verdict = checkCandidateAgainstBaseline(current, {
       rule_id: row.rule_id,
@@ -360,15 +373,21 @@ export async function activateRuleVersion(
     if (!verdict.ok) {
       throw new Error(`基线规则只可加严，本次变更被拒：${verdict.violations.map((v) => v.reason).join("；")}`);
     }
-    // ③ 版本可追溯（HP-02 + MC-102）：候选行在提案期已分配版本号（见 nextRuleRowIdentity），
-    //    激活时以候选行版本为准，历史最大版本**排除候选行本身**——否则每激活一次版本号都会 +1。
-    //    并发提案导致候选版本落后于已激活行时取较大值，保证不会撞 (rule_id, version, workspace_id) 唯一键。
-    const hist = await client.query<{ version: string }>(
-      `SELECT version FROM fence_rules WHERE workspace_id=$1 AND rule_id=$2 AND id<>$3`,
+    // ③ 数字版本在提案期已固定（行 ID/报告/人审快照同源），激活不得重新编号。
+    // 尚待审的高版本不改变本行；若高版本已经生效，本旧提案明确过期，须重新预演。
+    // 只有历史 v-next 候选没有预分配身份，保留其激活期分配的兼容路径。
+    const hist = await client.query<{ version: string; status: string }>(
+      `SELECT version, status FROM fence_rules WHERE workspace_id=$1 AND rule_id=$2 AND id<>$3`,
       [scope.workspaceId, row.rule_id, input.ruleRowId],
     );
     const maxVersion = hist.rows.reduce((max, r) => Math.max(max, ruleVersionNumber(r.version) ?? 0), 0);
-    const version = `v${Math.max(maxVersion + 1, ruleVersionNumber(row.version) ?? 0)}`;
+    const maxActiveVersion = hist.rows.filter((r) => r.status === "active")
+      .reduce((max, r) => Math.max(max, ruleVersionNumber(r.version) ?? 0), 0);
+    const allocatedVersion = ruleVersionNumber(row.version);
+    if (allocatedVersion !== null && allocatedVersion <= maxActiveVersion) {
+      throw new Error(`规则 ${input.ruleRowId} 的版本 ${row.version} 已落后于生效版本 v${maxActiveVersion}，请重新预演后提案`);
+    }
+    const version = allocatedVersion === null ? `v${maxVersion + 1}` : row.version;
     // MC-109：只回滚同 rule_id 的旧租户覆盖行（is_baseline=false）；平台/出厂基线行保持 active。
     // 修复前把基线行一起 rolled_back，首次自定义后该 rule_id 就再没有比较锚点，
     // 守卫（checkCandidateAgainstBaseline）直接放行任何放宽提案。

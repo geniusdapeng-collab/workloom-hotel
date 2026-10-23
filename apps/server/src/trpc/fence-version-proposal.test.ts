@@ -163,12 +163,33 @@ pgSuite("fence proposal version lifecycle with real PostgreSQL/RLS", () => {
     const rule = inputRule(nextRule());
     const dr1 = await dryRun(rule);
     // Verify distinct persisted reports before exercising concurrent confirmations.
-    const other = { ...rule, level: "block" as const };
-    const dr2 = await dryRun(other);
+    const dr2 = await dryRun(rule);
     expect(dr1.dryRunId).not.toBe(dr2.dryRunId);
-    const results = await Promise.all([confirm(dr1.dryRunId, rule), confirm(dr2.dryRunId, other)]);
-    const versions = await Promise.all(results.map(async (r) => (await proposal(r.eventId)).decision.after.version));
-    expect(versions.sort()).toEqual(["v1", "v2"]);
+    const results = await Promise.all([confirm(dr1.dryRunId, rule), confirm(dr2.dryRunId, rule)]);
+    const pending = await Promise.all(results.map(async (r) => ({ eventId: r.eventId, after: (await proposal(r.eventId)).decision.after })));
+    pending.sort((left, right) => left.after.version.localeCompare(right.after.version));
+    expect(pending.map((p) => p.after.version)).toEqual(["v1", "v2"]);
+    for (const p of pending) {
+      await approve(p.eventId);
+      expect(await scalar("SELECT version FROM fence_rules WHERE id=$1", [p.after.ruleRowId])).toEqual({ version: p.after.version });
+    }
+    expect(await scalar("SELECT status FROM fence_rules WHERE id=$1", [pending[0]!.after.ruleRowId])).toEqual({ status: "rolled_back" });
+    expect(await scalar("SELECT status FROM fence_rules WHERE id=$1", [pending[1]!.after.ruleRowId])).toEqual({ status: "active" });
+  });
+
+  it("refuses an older pending proposal after a newer version is already active", async () => {
+    const rule = inputRule(nextRule());
+    const dr1 = await dryRun(rule);
+    const p1 = await confirm(dr1.dryRunId, rule);
+    const dr2 = await dryRun(rule);
+    const p2 = await confirm(dr2.dryRunId, rule);
+    const after1 = (await proposal(p1.eventId)).decision.after;
+    const after2 = (await proposal(p2.eventId)).decision.after;
+    await approve(p2.eventId);
+    expect(await scalar("SELECT version,status FROM fence_rules WHERE id=$1", [after2.ruleRowId])).toEqual({ version: "v2", status: "active" });
+    await expect(approve(p1.eventId)).rejects.toThrow(/已落后|版本过期/);
+    expect(await scalar("SELECT version,status FROM fence_rules WHERE id=$1", [after1.ruleRowId])).toEqual({ version: "v1", status: "pending_approval" });
+    expect(await scalar("SELECT version,status FROM fence_rules WHERE id=$1", [after2.ruleRowId])).toEqual({ version: "v2", status: "active" });
   });
 
   it("creates distinct dry-run reports for the same rule in the same clock tick", async () => {
@@ -211,6 +232,18 @@ pgSuite("fence proposal version lifecycle with real PostgreSQL/RLS", () => {
     const retry = await approve(p.eventId);
     expect(retry).toMatchObject({ deduped: true, status: "approved" });
     expect(await scalar("SELECT status,version FROM fence_rules WHERE id=$1", [after.ruleRowId])).toEqual({ status: "active", version: "v1" });
+    expect(await scalar("SELECT count(*)::int AS n FROM biz_events WHERE workspace_id=$1 AND payload->'decision'->>'action'='approval.gesture' AND payload->'decision'->'after'->>'approvalId'=$2", [a.workspaceId, `apr-${p.eventId.toLowerCase()}`])).toEqual({ n: 1 });
+  });
+
+  it("deduplicates concurrent approval retries while preserving the allocated version", async () => {
+    const rule = inputRule(nextRule());
+    const dr = await dryRun(rule);
+    const p = await confirm(dr.dryRunId, rule);
+    const after = (await proposal(p.eventId)).decision.after;
+    const decisions = await Promise.all([approve(p.eventId), approve(p.eventId)]);
+    expect(decisions.every((d) => d.status === "approved")).toBe(true);
+    expect(decisions.filter((d) => !d.deduped)).toHaveLength(1);
+    expect(await scalar("SELECT version,status FROM fence_rules WHERE id=$1", [after.ruleRowId])).toEqual({ version: "v1", status: "active" });
     expect(await scalar("SELECT count(*)::int AS n FROM biz_events WHERE workspace_id=$1 AND payload->'decision'->>'action'='approval.gesture' AND payload->'decision'->'after'->>'approvalId'=$2", [a.workspaceId, `apr-${p.eventId.toLowerCase()}`])).toEqual({ n: 1 });
   });
 
