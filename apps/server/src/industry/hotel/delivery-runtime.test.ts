@@ -175,6 +175,27 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
     return (await owner.query<{ payload: any }>("SELECT payload FROM biz_events WHERE tenant_id=$1 AND workspace_id=$2 AND session_id=$3 ORDER BY seq", [f.scope.tenantId, f.scope.workspaceId, f.threadId])).rows.map((row) => row.payload);
   }
 
+  function holdModelReply() {
+    let arrived!: (input: ModelRequest) => void;
+    let release!: (content: string) => void;
+    let request: ModelRequest | undefined;
+    const entered = new Promise<ModelRequest>((resolve) => { arrived = resolve; });
+    const waiting = new Promise<string>((resolve) => { release = resolve; });
+    respond = (input) => { request = input; arrived(input); return waiting; };
+    return {
+      async arrived() {
+        let timer: ReturnType<typeof setTimeout> | undefined;
+        try {
+          return await Promise.race([entered, new Promise<never>((_, reject) => {
+            timer = setTimeout(() => reject(new Error("local model fixture did not receive the pending request within 10 seconds")), 10_000);
+          })]);
+        } finally { if (timer) clearTimeout(timer); }
+      },
+      // A failed pre-arrival assertion must also release a later request, then the test awaits its run before the next beforeEach.
+      release() { release(request ? workerReply(request.prompt) : ""); },
+    };
+  }
+
   it("单员工完整prompt/档案阶段目标 + 可读真实事件回执，隔离敏感字段", async () => {
     const f = await fixture();
     const result = await run(f);
@@ -374,17 +395,21 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
 
   it("并发CAS只允许一个实例付费工作，另一个返回running", async () => {
     const f = await fixture();
-    let release!: (value: string) => void;
-    const waiting = new Promise<string>((done) => { release = done; });
-    respond = () => waiting;
-    const first = run(f);
-    for (let i = 0; i < 100 && calls.length === 0; i++) await new Promise((done) => setTimeout(done, 5));
-    expect(calls).toHaveLength(1);
-    expect((await run(f)).status).toBe("running");
-    release(workerReply(calls[0]!.prompt));
-    expect((await first).status).toBe("completed");
-    expect(calls).toHaveLength(1);
-  });
+    const pending = holdModelReply();
+    // Reproduce the observed slow arrival beyond the former fixed 500ms polling window.
+    const first = run(f, { llmCallFor: (scene, sessionId) => async (prompt, signal) => {
+      await new Promise((done) => setTimeout(done, 650));
+      return llmCallFor(scene, sessionId)(prompt, signal);
+    } });
+    try {
+      await pending.arrived();
+      expect(calls).toHaveLength(1);
+      expect((await run(f)).status).toBe("running");
+      pending.release();
+      expect((await first).status).toBe("completed");
+      expect(calls).toHaveLength(1);
+    } finally { pending.release(); await first; }
+  }, 15_000);
 
   it("scheduler预先CAS的槽位可内部接续，普通调用不能冒认", async () => {
     const f = await fixture();
@@ -397,39 +422,39 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
 
   it("scheduler内部标记也不能覆盖活动owner，暂停后新generation阻止旧结果回写", async () => {
     const f = await fixture();
-    let release!: (value: string) => void;
-    const waiting = new Promise<string>((done) => { release = done; });
-    respond = () => waiting;
+    const pending = holdModelReply();
     const oldRun = run(f);
-    for (let i = 0; i < 100 && calls.length === 0; i++) await new Promise((done) => setTimeout(done, 5));
-    expect((await run(f, { claimedByScheduler: true })).status).toBe("running");
-    expect(calls).toHaveLength(1);
-    await owner.query("UPDATE threads SET status='paused' WHERE id=$1", [f.threadId]);
-    respond = ({ prompt }) => workerReply(prompt);
-    expect((await run(f)).status).toBe("completed");
-    release(workerReply(calls[0]!.prompt));
-    expect((await oldRun).status).toBe("completed");
-    const saved = await thread(f);
-    expect(saved.plan.generation).toBe(2);
-    expect((await events(f)).filter((event) => event.decision.action === "ask.answer")).toHaveLength(1);
-  });
+    try {
+      await pending.arrived();
+      expect((await run(f, { claimedByScheduler: true })).status).toBe("running");
+      expect(calls).toHaveLength(1);
+      await owner.query("UPDATE threads SET status='paused' WHERE id=$1", [f.threadId]);
+      respond = ({ prompt }) => workerReply(prompt);
+      expect((await run(f)).status).toBe("completed");
+      pending.release();
+      expect((await oldRun).status).toBe("completed");
+      const saved = await thread(f);
+      expect(saved.plan.generation).toBe(2);
+      expect((await events(f)).filter((event) => event.decision.action === "ask.answer")).toHaveLength(1);
+    } finally { pending.release(); await oldRun; }
+  }, 15_000);
 
   it("租约失联先报告未知结果，显式重试后才继续", async () => {
     const f = await fixture();
-    let release!: (value: string) => void;
-    const waiting = new Promise<string>((done) => { release = done; });
-    respond = () => waiting;
+    const pending = holdModelReply();
     const oldRun = run(f);
-    for (let i = 0; i < 100 && calls.length === 0; i++) await new Promise((done) => setTimeout(done, 5));
-    await owner.query("UPDATE threads SET plan=jsonb_set(plan,'{leaseUntil}',to_jsonb('2000-01-01T00:00:00Z'::text)) WHERE id=$1", [f.threadId]);
-    expect((await run(f)).status).toBe("failed");
-    expect(calls).toHaveLength(1);
-    release(workerReply(calls[0]!.prompt));
-    expect((await oldRun).status).toBe("failed");
-    respond = ({ prompt }) => workerReply(prompt);
-    expect((await run(f)).status).toBe("completed");
-    expect(calls).toHaveLength(2);
-  });
+    try {
+      await pending.arrived();
+      await owner.query("UPDATE threads SET plan=jsonb_set(plan,'{leaseUntil}',to_jsonb('2000-01-01T00:00:00Z'::text)) WHERE id=$1", [f.threadId]);
+      expect((await run(f)).status).toBe("failed");
+      expect(calls).toHaveLength(1);
+      pending.release();
+      expect((await oldRun).status).toBe("failed");
+      respond = ({ prompt }) => workerReply(prompt);
+      expect((await run(f)).status).toBe("completed");
+      expect(calls).toHaveLength(2);
+    } finally { pending.release(); await oldRun; }
+  }, 15_000);
 
   it("岗位版本变化或停用使未完成步骤失败，不能静默换人", async () => {
     const f = await fixture();
@@ -491,17 +516,17 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
 
   it("取消后旧运行者的在途输出不能回写完成", async () => {
     const f = await fixture();
-    let release!: (value: string) => void;
-    const waiting = new Promise<string>((done) => { release = done; });
-    respond = () => waiting;
+    const pending = holdModelReply();
     const first = run(f);
-    for (let i = 0; i < 100 && calls.length === 0; i++) await new Promise((done) => setTimeout(done, 5));
-    await owner.query("UPDATE threads SET status='cancelled' WHERE id=$1", [f.threadId]);
-    release(workerReply(calls[0]!.prompt));
-    expect((await first).status).toBe("cancelled");
-    expect((await thread(f)).status).toBe("cancelled");
-    expect((await events(f)).filter((event) => event.decision.action === "ask.answer")).toHaveLength(0);
-  });
+    try {
+      await pending.arrived();
+      await owner.query("UPDATE threads SET status='cancelled' WHERE id=$1", [f.threadId]);
+      pending.release();
+      expect((await first).status).toBe("cancelled");
+      expect((await thread(f)).status).toBe("cancelled");
+      expect((await events(f)).filter((event) => event.decision.action === "ask.answer")).toHaveLength(0);
+    } finally { pending.release(); await first; }
+  }, 15_000);
 
   it("产物事件和进度状态在同一事务回滚，不留下半份回执", async () => {
     const f = await fixture();
@@ -529,20 +554,20 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
 
   it("模型请求在途新增输出block在提交事务内重判，不留下worker回执", async () => {
     const f = await fixture();
-    let release!: (value: string) => void;
-    const waiting = new Promise<string>((done) => { release = done; });
-    respond = () => waiting;
+    const pending = holdModelReply();
     const running = run(f);
-    for (let i = 0; i < 100 && calls.length === 0; i++) await new Promise((done) => setTimeout(done, 5));
-    expect(calls).toHaveLength(1);
-    await owner.query("INSERT INTO fence_rules(id,rule_id,version,workspace_id,name,level,match_spec,action,is_baseline,status,created_by) VALUES($1,'HD-INFLIGHT','fixture',$2,'inflight output block','block',$3,'{}',false,'active','fixture')", [
-      `hd-fence-${randomUUID()}`, f.scope.workspaceId, JSON.stringify({ object_types: ["ask_answer"], actions: ["ask.deliver"], when: "true" }),
-    ]);
-    release(workerReply(calls[0]!.prompt));
-    expect((await running).status).toBe("failed");
-    expect((await thread(f)).progress_done).toBe(0);
-    expect((await events(f)).filter((event) => event.decision.action === "ask.answer")).toHaveLength(0);
-  });
+    try {
+      await pending.arrived();
+      expect(calls).toHaveLength(1);
+      await owner.query("INSERT INTO fence_rules(id,rule_id,version,workspace_id,name,level,match_spec,action,is_baseline,status,created_by) VALUES($1,'HD-INFLIGHT','fixture',$2,'inflight output block','block',$3,'{}',false,'active','fixture')", [
+        `hd-fence-${randomUUID()}`, f.scope.workspaceId, JSON.stringify({ object_types: ["ask_answer"], actions: ["ask.deliver"], when: "true" }),
+      ]);
+      pending.release();
+      expect((await running).status).toBe("failed");
+      expect((await thread(f)).progress_done).toBe(0);
+      expect((await events(f)).filter((event) => event.decision.action === "ask.answer")).toHaveLength(0);
+    } finally { pending.release(); await running; }
+  }, 15_000);
 
   it("最终汇总文本单独触发围栏，保留三岗成果而不写入summary或完成状态", async () => {
     const f = await fixture();
