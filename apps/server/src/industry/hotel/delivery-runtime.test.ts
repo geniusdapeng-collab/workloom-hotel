@@ -58,10 +58,10 @@ function collaborationPlan() {
 }
 
 describe("酒店内部交付入口识别", () => {
-  it.each(["撰写入住率分析报告", "提供退款风险分析方案，不执行退款", "生成差评回复草稿，不发布", "整理客房检查清单", "单员工，仅起草内部客房排班建议", "生成桌面核查清单，不操控GUI"])("明确内部产物：%s", (goal) => {
+  it.each(["撰写入住率分析报告", "提供退款风险分析方案，不执行退款", "生成差评回复草稿，不发布", "整理客房检查清单", "单员工，仅起草内部客房排班建议", "生成桌面核查清单，不操控GUI", "多员工协作起草内部方案；不重新调用已经完成的岗位，重复点击完成任务应直接读回同线程产物。"])("明确内部产物：%s", (goal) => {
     expect(isHotelDraftGoal(goal)).toBe(true);
   });
-  it.each(["立即退款500元", "分析房价后实际执行改价", "生成草稿然后立即发布", "通过GUI点击退款并给出报告", "请将本店房价改为400并生成分析报告", "生成分析报告并退款500元", "起草方案并发布到美团", "生成报告，同时发送给客户", "调价2%", "继续"])("执行动作或非产物目标不进入报告链：%s", (goal) => {
+  it.each(["立即退款500元", "分析房价后实际执行改价", "生成草稿然后立即发布", "通过GUI点击退款并给出报告", "调用GUI点击退款并给出报告", "请将本店房价改为400并生成分析报告", "生成分析报告并退款500元", "起草方案并发布到美团", "生成报告，同时发送给客户", "调价2%", "继续"])("执行动作或非产物目标不进入报告链：%s", (goal) => {
     expect(isHotelDraftGoal(goal)).toBe(false);
   });
   it("识别明确协作及跨岗位，单员工仍保持单任务", () => {
@@ -253,6 +253,7 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
     { field: "humanDecisions", claim: "是否批准任何低于380元保底价的定价，必须人工升级审批" },
     { field: "humanDecisions", claim: "是否批准或撤销低于保底价380的调价记录" },
     { field: "humanDecisions", claim: "保底价与安全禁区相关规则的任何调整" },
+    { field: "humanDecisions", claim: "本次不修改政策，但应调整当前保底价以接受368元报价" },
     { field: "text", claim: "店长可特批368元房价作为当前保底价的例外" },
     { field: "humanDecisions", claim: "将低于保底价的368元房价提交人工审批后放行" },
     { field: "missingData", claim: "因缺少审批回执，无法判断368是否越线及是否已获授权" },
@@ -309,6 +310,18 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
     expect((await run(f, { goal: "单员工起草房价分析报告，解释不能把房价降至368元" })).status).toBe("completed");
     const input = parseInput(calls[0]!.prompt);
     expect(input.pricingArithmetic).toEqual(expect.arrayContaining([expect.objectContaining({ floorPrice: 380, quotedPrice: 368, floorMinusQuote: 12, quoteBelowFloor: true })]));
+  });
+
+  it("S12完整正文与待决策字段中的本次不修改政策不被当成实际改底价", async () => {
+    const f = await fixture();
+    const response = JSON.parse(readFileSync(new URL("./fixtures/deepseek-s12-024-response.json", import.meta.url), "utf8"));
+    const original = JSON.parse(response.choices[0].message.content);
+    // Only source IDs are mapped to this isolated fixture. All policy prose remains the exact supplier output.
+    respond = ({ prompt }) => JSON.stringify({ ...original, sourceIds: [parseInput(prompt).sources[0]!.id] });
+    const result = await run(f, { goal: "单员工起草内部经营授权边界分析报告，不执行经营动作" });
+    expect(result.status, result.error).toBe("completed");
+    expect(result.answer).toContain("决定是否启动保底价口径（含佣/净价）说明的版本治理，本次不修改政策。");
+    expect((await events(f)).filter((event) => event.decision.action === "ask.answer")).toHaveLength(1);
   });
 
   it("前序正文带出的祖先ID不自动获得引用权限，拒绝而非静默删改未知引用", async () => {

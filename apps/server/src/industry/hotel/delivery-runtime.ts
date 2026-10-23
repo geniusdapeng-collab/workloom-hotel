@@ -129,7 +129,7 @@ export function isHotelDraftGoal(goal: string): boolean {
   return !/(?:实际|立即|直接|自动|立刻|现在|然后|再)(?:执行)?(?:改价|调价|退款|发布|群发|外发|发送|写回|付款|下单|转账|开锁)/i.test(executable)
     && !/(?:并且?|同时|随后|接着|顺便|之后|后)(?:请|帮我|替我)?(?:实际|立即|直接|自动|执行|进行|实施)?(?:改价|调价|退款|发布|群发|外发|发送|写回|付款|下单|转账|开锁)/i.test(executable)
     && !/(?:执行|落实|写回|写入).{0,16}(?:PMS|OTA|改价|调价|退款|发布|付款|群发)/i.test(executable)
-    && !/(?:通过|使用|调用|操控|操作|执行).{0,12}(?:GUI|桌面操控|点击|开锁)/i.test(executable)
+    && !/(?:通过|使用|调用|操控|操作|执行)[^，,。；;\n]{0,12}(?:GUI|桌面操控|点击|开锁)/i.test(executable)
     && !/(?:把|将).{0,30}(?:房价|价格).{0,12}(?:改为|调整为|上调至|下调至|设为|设置为)/.test(executable);
 }
 
@@ -512,7 +512,9 @@ function assertPricePolicy(raw: Pick<Artifact, "title" | "text" | "missingData" 
     }
   }
   for (const decision of raw.humanDecisions) {
-    if (floorTerms.test(decision) && /修改|调整|变更|放宽/.test(decision) && !/另(?:立|行).{0,12}版本|不在本任务|非本任务|本任务不/.test(decision)) {
+    // An explicit "do not change" clause is not a policy-change request; a later positive request still remains visible.
+    const requestedChange = decision.replace(/(?:不得|不可|不能|无需|不会|不|未)(?:直接|实际|立即|自行|自动)?(?:修改|调整|变更|放宽)/g, "[禁止改动]");
+    if (floorTerms.test(decision) && /修改|调整|变更|放宽/.test(requestedChange) && !/另(?:立|行).{0,12}版本|不在本任务|非本任务|本任务不/.test(decision)) {
       throw new Error("修改当前保底价或安全禁区须另立版本治理，不属于本任务普通审批事项");
     }
   }
