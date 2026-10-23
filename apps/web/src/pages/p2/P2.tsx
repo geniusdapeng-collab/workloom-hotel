@@ -31,6 +31,8 @@ import {
 } from "../../components/hud";
 import { Icon, clientChineseText } from "@workloom/ui";
 import { clientNaturalText } from "../../lib/clientText";
+import { operationFailure } from "../../lib/ui-state";
+import { DeliveryArtifact, deliveryArtifactData } from "./DeliveryArtifact";
 
 interface ThreadRow {
   id: string; title: string; mode: string; status: string;
@@ -86,6 +88,7 @@ export default function P2() {
   const [composer, setComposer] = useState("");
   const [banner, setBanner] = useState<{ level: "alert" | "warn" | "info"; text: string } | null>(null);
   const [rejectTarget, setRejectTarget] = useState<string | null>(null);
+  const [runBusy, setRunBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -167,15 +170,30 @@ export default function P2() {
 
   /* ---------- 追问（P2E6：沿用线程上下文；threads.run 续跑，replay 幂等 H-5） ---------- */
   const followUp = useCallback(async () => {
-    if (!composer.trim() || !thread) return;
+    if (!composer.trim() || !thread || runBusy) return;
+    setRunBusy(true);
     setBanner({ level: "info", text: "追问已沿用当前任务上下文并进入队列，正在执行…" });
     setComposer("");
     try {
       await trpc.threads.run.mutate({ threadId: thread.id, goal: composer, ...(thread.agent_id ? { presetKey: thread.agent_id } : {}) });
+    } catch (error) {
+      setBanner({ level: "alert", text: operationFailure(error, "任务继续执行") });
     } finally {
+      setRunBusy(false);
       await load();
     }
-  }, [composer, thread, load]);
+  }, [composer, thread, runBusy, load]);
+
+  const continueTask = useCallback(async () => {
+    if (!thread || runBusy) return;
+    setRunBusy(true);
+    try {
+      // Omit the title/“continue”: the server restores the exact persisted brief and plan.
+      await trpc.threads.run.mutate({ threadId: thread.id });
+    } catch (error) {
+      setBanner({ level: "alert", text: operationFailure(error, "任务继续执行") });
+    } finally { setRunBusy(false); await load(); }
+  }, [thread, runBusy, load]);
 
   /* ---------- 左栏：会话列表（P2E1 状态点浏览，单击切换） ---------- */
   const left = (
@@ -263,10 +281,12 @@ export default function P2() {
               {canDispatch && thread.status !== "completed" && thread.status !== "failed" && (
                 <button
                   type="button"
-                  onClick={() => void trpc.threads.run.mutate({ threadId: thread.id, goal: thread.title, ...(thread.agent_id ? { presetKey: thread.agent_id } : {}) }).then(load)}
-                  className="cursor-pointer rounded-md border border-gline bg-gold/8 px-3 py-1 text-body font-bold text-gold hover:bg-gold/15"
+                  onClick={() => void continueTask()}
+                  disabled={runBusy || thread.status === "running"}
+                  aria-busy={runBusy || undefined}
+                  className="cursor-pointer rounded-md border border-gline bg-gold/8 px-3 py-1 text-body font-bold text-gold hover:bg-gold/15 disabled:cursor-wait disabled:opacity-50"
                 >
-                  <Icon name="play" size={14} className="inline" /> 执行或从中断处继续
+                  <Icon name="play" size={14} className="inline" /> {runBusy || thread.status === "running" ? "正在执行，请稍候" : "执行或从中断处继续"}
                 </button>
               )}
             </>
@@ -287,8 +307,8 @@ export default function P2() {
             {canDispatch && <div className="wl-action-row flex flex-wrap gap-2">
               <button type="button" onClick={() => setBanner({ level: "info", text: "已标记为需要人工介入，并开启人工接管通道。" })}
                 className="cursor-pointer rounded-md border border-alert/60 bg-alert/10 px-3 py-1.5 text-body font-bold text-alert">转人工</button>
-              <button type="button" onClick={() => thread && void trpc.threads.run.mutate({ threadId: thread.id, goal: thread.title, ...(thread.agent_id ? { presetKey: thread.agent_id } : {}) }).then(load)}
-                className="cursor-pointer rounded-md border border-warn/50 bg-warn/10 px-3 py-1.5 text-body font-bold text-warn">降级重试</button>
+              <button type="button" disabled={runBusy} onClick={() => void continueTask()}
+                className="cursor-pointer rounded-md border border-warn/50 bg-warn/10 px-3 py-1.5 text-body font-bold text-warn disabled:opacity-50">{runBusy ? "正在重试…" : "从已交付步骤继续"}</button>
               <button type="button" onClick={() => setBanner({ level: "info", text: "回滚会生成一组反向补偿事件，原始账本记录不会被覆盖。" })}
                 className="cursor-pointer rounded-md border border-holo/40 bg-holo/8 px-3 py-1.5 text-body font-bold text-holo">回滚</button>
             </div>}
@@ -324,6 +344,9 @@ export default function P2() {
                   );
                 }
                 if (ev.decision.action === "ask.answer") {
+                  const delivery = deliveryArtifactData(ev.decision.after, ev.links);
+                  if (delivery) return <DeliveryArtifact key={ev.event_id} data={delivery} eventId={ev.event_id}
+                    senderId={ev.who.id} version={ev.who.version ?? ""} receipt={receiptOf(ev)} credits={ev.model_trace?.credits} />;
                   // ask 问询应答（B8）：正文上屏（§9.1 动作码不直接上屏同口径）
                   const ans = clientNaturalText(
                     (ev.decision.after as { text?: string } | undefined)?.text,
@@ -339,7 +362,7 @@ export default function P2() {
                       receipt={receiptOf(ev)}
                       credits={ev.model_trace?.credits}
                     >
-                      {ans}
+                      <div className="whitespace-pre-wrap break-words [overflow-wrap:anywhere]">{ans}</div>
                     </AgentActionMessage>
                   );
                 }
@@ -445,6 +468,8 @@ export default function P2() {
         {/* P2E6 线程内追问（只读成员不显示输入栏 E2.6；沿用线程上下文 F3.6） */}
         {canDispatch && thread && (
           <div className="mt-4">
+            {runBusy && <div role="status" className="mb-2 text-body text-holo">任务正在执行，进度和已入账成果会自动更新。</div>}
+            <fieldset disabled={runBusy} aria-busy={runBusy || undefined} className="min-w-0 disabled:opacity-60">
             <DispatchBar
               state={composer ? "typing" : "empty"}
               value={composer}
@@ -452,6 +477,7 @@ export default function P2() {
               onChange={setComposer}
               onSubmit={() => void followUp()}
             />
+            </fieldset>
           </div>
         )}
       </div>

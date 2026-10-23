@@ -11,12 +11,14 @@ export class GatewayEventSink implements EventSink {
     private readonly gateway: pg.Pool,
     private readonly scope: { tenantId: string; workspaceId: string },
     private readonly actor: { id: string; version?: string } = { id: "model-router" },
+    private readonly sessionId?: string,
   ) {}
 
   private async write(decision: Record<string, unknown>, modelTrace?: Record<string, unknown>) {
     await gatewayAppend(this.gateway, {
       ...this.scope,
       actor: { id: this.actor.id, type: "system" },
+      ...(this.sessionId ? { sessionId: this.sessionId } : {}),
     }, {
       who: { type: "system", id: this.actor.id },
       context: {

@@ -24,7 +24,7 @@ import { canonicalJson, gatewayAppend, gatewayAppendOnClient, insertWithReadable
 import { INTENT_ROUTE_TIMEOUT_DISPATCH_MS, makeReadableId } from "@workloom/shared";
 import { registerAskKbSearch } from "@workloom/runtime";
 
-import { loadGoalArchive, registerIndustryQuestPlanner, resolveDispatchPresetKey, runQuestForThread } from "../runtime/thread-runner.js";
+import { loadGoalArchive, registerIndustryQuestPlanner, registerIndustryThreadRunner, resolveDispatchPresetKey, runQuestForThread } from "../runtime/thread-runner.js";
 import {
   actionProcedure,
   capabilityActionProcedure,
@@ -44,7 +44,7 @@ import {
   expireSweep,
   listQueue,
 } from "@workloom/base/review-console";
-import { routeIntent, runAsk } from "@workloom/runtime";
+import { routeIntent, runAsk, type IntentResult } from "@workloom/runtime";
 import { LlmIntentClassifier, type IntentClassifier } from "@workloom/runtime";
 import { providerFromEnv, OpenAiCompatibleProvider } from "@workloom/base/model-router";
 import { routedLlmCall, resetLlmAssembly } from "../service/llm.js";
@@ -58,6 +58,8 @@ import { overlayRouter } from "./overlay-router.js";
 import { accountsRouter } from "./accounts-router.js";
 import { searchKB } from "../service/kb.js";
 import { acquisitionQuestPlanner } from "../industry/hotel/acquisition-planner.js";
+import { isHotelDeliveryPlan } from "../industry/hotel/delivery-runtime.js";
+import { isHotelInternalDeliveryGoal, tryRunHotelDeliveryForThread } from "../industry/hotel/thread-delivery.js";
 import { runRouterReviewBeat } from "@workloom/base/model-router";
 import {
   loadCharter, parseCharter, transition, defaultCharter,
@@ -1074,24 +1076,32 @@ const threadsRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       const scope = scopeOf(ctx.identity);
+      // Resolve the complete brief before choosing the engine. A missing explicit reference cannot become a title-only task.
+      const goalArchive = input.goalRef ? await loadGoalArchive(scope, input.goalRef) : undefined;
+      if (input.goalRef && !goalArchive) {
+        throw new TRPCError({ code: "PRECONDITION_FAILED", message: "目标档案不存在或不可读取，未按不完整标题创建任务" });
+      }
+      const planningGoal = goalArchive?.text ?? input.title;
       // F3.2 意图路由（B8 接线：真实模型分类 → 超时/异常规则兜底 → 含糊反问；via 留痕）
       // GR-06：交付型入口用 12s 预算（真实模型 3s 内回不来 → 此前 100% 落 timeout_fallback）
-      const intent = await routeIntent(input.title, intentClassifier(scope), INTENT_ROUTE_TIMEOUT_DISPATCH_MS);
+      // Hotel internal deliverables have an explicit deterministic contract; do not spend a model call classifying them.
+      const internalDelivery = await isHotelInternalDeliveryGoal(scope, planningGoal);
+      if (internalDelivery && planningGoal.length > 20_000) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "内部交付目标超过两万字上限，未截断目标或创建任务" });
+      }
+      const intent: IntentResult = internalDelivery
+        ? { kind: "routed", mode: "quest", via: "rule", rationale: "明确内部分析或草稿目标，按持久化交付计划执行" }
+        : await routeIntent(input.title, intentClassifier(scope), INTENT_ROUTE_TIMEOUT_DISPATCH_MS);
       if (intent.kind === "clarify") {
         // 含糊指令：反问澄清，不盲目建任务
         return { kind: "clarify" as const, question: intent.clarifyQuestion, via: intent.via };
       }
       // N-14：岗位解析带任务语义（视觉/视频/发布/增长四域偏好），不再只认 Bundle 清单顺序
-      const presetKey = input.presetKey ?? (await resolveDispatchPresetKey(scope, input.title));
+      const presetKey = input.presetKey ?? (await resolveDispatchPresetKey(scope, planningGoal));
       /**
        * GR-14：档案读取失败一律 fail-closed（按无档案走并留痕），绝不"猜"目标。
        * 读到了则用全文替换规划目标；线程 title 仍是索引（事件 after 里带 goal_ref 与版本）。
        */
-      const goalArchive = input.goalRef ? await loadGoalArchive(scope, input.goalRef) : undefined;
-      const planningGoal = goalArchive?.text ?? input.title;
-      if (input.goalRef && !goalArchive) {
-        console.warn(`[dispatch] goalRef=${input.goalRef} 未取到档案（fail-closed：按标题规划）`);
-      }
       const app = getAppPool();
       const client = await app.connect();
       let threadId: string;
@@ -1162,6 +1172,8 @@ const threadsRouter = router({
             action: "thread.dispatch",
             after: {
               threadId, title: input.title, mode: intent.mode, rationale: intent.rationale,
+              // Store the exact initial brief once; queued runs and restarts never depend on a mutable archive or “continue”.
+              goal_text: planningGoal,
               // GR-14：长文档案引用与版本进账本（规划输入可追溯）
               ...(input.goalRef ? { goal_ref: input.goalRef, goal_ref_version: goalArchive?.version ?? null } : {}),
             },
@@ -1189,7 +1201,8 @@ const threadsRouter = router({
         const r = await runQuestForThread(scope, {
           threadId, goal: planningGoal, presetRef: presetKey, mode: "quest",
         });
-        return { kind: "routed" as const, mode: intent.mode, via: intent.via, threadId, status: r.status, stepsDone: r.stepsDone, stepsTotal: r.stepsTotal };
+        return { kind: "routed" as const, mode: intent.mode, via: intent.via, threadId, status: r.status, stepsDone: r.stepsDone, stepsTotal: r.stepsTotal,
+          ...(r.answer ? { answer: r.answer } : {}), ...(r.artifactEventIds ? { artifactEventIds: r.artifactEventIds } : {}) };
       }
       return { kind: "routed" as const, mode: intent.mode, via: intent.via, threadId, status: "queued" as const };
     }),
@@ -1323,13 +1336,19 @@ const threadsRouter = router({
       try {
         await client.query("BEGIN");
         await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
-        const t = await client.query<{ mode: string; agent_id: string | null; title: string }>(`SELECT mode, agent_id, title FROM threads WHERE id=$1 AND workspace_id=$2`, [input.threadId, scope.workspaceId]);
+        await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
+        const t = await client.query<{ mode: string; agent_id: string | null; title: string; plan: unknown; goal_text: string | null }>(
+          `SELECT mode,agent_id,title,plan,
+             (SELECT e.payload->'decision'->'after'->>'goal_text' FROM biz_events e
+               WHERE e.tenant_id=threads.tenant_id AND e.workspace_id=threads.workspace_id AND e.session_id=threads.id
+                 AND e.payload->'decision'->>'action'='thread.dispatch' ORDER BY e.seq ASC LIMIT 1) AS goal_text
+           FROM threads WHERE id=$1 AND workspace_id=$2`, [input.threadId, scope.workspaceId]);
         if (!t.rows[0]) throw new TRPCError({ code: "NOT_FOUND", message: "任务不存在或无权访问" });
         selectedAgent = await runnableAgentOn(client, scope.workspaceId, input.presetKey ?? t.rows[0].agent_id);
         await client.query("COMMIT");
         if (t.rows[0]?.mode === "ask" || t.rows[0]?.mode === "agent") mode = t.rows[0].mode;
         // N-06：缺省读线程 title——对话框"推进"不再把"继续/推进吧"当规划目标
-        runGoal = input.goal ?? t.rows[0]?.title ?? "";
+        runGoal = isHotelDeliveryPlan(t.rows[0].plan) ? t.rows[0].plan.goal : input.goal ?? t.rows[0].goal_text ?? t.rows[0].title;
       } catch (err) {
         await client.query("ROLLBACK").catch(() => undefined);
         throw err;
@@ -3526,6 +3545,7 @@ export type { IntelItem, RepoPulse } from "../service/aipm.js";
  * 本模块随服务启动加载（index.ts 导入 appRouter），注册早于任何派遣/调度执行。
  */
 registerIndustryQuestPlanner((goal) => acquisitionQuestPlanner(goal));
+registerIndustryThreadRunner(tryRunHotelDeliveryForThread);
 registerAskKbSearch(async (scope, question, limit) => {
   const hits = await searchKB({ workspaceId: scope.workspaceId, query: question, limit });
   return hits.map((hit) => ({
