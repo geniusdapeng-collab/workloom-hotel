@@ -58,7 +58,7 @@ import { overlayRouter } from "./overlay-router.js";
 import { accountsRouter } from "./accounts-router.js";
 import { searchKB } from "../service/kb.js";
 import { acquisitionQuestPlanner } from "../industry/hotel/acquisition-planner.js";
-import { isHotelDeliveryPlan } from "../industry/hotel/delivery-runtime.js";
+import { cleanHotelDeliveryText, isHotelDeliveryPlan } from "../industry/hotel/delivery-runtime.js";
 import { isHotelInternalDeliveryGoal, tryRunHotelDeliveryForThread } from "../industry/hotel/thread-delivery.js";
 import { runRouterReviewBeat } from "@workloom/base/model-router";
 import {
@@ -1081,17 +1081,23 @@ const threadsRouter = router({
       if (input.goalRef && !goalArchive) {
         throw new TRPCError({ code: "PRECONDITION_FAILED", message: "目标档案不存在或不可读取，未按不完整标题创建任务" });
       }
-      const planningGoal = goalArchive?.text ?? input.title;
+      const originalGoal = goalArchive?.text ?? input.title;
       // F3.2 意图路由（B8 接线：真实模型分类 → 超时/异常规则兜底 → 含糊反问；via 留痕）
       // GR-06：交付型入口用 12s 预算（真实模型 3s 内回不来 → 此前 100% 落 timeout_fallback）
       // Hotel internal deliverables have an explicit deterministic contract; do not spend a model call classifying them.
-      const internalDelivery = await isHotelInternalDeliveryGoal(scope, planningGoal);
+      const internalDelivery = await isHotelInternalDeliveryGoal(scope, originalGoal);
+      // Clean before threads.title or the immutable dispatch event can preserve a mistakenly pasted credential.
+      const planningGoal = internalDelivery ? cleanHotelDeliveryText(originalGoal) : originalGoal;
+      const dispatchTitle = internalDelivery ? cleanHotelDeliveryText(input.title) : input.title;
+      if (dispatchTitle.length > 500) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "标题脱敏后超过五百字上限，未截断或创建任务" });
+      }
       if (internalDelivery && planningGoal.length > 20_000) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "内部交付目标超过两万字上限，未截断目标或创建任务" });
       }
       const intent: IntentResult = internalDelivery
         ? { kind: "routed", mode: "quest", via: "rule", rationale: "明确内部分析或草稿目标，按持久化交付计划执行" }
-        : await routeIntent(input.title, intentClassifier(scope), INTENT_ROUTE_TIMEOUT_DISPATCH_MS);
+        : await routeIntent(dispatchTitle, intentClassifier(scope), INTENT_ROUTE_TIMEOUT_DISPATCH_MS);
       if (intent.kind === "clarify") {
         // 含糊指令：反问澄清，不盲目建任务
         return { kind: "clarify" as const, question: intent.clarifyQuestion, via: intent.via };
@@ -1154,7 +1160,7 @@ const threadsRouter = router({
           await client.query(
             `INSERT INTO threads (id, tenant_id, workspace_id, title, mode, status, created_by, agent_id)
              VALUES ($1,$2,$3,$4,$5,'queued',$6,$7)`,
-            [id, scope.tenantId, scope.workspaceId, input.title, intent.mode, ctx.identity.memberNo, ownerAgentId],
+            [id, scope.tenantId, scope.workspaceId, dispatchTitle, intent.mode, ctx.identity.memberNo, ownerAgentId],
           );
           return id;
         });
@@ -1171,7 +1177,7 @@ const threadsRouter = router({
           decision: {
             action: "thread.dispatch",
             after: {
-              threadId, title: input.title, mode: intent.mode, rationale: intent.rationale,
+              threadId, title: dispatchTitle, mode: intent.mode, rationale: intent.rationale,
               // Store the exact initial brief once; queued runs and restarts never depend on a mutable archive or “continue”.
               goal_text: planningGoal,
               // GR-14：长文档案引用与版本进账本（规划输入可追溯）

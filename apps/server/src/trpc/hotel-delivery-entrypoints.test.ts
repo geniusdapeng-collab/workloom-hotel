@@ -180,6 +180,30 @@ database("Hotel document delivery shares the real router, RLS, scoped model sink
     expect(ledger.find((event) => event.decision.action === "thread.dispatch").decision.after).toMatchObject({ goal_text: fullGoal, goal_ref: "longBrief", goal_ref_version: "fixture-v7" });
   });
 
+  it("does not persist provider secrets or phone numbers in the Hotel title, dispatch brief, plan or model request", async () => {
+    const scope = await fixture();
+    const privateKey = "sk-fixture-private-dispatch-marker-123456789";
+    const privatePhone = "13800000001";
+    const title = `单员工形成内部分析报告，联系${privatePhone}，误粘凭据${privateKey}`;
+    const goal = `单员工形成入住率内部分析报告；${"保留完整的非敏感经营要求。".repeat(45)}联系${privatePhone}，误粘凭据${privateKey}；末尾非敏感目标必须保留。`;
+    await state.owner.query("UPDATE profiles SET archive=archive || $2::jsonb WHERE workspace_id=$1", [scope.workspaceId, JSON.stringify({ goals: { privateBrief: { text: goal, version: "fixture-private-v1" } } })]);
+    const result = routed(await dispatch(scope, title, true, { goalRef: "privateBrief" }));
+    expect(result.status).toBe("completed"); expect(modelRequests()).toHaveLength(1);
+    const saved = (await state.owner.query<{ title: string; plan: any }>("SELECT title,plan FROM threads WHERE id=$1", [result.threadId])).rows[0]!;
+    const ledger = await events(scope, result.threadId);
+    const dispatchEvent = ledger.find((event) => event.decision.action === "thread.dispatch");
+    for (const privateValue of [privateKey, privatePhone]) {
+      expect(saved.title).not.toContain(privateValue);
+      expect(JSON.stringify(saved.plan)).not.toContain(privateValue);
+      expect(JSON.stringify(dispatchEvent)).not.toContain(privateValue);
+      expect(JSON.stringify(modelRequests())).not.toContain(privateValue);
+    }
+    expect(saved.title).toContain("单员工形成内部分析报告");
+    expect(saved.plan.goal).toContain("末尾非敏感目标必须保留");
+    expect(dispatchEvent.decision.after.goal_text).toContain("末尾非敏感目标必须保留");
+    expect(modelRequests()[0]!.body.messages[0].content).toContain("末尾非敏感目标必须保留");
+  });
+
   it("completed replays do not classify, replan or regenerate", async () => {
     const scope = await fixture();
     const result = routed(await dispatch(scope, "单员工形成内部经营分析报告"));

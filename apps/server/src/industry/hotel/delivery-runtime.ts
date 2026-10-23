@@ -116,6 +116,8 @@ function cleaned(value: string): string {
     .replace(/\bsk-(?:proj-|ant-)?[A-Za-z0-9_-]{20,}\b/g, "[REDACTED:provider-key]")
     .replace(/\bBearer\s+[A-Za-z0-9._~+/-]{16,}/gi, "[REDACTED:authorization]");
 }
+/** The dispatch boundary uses the exact same scrubber before any title or full brief becomes durable. */
+export { cleaned as cleanHotelDeliveryText };
 function failureMessage(error: unknown): string {
   return cleaned(error instanceof Error ? error.message : "交付运行失败，结果未核实").slice(0, 700);
 }
