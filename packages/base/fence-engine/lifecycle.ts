@@ -7,6 +7,7 @@
  *  - withObjectLock：对象写锁（pg advisory try-lock；超时转「需介入」，禁强制抢锁，E2.5）
  */
 import type pg from "pg";
+import { randomUUID } from "node:crypto";
 import { DRY_RUN_REPLAY_LIMIT, OBJECT_LOCK_TIMEOUT_MS, type BusinessEvent } from "@workloom/shared";
 import { judge, type JudgeVerdict, type RuntimeRule } from "./judge.js";
 import { checkCandidateAgainstBaseline } from "./dsl.js";
@@ -23,6 +24,8 @@ export interface DryRunReport {
   impact: string; // 人读摘要
   /** 与现行规则集的差量（提供 baseline 时给出；HP-02 补 F2.5 证据缺口） */
   delta?: DryRunDelta;
+  /** Exact candidates shown in this report; confirmation must not substitute a different rule. */
+  candidateRules?: RuntimeRule[];
 }
 
 /**
@@ -140,8 +143,10 @@ export async function createDryRun(
         `放行 ${verdicts.filter((v) => v.verdict.level === "auto").length}` +
         (delta ? ` · ${delta.summary}` : ""),
       delta,
+      candidateRules: input.rules,
     };
-    const dryRunId = `fdr-${input.ruleId.toLowerCase()}-${Date.now().toString(36)}`;
+    // A rule can be previewed twice in one millisecond or in separate workspaces.
+    const dryRunId = `fdr-${input.ruleId.toLowerCase()}-${randomUUID()}`;
     await client.query(
       `INSERT INTO fence_dry_runs (id, workspace_id, rule_id, rule_version, report, status, created_by)
        VALUES ($1,$2,$3,$4,$5,'pending',$6)`,
