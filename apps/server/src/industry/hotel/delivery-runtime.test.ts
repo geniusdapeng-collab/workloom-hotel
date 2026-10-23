@@ -494,6 +494,25 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
     expect((await events(f)).find((event) => event.decision.action === "ask.answer").decision.after.sourceFacts).toEqual(expect.arrayContaining([expect.objectContaining(research[0]!)]));
   });
 
+  it("可读产物只列实际引用的公开网页URL及原来源检索时间", async () => {
+    const f = await fixture();
+    const research = [
+      { id: "web:cited-page", text: "公开网页检索资料（检索时间 2026-10-24T01:23:45.000Z；页面日期未知）：可引用的公开材料。", url: "https://example.org/cited-hotel" },
+      { id: "web:unused-page", text: "公开网页检索资料（检索时间 2026-10-24T01:23:46.000Z；页面日期未知）：未被引用的材料。", url: "https://example.org/unused-hotel" },
+    ];
+    respond = ({ prompt }) => {
+      const output = JSON.parse(workerReply(prompt));
+      output.sourceIds.push(research[0]!.id);
+      return JSON.stringify(output);
+    };
+    const result = await run(f, { researchFacts: research });
+    expect(result.status).toBe("completed");
+    expect(result.answer).toContain(research[0]!.url);
+    expect(result.answer).toContain("2026-10-24T01:23:45.000Z");
+    expect(result.answer).not.toContain(research[1]!.url);
+    expect(result.answer).not.toContain("2026-10-24T01:23:46.000Z");
+  });
+
   it("围栏治理事件不挤占有限经营资料窗口，保持原始经营事件可追溯", async () => {
     const f = await fixture();
     const governanceIds: string[] = [];

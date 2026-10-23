@@ -477,11 +477,16 @@ function parseArtifact(raw: unknown, sources: SourceFact[], predecessors: Artifa
   if (/(?:已|已经|成功)(?:经|完成)?(?:执行)?(?:改价|调价|退款|发布|群发|发送|写回|付款|下单|转账|开锁)/.test(body)
     || /(?:已|已经|成功).{0,12}(?:发布到|写入PMS|写回OTA|执行退款|执行改价)/i.test(body)
     || /\b(?:successfully|already)\s+(?:refunded|published|sent|charged|updated\s+(?:PMS|OTA))/i.test(body)) throw new Error("模型伪称已执行外部经营动作，交付被拦截");
+  const webReferences = sources.filter((source) => source.id.startsWith("web:") && source.url && sourceIds.includes(source.id)).map((source) => {
+    const observedAt = /检索时间[：:\s]*([0-9]{4}-[0-9]{2}-[0-9]{2}(?:T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{1,3})?(?:Z|[+-][0-9]{2}:[0-9]{2}))?)/.exec(source.text)?.[1];
+    return `- ${source.id}：${source.url}\n  检索时间：${observedAt && Number.isFinite(Date.parse(observedAt)) ? observedAt : "来源未提供，须核实"}`;
+  }).join("\n");
   const result = {
     title: cleaned(raw.title),
-    text: `# ${cleaned(raw.title)}\n\n${body}\n\n依据来源：${raw.sourceIds.join("、")}\n\n缺少的数据：\n${raw.missingData.length ? raw.missingData.map((item) => `- ${cleaned(item)}`).join("\n") : "- 模型未列出额外缺项，仍须按来源覆盖范围复核。"}\n\n待人工决策：\n${raw.humanDecisions.length ? raw.humanDecisions.map((item) => `- ${cleaned(item)}`).join("\n") : "- 经营执行由门店授权人另行决定。"}\n\n数据模式：${dataMode}。仅内部分析/草稿，未执行PMS/OTA写入、退款、发布或GUI操作。`,
+    text: `# ${cleaned(raw.title)}\n\n${body}\n\n依据来源：${raw.sourceIds.join("、")}${webReferences ? `\n\n公开网页来源（仅本产物实际引用）：\n${webReferences}` : ""}\n\n缺少的数据：\n${raw.missingData.length ? raw.missingData.map((item) => `- ${cleaned(item)}`).join("\n") : "- 模型未列出额外缺项，仍须按来源覆盖范围复核。"}\n\n待人工决策：\n${raw.humanDecisions.length ? raw.humanDecisions.map((item) => `- ${cleaned(item)}`).join("\n") : "- 经营执行由门店授权人另行决定。"}\n\n数据模式：${dataMode}。仅内部分析/草稿，未执行PMS/OTA写入、退款、发布或GUI操作。`,
     sourceIds, missingData: raw.missingData.map(cleaned), humanDecisions: raw.humanDecisions.map(cleaned),
   };
+  if (!text(result.text, 80_000)) throw new Error("完整产物与所引公开来源超过可恢复计划上限，未截断、未提交产物");
   return { ...result, digest: digest(artifactBody(result)), generatedAt: new Date().toISOString() };
 }
 
