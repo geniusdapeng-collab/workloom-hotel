@@ -22,6 +22,8 @@ type PromptInput = {
   step: { id: string; presetKey: string; goal: string };
   sources: Array<{ id: string; text: string }>;
   predecessors: Array<{ eventId: string; text: string }>;
+  allowedSourceIds: string[];
+  requiredSourceIds: string[];
 };
 type ModelRequest = { scene: string; prompt: string };
 
@@ -206,6 +208,8 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
     const second = parseInput(calls[2]!.prompt);
     expect(second.predecessors[0]?.eventId).toBe(workers[0].event_id);
     expect(second.predecessors[0]?.text).toBe(workers[0].decision.after.text);
+    expect(second.allowedSourceIds).toEqual([...second.sources.map((source) => source.id), ...second.predecessors.map((previous) => previous.eventId)]);
+    expect(second.requiredSourceIds).toEqual([workers[0].event_id]);
     const summary = receipts.find((event) => event.decision.after.delivery.kind === "summary");
     expect(summary.links).toEqual(workers.map((event) => event.event_id));
     expect(summary.decision.after.businessDataMode).toBe("simulated");
@@ -242,6 +246,66 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
     expect(result.status).toBe("failed");
     expect((await thread(f)).progress_done).toBe(0);
     expect((await events(f)).filter((event) => event.decision.action === "ask.answer")).toHaveLength(0);
+  });
+
+  it.each([
+    { field: "humanDecisions", claim: "是否批准任何低于380元保底价的定价，必须人工升级审批" },
+    { field: "humanDecisions", claim: "是否批准或撤销低于保底价380的调价记录" },
+    { field: "humanDecisions", claim: "保底价与安全禁区相关规则的任何调整" },
+    { field: "text", claim: "店长可特批368元房价作为当前保底价的例外" },
+    { field: "missingData", claim: "因缺少审批回执，无法判断368是否越线及是否已获授权" },
+    { field: "text", claim: "携程12%佣金后净额约323.84元，美团10%后约331.2元，均低于380元保底口径" },
+  ])("现行硬约束与价格口径矛盾的$field被拒绝：$claim", async ({ field, claim }) => {
+    const f = await fixture();
+    respond = ({ prompt }) => {
+      const output = JSON.parse(workerReply(prompt));
+      if (field === "text") output.text += claim + "。";
+      else output[field] = [claim];
+      return JSON.stringify(output);
+    };
+    const result = await run(f);
+    expect(result.status).toBe("failed");
+    expect(result.error).toMatch(/底价|口径|硬约束/);
+    expect((await thread(f)).progress_done).toBe(0);
+    expect((await events(f)).filter((event) => event.decision.action === "ask.answer")).toHaveLength(0);
+  });
+
+  it.each([
+    "不能通过人工审批豁免当前保底价；低于380元不得批准，发现记录应由人核查并纠正。",
+    "不应通过普通审批豁免保底价380元，相关越线记录应由人核查并纠正；若另行修改底价须另立版本治理，不在本任务范围。",
+    "净价=368*(1-12%)=323.84元，仅为收益测算，不与未注明净口径的标价底线混比。",
+    "在不低于380元底价的前提下，涨幅超过8%须人审；500元退款及200元内善意补偿仍须按审批矩阵复核。",
+  ])("不放宽硬约束的正常审批与独立净额测算仍可交付：%s", async (statement) => {
+    const f = await fixture();
+    respond = ({ prompt }) => {
+      const output = JSON.parse(workerReply(prompt));
+      output.text += statement;
+      output.humanDecisions = ["500元退款须按审批矩阵复核；保底价以上的活动涨幅超过8%需人审"];
+      return JSON.stringify(output);
+    };
+    expect((await run(f)).status).toBe("completed");
+    expect((await events(f)).filter((event) => event.decision.action === "ask.answer")).toHaveLength(1);
+  });
+
+  it("前序正文带出的祖先ID不自动获得引用权限，拒绝而非静默删改未知引用", async () => {
+    const f = await fixture();
+    let ancestorId: string | undefined;
+    respond = ({ scene, prompt }) => {
+      if (scene === "quest-plan") return JSON.stringify(collaborationPlan());
+      const input = parseInput(prompt);
+      const output = JSON.parse(workerReply(prompt));
+      if (input.step.id === "reconcile") ancestorId = input.predecessors[0]!.eventId;
+      if (input.step.id === "review") {
+        expect(input.allowedSourceIds).not.toContain(ancestorId);
+        expect(input.requiredSourceIds).toEqual(input.predecessors.map((prior) => prior.eventId));
+        output.sourceIds.push(ancestorId);
+      }
+      return JSON.stringify(output);
+    };
+    const result = await run(f, { goal: "多员工协作形成收益财务口碑分析报告" });
+    expect(result).toMatchObject({ status: "failed", stepsDone: 2, stepsTotal: 3 });
+    expect(result.error).toMatch(/来源ID/);
+    expect((await events(f)).filter((event) => event.decision.action === "ask.answer")).toHaveLength(2);
   });
 
   it("无模型不能伪造交付；保留可见错误", async () => {
