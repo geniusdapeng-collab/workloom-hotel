@@ -2,7 +2,7 @@
 import { randomUUID } from "node:crypto";
 import { createServer, type Server } from "node:http";
 import { dirname, resolve } from "node:path";
-import { realpathSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -24,6 +24,7 @@ type PromptInput = {
   predecessors: Array<{ eventId: string; text: string }>;
   allowedSourceIds: string[];
   requiredSourceIds: string[];
+  pricingArithmetic: Array<{ floorPrice: number; quotedPrice: number; floorMinusQuote: number; quoteBelowFloor: boolean }>;
 };
 type ModelRequest = { scene: string; prompt: string };
 
@@ -253,6 +254,7 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
     { field: "humanDecisions", claim: "是否批准或撤销低于保底价380的调价记录" },
     { field: "humanDecisions", claim: "保底价与安全禁区相关规则的任何调整" },
     { field: "text", claim: "店长可特批368元房价作为当前保底价的例外" },
+    { field: "humanDecisions", claim: "将低于保底价的368元房价提交人工审批后放行" },
     { field: "missingData", claim: "因缺少审批回执，无法判断368是否越线及是否已获授权" },
     { field: "text", claim: "携程12%佣金后净额约323.84元，美团10%后约331.2元，均低于380元保底口径" },
   ])("现行硬约束与价格口径矛盾的$field被拒绝：$claim", async ({ field, claim }) => {
@@ -275,6 +277,7 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
     "不应通过普通审批豁免保底价380元，相关越线记录应由人核查并纠正；若另行修改底价须另立版本治理，不在本任务范围。",
     "净价=368*(1-12%)=323.84元，仅为收益测算，不与未注明净口径的标价底线混比。",
     "在不低于380元底价的前提下，涨幅超过8%须人审；500元退款及200元内善意补偿仍须按审批矩阵复核。",
+    "夜班期间价格调整事件（如423元、368元、538元）缺少审批与竞对依据记录，无法确认合规性。",
   ])("不放宽硬约束的正常审批与独立净额测算仍可交付：%s", async (statement) => {
     const f = await fixture();
     respond = ({ prompt }) => {
@@ -285,6 +288,27 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
     };
     expect((await run(f)).status).toBe("completed");
     expect((await events(f)).filter((event) => event.decision.action === "ask.answer")).toHaveLength(1);
+  });
+
+  it("完整ds022原始回执中的禁止净价混比表述不被误拒，独立算术缺陷不冒称质量通过", async () => {
+    const f = await fixture();
+    const response = JSON.parse(readFileSync(new URL("./fixtures/deepseek-s03-022-response.json", import.meta.url), "utf8"));
+    const content = response.choices[0].message.content as string;
+    const original = JSON.parse(content);
+    // Replay every original output field unchanged. The upstream arithmetic typo remains a separately reviewed quality defect.
+    respond = () => content;
+    const researchFacts = original.sourceIds.map((id: string) => ({ id, text: "隔离回放来源ID夹具，不作为真实经营资料的完整证明。" }));
+    const result = await run(f, { goal: "单员工分析为什么房价不能降至368元并形成报告", researchFacts });
+    expect(result.status, result.error).toBe("completed");
+    expect(result.answer).toContain("禁止把扣佣后净额与380元直接比较");
+    expect(result.answer).toContain("368元低于该硬约束22元"); // Preserved provenance; explicitly not an arithmetic quality pass.
+  });
+
+  it("把目标报价与档案底价的差额作为可复核确定性事实提供给模型", async () => {
+    const f = await fixture();
+    expect((await run(f, { goal: "单员工起草房价分析报告，解释不能把房价降至368元" })).status).toBe("completed");
+    const input = parseInput(calls[0]!.prompt);
+    expect(input.pricingArithmetic).toEqual(expect.arrayContaining([expect.objectContaining({ floorPrice: 380, quotedPrice: 368, floorMinusQuote: 12, quoteBelowFloor: true })]));
   });
 
   it("前序正文带出的祖先ID不自动获得引用权限，拒绝而非静默删改未知引用", async () => {
