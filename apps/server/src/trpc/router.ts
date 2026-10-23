@@ -24,7 +24,7 @@ import { canonicalJson, gatewayAppend, gatewayAppendOnClient, insertWithReadable
 import { INTENT_ROUTE_TIMEOUT_DISPATCH_MS, makeReadableId } from "@workloom/shared";
 import { registerAskKbSearch } from "@workloom/runtime";
 
-import { loadGoalArchive, registerIndustryQuestPlanner, resolveDispatchPresetKey } from "../runtime/thread-runner.js";
+import { loadGoalArchive, registerIndustryQuestPlanner, resolveDispatchPresetKey, runQuestForThread } from "../runtime/thread-runner.js";
 import {
   actionProcedure,
   capabilityActionProcedure,
@@ -44,7 +44,7 @@ import {
   expireSweep,
   listQueue,
 } from "@workloom/base/review-console";
-import { routeIntent, runAsk, runQuest } from "@workloom/runtime";
+import { routeIntent, runAsk } from "@workloom/runtime";
 import { LlmIntentClassifier, type IntentClassifier } from "@workloom/runtime";
 import { providerFromEnv, OpenAiCompatibleProvider } from "@workloom/base/model-router";
 import { routedLlmCall, resetLlmAssembly } from "../service/llm.js";
@@ -1186,8 +1186,8 @@ const threadsRouter = router({
         return { kind: "routed" as const, mode: intent.mode, via: intent.via, threadId, status: ra.status, answer: ra.answer };
       }
       if (input.runImmediately && intent.mode === "quest") {
-        const r = await runQuest(app, getGatewayPool(), scope, {
-          threadId, goal: planningGoal, presetKey, llmCall: llmCall("quest-plan", scope),
+        const r = await runQuestForThread(scope, {
+          threadId, goal: planningGoal, presetRef: presetKey, mode: "quest",
         });
         return { kind: "routed" as const, mode: intent.mode, via: intent.via, threadId, status: r.status, stepsDone: r.stepsDone, stepsTotal: r.stepsTotal };
       }
@@ -1339,8 +1339,8 @@ const threadsRouter = router({
       if (mode === "ask") {
         return runAsk(app, getGatewayPool(), scope, { threadId: input.threadId, goal: runGoal, presetKey: selectedAgent!.presetKey, llmCall: llmCall("ask-synthesize", scope) });
       }
-      return runQuest(app, getGatewayPool(), scope, {
-        threadId: input.threadId, goal: runGoal, presetKey: selectedAgent!.presetKey, mode, llmCall: llmCall("quest-plan", scope),
+      return runQuestForThread(scope, {
+        threadId: input.threadId, goal: runGoal, presetRef: selectedAgent!.presetKey, mode,
       });
     }),
 });

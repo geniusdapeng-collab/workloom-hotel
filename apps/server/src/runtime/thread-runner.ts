@@ -15,7 +15,8 @@ import YAML from "yaml";
 import { getAppPool, getGatewayPool } from "@workloom/db";
 import { bundlesRoot } from "@workloom/base/bundles";
 import { assemblePreset, runQuest, type AssembledPreset, type QuestPlanner, type QuestRunResult } from "@workloom/runtime";
-import { llmCall } from "../service/llm.js";
+import { routedLlmCall } from "../service/llm.js";
+import { resolveWorkspaceActiveBundle } from "../service/active-bundle.js";
 import { loadDeploymentToolExecutor, describeToolCoverage } from "./tool-executor.js";
 import { preferredDispatchPresets } from "./dispatch-routing.js";
 
@@ -376,7 +377,13 @@ export async function runQuestForThread(scope: Scope, input: ThreadQuestInput): 
     ...(input.mode ? { mode: input.mode } : {}),
     ...(input.replan ? { replan: true, ...(input.replanReason ? { replanReason: input.replanReason } : {}) } : {}),
     // 视觉目标关掉 LLM 规划（空参步骤到桥侧必 bad_request），走行业确定性直译
-    ...(visualGoal ? {} : { llmCall: llmCall("quest-plan") }),
+    ...(visualGoal ? {} : { llmCall: routedLlmCall({
+      gateway: getGatewayPool(), scope, scene: "quest-plan",
+      industryResolver: async () => {
+        const active = await resolveWorkspaceActiveBundle(scope.workspaceId);
+        return active.state === "ready" ? active.bundleId : null;
+      },
+    }) }),
     ...(fallbackPlanner ? { fallbackPlanner } : {}),
     ...(toolExecutor ? { toolExecutor } : {}),
     ...(planVocabulary.objectTypes.length ? { planVocabulary } : {}),
