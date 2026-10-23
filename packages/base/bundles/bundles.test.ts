@@ -57,6 +57,23 @@ describe("草稿骨架与校验（P7E5/§2.3，文件级）", () => {
     expect(REGISTERED_PAGES.length).toBe(9);
   });
 
+  it("Hotel 界面用例使用实际扩展主路由，且与已验证导航的能力和路径一致", () => {
+    const manifest = loadVerifiedBundleManifest("hotel");
+    const cases = JSON.parse(readFileSync(new URL("../../../bundles/hotel/ui/cases.json", import.meta.url), "utf8")) as {
+      pages: string[]; cases: Array<{ page: string }>;
+    };
+    const clientSource = readFileSync(new URL("../../../apps/web/src/extensions/hotel/routes.tsx", import.meta.url), "utf8");
+    const clientRoutes = new Map([...clientSource.matchAll(/\{\s*path:\s*"([^"]+)"\s*,\s*capabilityId:\s*"([^"]+)"/g)]
+      .map((match) => [match[1]!, match[2]!]));
+    const navigation = manifest.workloom.ui.navigation.slots.filter((slot) => slot.clients.includes("pc"));
+    expect(clientRoutes.size).toBe(navigation.length);
+    for (const slot of navigation) expect(clientRoutes.get(slot.route)).toBe(slot.capabilityId);
+    const allowed = new Set<string>([...REGISTERED_PAGES, ...navigation.map((slot) => slot.route)]);
+    expect(cases.pages.every((page) => allowed.has(page))).toBe(true);
+    expect(cases.cases.every((item) => allowed.has(item.page))).toBe(true);
+    expect([...new Set(cases.cases.map((item) => item.page))].sort()).toEqual([...cases.pages].sort());
+  });
+
   it("候选行业包篡改后完整性校验失败关闭", () => {
     const source = new URL("../../../bundles/hotel/bundle.json", import.meta.url);
     const manifest = JSON.parse(readFileSync(source, "utf8"));
@@ -314,21 +331,83 @@ describe.runIf(RUN_DB)("行业装配 PG 集成（F2.10 铁律）", async () => {
     }
   };
 
+  async function withUiCase<T>(page: string, body: (root: string) => Promise<T>, mobileOnly = false): Promise<T> {
+    const root = mkdtempSync(join(tmpdir(), "wl-bundle-ui-case-"));
+    cpSync(new URL("../../../bundles/hotel", import.meta.url).pathname, join(root, "hotel"), { recursive: true });
+    try {
+      const casesPath = join(root, "hotel/ui/cases.json");
+      writeFileSync(casesPath, `${JSON.stringify({ pages: [page], cases: [{ page, name: "隔离页面契约", expect: "只验证已声明页面，未知页面拒绝激活" }] }, null, 2)}\n`);
+      const path = join(root, "hotel/bundle.json");
+      const manifest = JSON.parse(readFileSync(path, "utf8"));
+      if (mobileOnly) {
+        const slot = manifest.workloom.ui.navigation.slots.find((item: { route: string }) => item.route === page);
+        slot.clients = ["b-mobile"];
+      }
+      const normalized = parseBundleManifest(manifest);
+      const assets = Object.fromEntries(Object.keys(normalized.integrity!.assets).map((asset) => [
+        asset, createHash("sha256").update(readFileSync(join(root, "hotel", asset))).digest("hex"),
+      ]));
+      manifest.integrity = {
+        algorithm: "sha256", assets,
+        digest: createHash("sha256").update(canonicalBundleArtifactPayload(normalized, assets)).digest("hex"),
+      };
+      writeFileSync(path, `${JSON.stringify(manifest, null, 2)}\n`);
+      return await body(root);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  }
 
-  it("hotel profile：七槽 7/7 已装配 + 起飞前检查单六项全绿（F2.10 + v3.0 第⑦槽）", async () => {
+  it("已验证行业PC导航声明的语义页面可通过检查并实际激活，基座注册表保持行业无关", async () => {
+    const page = loadVerifiedBundleManifest("hotel").workloom.ui.navigation.slots.find((slot) => slot.clients.includes("pc"))!.route;
+    await withUiCase(page, async (root) => {
+      const profile = await computeAssembly(app, scope, "hotel", root);
+      expect(profile.checks.find((check) => check.key === "ui")?.ok).toBe(true);
+      const activated = await activateBundle(app, gw, scope, "hotel", "MEM-001", root);
+      expect(activated.eventId).toMatch(/^E-\d+$/);
+      expect(activated.profile.canActivate).toBe(true);
+      expect(loadVerifiedBundleManifest("hotel", root).workloom.example).toBe(false);
+    });
+    expect(REGISTERED_PAGES).not.toContain(page);
+  });
+
+  it.each(["/hotel/not-installed", "p999"])("未声明的页面 %s 保持校验红且不能激活", async (page) => {
+    await withUiCase(page, async (root) => {
+      const profile = await computeAssembly(app, scope, "hotel", root);
+      expect(profile.checks.find((check) => check.key === "ui")).toMatchObject({ ok: false, detail: expect.stringContaining(page) });
+      await expect(activateBundle(app, gw, scope, "hotel", "MEM-001", root)).rejects.toMatchObject({ code: "ASSEMBLY_CHECK_FAILED" });
+    });
+  });
+
+  it("仅移动端声明不能冒充工作台PC页面", async () => {
+    const page = loadVerifiedBundleManifest("hotel").workloom.ui.navigation.slots.find((slot) => slot.clients.includes("pc"))!.route;
+    await withUiCase(page, async (root) => {
+      const profile = await computeAssembly(app, scope, "hotel", root);
+      expect(profile.checks.find((check) => check.key === "ui")?.ok).toBe(false);
+      await expect(activateBundle(app, gw, scope, "hotel", "MEM-001", root)).rejects.toMatchObject({ code: "ASSEMBLY_CHECK_FAILED" });
+    }, true);
+  });
+
+
+  it("hotel profile：按声明装配岗位与槽位，未声明模型策略时明确采用默认值，起飞前检查全绿", async () => {
+    const manifest = loadVerifiedBundleManifest("hotel");
+    const presets = loadVerifiedBundleWorkforcePresets("hotel");
+    const uiCases = JSON.parse(readFileSync(new URL("../../../bundles/hotel/ui/cases.json", import.meta.url), "utf8")) as {
+      cases: Array<{ page: string }>;
+    };
+    const archiveSchemaPath = manifest.workloom.provides.schemas.find((path) => path.endsWith("/archive.schema.json"))!;
+    const archiveSchema = JSON.parse(readFileSync(new URL(`../../../bundles/hotel/${archiveSchemaPath}`, import.meta.url), "utf8"));
     const p = await computeAssembly(app, scope, "hotel");
     expect(p.status).toBe("active");
-    expect(p.filledCount).toBe(7);
+    const declaredSlots = ["archive", "enums", "tools", "fences", "presets", "ui", ...(manifest.workloom.provides.modelPolicy ? ["model-policy"] : [])];
+    expect(p.slots.filter((slot) => slot.filled).map((slot) => slot.id)).toEqual(declaredSlots);
+    expect(p.filledCount).toBe(declaredSlots.length);
     expect(p.checks.map((c) => c.ok)).toEqual([true, true, true, true, true, true]);
     expect(p.canActivate).toBe(true);
-    // 班组卡：7 preset 全注册且围栏绑定合法（P7E2）
-    expect(p.agents.length).toBe(7);
+    expect(p.agents.map((agent) => agent.presetKey).sort()).toEqual(presets.map((preset) => preset.preset_key).sort());
     expect(p.agents.every((a) => a.fenceOk)).toBe(true);
-    // 槽摘要口径：档案 7 字段组 · forbidden 硬约束 2 条；UI 6 页 · 42 条；第⑦槽路由策略合法
-    expect(p.slots[0]!.summary).toContain("字段组");
-    expect(p.slots[5]!.summary).toBe("6 页 · 状态用例 42 条同步");
-    expect(p.slots[6]!.id).toBe("model-policy");
-    expect(p.slots[6]!.summary).toContain("model-policy.yml");
+    expect(p.slots.find((slot) => slot.id === "archive")?.summary).toContain(`${Object.keys(archiveSchema.properties).length} 组字段`);
+    expect(p.slots.find((slot) => slot.id === "ui")?.summary).toBe(`${new Set(uiCases.cases.map((item) => item.page)).size} 个页面 · ${uiCases.cases.length} 条界面状态用例`);
+    expect(p.slots.find((slot) => slot.id === "model-policy")).toMatchObject({ filled: !!manifest.workloom.provides.modelPolicy, failed: false });
+    if (!manifest.workloom.provides.modelPolicy) expect(p.checks.find((check) => check.key === "model_policy")?.detail).toContain("使用平台默认模型策略");
   });
 
   it("校验留痕：recheck 写 bundle.check_run 事件（P7E3 留痕可查）", async () => {
@@ -355,14 +434,27 @@ describe.runIf(RUN_DB)("行业装配 PG 集成（F2.10 铁律）", async () => {
     const bjPath = join(root, "copycat", "bundle.json");
     const bj = JSON.parse(readFileSync(bjPath, "utf-8"));
     bj.name = "@workloom/copycat"; bj.workloom.industry = "copycat"; bj.workloom.status = "draft";
+    for (const slot of bj.workloom.ui.navigation.slots) {
+      slot.capabilityId = slot.capabilityId.replace(/^hotel\./, "copycat.");
+      slot.route = slot.route.replace(/^\/hotel\//, "/copycat/");
+      slot.permissions = slot.permissions.map((permission: string) => permission.replace(/^hotel\./, "copycat."));
+    }
+    bj.workloom.ui.permissions = bj.workloom.ui.permissions.map((permission: string) => permission.replace(/^hotel\./, "copycat."));
     delete bj.integrity;
     writeFileSync(bjPath, `${JSON.stringify(bj, null, 2)}\n`, "utf-8");
+    const casesPath = join(root, "copycat/ui/cases.json");
+    const cases = JSON.parse(readFileSync(casesPath, "utf8"));
+    cases.pages = cases.pages.map((page: string) => page.replace(/^\/hotel\//, "/copycat/"));
+    for (const item of cases.cases) item.page = item.page.replace(/^\/hotel\//, "/copycat/");
+    writeFileSync(casesPath, `${JSON.stringify(cases, null, 2)}\n`);
 
     // finally 还原演示工作区（hotel）：断言中断也不残留 industry 污染（测试纪律：不跨用例污染）
     try {
       const p0 = await computeAssembly(app, scope, "copycat", root);
       expect(p0.status).toBe("draft");
-      expect(p0.filledCount).toBe(7); // 五要素填满 + 第⑦槽 model-policy.yml（随 hotel 资产复制） → 七槽全装配
+      expect(p0.slots.filter((slot) => slot.filled).map((slot) => slot.id)).toEqual([
+        "archive", "enums", "tools", "fences", "presets", "ui", ...(bj.workloom.provides.modelPolicy ? ["model-policy"] : []),
+      ]);
       expect(p0.canActivate).toBe(true); // 检查单六项全绿
 
       const act = await activateBundle(app, gw, scope, "copycat", "MEM-001", root);

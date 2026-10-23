@@ -63,7 +63,7 @@ export function bundlesRoot(): string {
   return DEFAULT_BUNDLES_ROOT;
 }
 
-/** 已注册工作台页面（P7E3 ⑤「UI 用例同步」校验基准；新增页面须同步此表与 cases.json） */
+/** 基座历史页面编号的兼容集合。行业页面使用已验证 Bundle 声明的语义路由，不向此表写入行业编号。 */
 export const REGISTERED_PAGES = ["p1", "p2", "p3", "p4", "p5", "p6", "p7", "p8", "p9"] as const;
 
 export type SlotId = "archive" | "enums" | "tools" | "fences" | "presets" | "ui" | "model-policy";
@@ -1020,7 +1020,14 @@ async function computeAssemblyScoped(
   const uiCases = assets.uiCases;
   const cases = uiCases?.cases ?? [];
   const casePages = [...new Set(cases.map((c) => c.page))];
-  const unregistered = casePages.filter((p) => !(REGISTERED_PAGES as readonly string[]).includes(p));
+  // The manifest has already passed contract, compatibility and asset integrity checks.
+  // Only its explicit PC navigation routes can extend the shared workbench page set;
+  // a loose /p<number>, an undeclared path or a mobile-only declaration cannot grant a PC page.
+  const registeredPages = new Set<string>([
+    ...REGISTERED_PAGES,
+    ...bj.workloom.ui.navigation.slots.filter((slot) => slot.clients.includes("pc")).map((slot) => slot.route),
+  ]);
+  const unregistered = casePages.filter((page) => !registeredPages.has(page));
   const checkUi: CheckItem = !uiCases
     ? { key: "ui", label: "界面状态用例", ok: false, slot: "ui",
         detail: "缺少界面状态用例清单", fix: "在行业包里补齐工作台界面用例" }
