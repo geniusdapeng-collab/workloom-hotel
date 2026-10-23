@@ -428,11 +428,12 @@ function parseJson(value: string): unknown {
 }
 
 function requestedMinimumWorkers(goal: string): number {
-  const match = /至少\s*([2-9二三四五六七八九十])\s*(?:个|名|位)?(?:真实)?(?:岗位|员工|部门)/.exec(goal);
+  const match = /至少\s*(\d+|[一二三四五六七八九十百千万亿]+)\s*(?:个|名|位)?(?:真实)?(?:岗位|员工|部门)/.exec(goal);
   if (!match) return 2;
-  const number = Number(match[1]) || ({ 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10 } as Record<string, number>)[match[1]!]!;
+  const number = /^\d+$/.test(match[1]!) ? Number(match[1]) : ({ 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10 } as Record<string, number>)[match[1]!];
+  if (number === undefined || !Number.isSafeInteger(number)) throw new Error("目标要求的协作岗位数量超出支持格式或安全整数范围，未裁剪要求");
   if (number > MAX_WORKERS) throw new Error("目标要求的协作岗位数超过本次最多5个岗位上限，未裁剪要求");
-  return number;
+  return Math.max(2, number);
 }
 
 function planSteps(raw: unknown, candidates: AgentChoice[], minimumWorkers: number): DeliveryStep[] {

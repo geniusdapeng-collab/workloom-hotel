@@ -481,6 +481,15 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
     expect(calls).toHaveLength(1);
   });
 
+  it.each(["10个岗位", "12名员工", "十个岗位", "十二名员工", "9007199254740992个岗位"])("超过支持范围的明确最低岗位数 %s 在规划I/O前失败", async (minimum) => {
+    const f = await fixture();
+    const result = await run(f, { goal: `多员工协作，至少${minimum}形成内部分析报告` });
+    expect(result.status).toBe("failed");
+    expect(result.error).toMatch(/岗位|员工/);
+    expect(calls).toHaveLength(0);
+    expect((await events(f)).some((event) => event.decision.action === "ask.answer")).toBe(false);
+  });
+
   it("显式research facts引用可校验并完整保留URL，默认无隐式搜索", async () => {
     const f = await fixture();
     const research = [{ id: "research:official-page", text: "官方来源的公开资料，用于分析而非渠道实际报价。", url: "https://example.org/hotel" }];
