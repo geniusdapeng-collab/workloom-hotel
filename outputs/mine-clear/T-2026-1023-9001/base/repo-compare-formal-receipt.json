@@ -1,0 +1,186 @@
+{
+  "actor": "/root/repo_compare",
+  "observedUtc": "2026-10-23T19:26:29.150176+00:00",
+  "scope": "Only the 11 root-assigned serialized runs; not a gate/handoff receipt",
+  "runs": [
+    {
+      "card": "MC-003",
+      "role": "repair",
+      "actor": "/root/repo_compare",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "exitCode": 0,
+      "result": "pass",
+      "runPath": "outputs/mine-clear-final-f871015/runs/MC-003-0-1792783035412.json",
+      "outputs": [
+        {
+          "path": "outputs/mine-clear-final-f871015/evidence/MC-003-0-1792783035412.txt",
+          "sha256": "77c1da01c7b9772e1a27a66e54fd27025a4de20321b42bfb1c1517c61ec7ed6c",
+          "testsPassed": 17
+        }
+      ]
+    },
+    {
+      "card": "MC-007",
+      "role": "repair",
+      "actor": "/root/repo_compare",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "exitCode": 0,
+      "result": "pass",
+      "runPath": "outputs/mine-clear-final-f871015/runs/MC-007-0-1792783078699.json",
+      "outputs": [
+        {
+          "path": "outputs/mine-clear-final-f871015/evidence/MC-007-0-1792783078699.txt",
+          "sha256": "1460d320a0091e0569494857cf437494b8573e8c6c265c2e490c8b852c700d95",
+          "testsPassed": 22
+        }
+      ]
+    },
+    {
+      "card": "MC-001",
+      "role": "acceptance",
+      "actor": "/root/repo_compare",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "exitCode": 0,
+      "result": "pass",
+      "runPath": "outputs/mine-clear-final-f871015/runs/MC-001-0-1792783211510.json",
+      "outputs": [
+        {
+          "path": "outputs/mine-clear-final-f871015/evidence/MC-001-0-1792783211510.txt",
+          "sha256": "cde5adebbbbf07f86fb07b6a2d58ea263dde5c2981e3374d2e8808bc7577bd57",
+          "testsPassed": 18
+        }
+      ]
+    },
+    {
+      "card": "MC-002",
+      "role": "acceptance",
+      "actor": "/root/repo_compare",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "exitCode": 0,
+      "result": "pass",
+      "runPath": "outputs/mine-clear-final-f871015/runs/MC-002-0-1792783260623.json",
+      "outputs": [
+        {
+          "path": "outputs/mine-clear-final-f871015/evidence/MC-002-0-1792783260623.txt",
+          "sha256": "3978f4251932d26231174dca8fee669b3bfb88abb795cd6382e800238f9d222c",
+          "testsPassed": 56
+        }
+      ]
+    },
+    {
+      "card": "MC-004",
+      "role": "acceptance",
+      "actor": "/root/repo_compare",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "exitCode": 0,
+      "result": "pass",
+      "runPath": "outputs/mine-clear-final-f871015/runs/MC-004-0-1792783311156.json",
+      "outputs": [
+        {
+          "path": "outputs/mine-clear-final-f871015/evidence/MC-004-0-1792783311156.txt",
+          "sha256": "d56d46f6cd460f3e6e9230de7537de2b68b06f0f68de764d4f96cb1e144379ab",
+          "testsPassed": 102
+        }
+      ]
+    },
+    {
+      "card": "MC-005",
+      "role": "acceptance",
+      "actor": "/root/repo_compare",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "exitCode": 0,
+      "result": "pass",
+      "runPath": "outputs/mine-clear-final-f871015/runs/MC-005-0-1792783337336.json",
+      "outputs": [
+        {
+          "path": "outputs/mine-clear-final-f871015/evidence/MC-005-0-1792783337336.txt",
+          "sha256": "bbffd0856a94779a9b2f1e5c40ff4439bd432b9d906e2dd73fde0b1f12f35128",
+          "testsPassed": 27
+        }
+      ]
+    },
+    {
+      "card": "MC-006",
+      "role": "acceptance",
+      "actor": "/root/repo_compare",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "exitCode": 0,
+      "result": "pass",
+      "runPath": "outputs/mine-clear-final-f871015/runs/MC-006-0-1792783356354.json",
+      "outputs": [
+        {
+          "path": "outputs/mine-clear-final-f871015/evidence/MC-006-0-1792783356354.txt",
+          "sha256": "0356b7571cc7e431171ce21aec0566a13363a79ae9f274351a8b4c91bf2e636a",
+          "testsPassed": null
+        }
+      ]
+    },
+    {
+      "card": "MC-008",
+      "role": "acceptance",
+      "actor": "/root/repo_compare",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "exitCode": 0,
+      "result": "pass",
+      "runPath": "outputs/mine-clear-final-f871015/runs/MC-008-0-1792783366184.json",
+      "outputs": [
+        {
+          "path": "outputs/mine-clear-final-f871015/evidence/MC-008-0-1792783366184.txt",
+          "sha256": "502c7e7e92d30247e0dcdee6bbfea5e8d3078729105eb8f21bb6ca2e944b7f34",
+          "testsPassed": 102
+        }
+      ]
+    },
+    {
+      "card": "MC-010",
+      "role": "acceptance",
+      "actor": "/root/repo_compare",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "exitCode": 0,
+      "result": "pass",
+      "runPath": "outputs/mine-clear-final-f871015/runs/MC-010-0-1792783439211.json",
+      "outputs": [
+        {
+          "path": "outputs/mine-clear-final-f871015/evidence/MC-010-0-1792783439211.txt",
+          "sha256": "b25e7860a583c62f9d436bebb85ba6455aa3d10635370b9d9fda87d7c99e26a2",
+          "testsPassed": 6
+        }
+      ]
+    },
+    {
+      "card": "MC-011",
+      "role": "acceptance",
+      "actor": "/root/repo_compare",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "exitCode": 0,
+      "result": "pass",
+      "runPath": "outputs/mine-clear-incremental-final-f871015/runs/MC-011-0-1792783518134.json",
+      "outputs": [
+        {
+          "path": "outputs/mine-clear-incremental-final-f871015/evidence/MC-011-0-1792783518134.txt",
+          "sha256": "89f29a622a0d3cd73bba39f3d923ec4addabe3def2cb741498341c04ffa56298",
+          "testsPassed": 16
+        }
+      ]
+    },
+    {
+      "card": "MC-012",
+      "role": "acceptance",
+      "actor": "/root/repo_compare",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "exitCode": 0,
+      "result": "pass",
+      "runPath": "outputs/mine-clear-incremental-final-f871015/runs/MC-012-0-1792783549879.json",
+      "outputs": [
+        {
+          "path": "outputs/mine-clear-incremental-final-f871015/evidence/MC-012-0-1792783549879.txt",
+          "sha256": "ecae1b294b4571f256fd8b3d7beb763a2f866f7c4ccb77b5de331a577cab7c1c",
+          "testsPassed": 22
+        }
+      ]
+    }
+  ],
+  "allAssignedRunsPassed": true,
+  "paidCalls": 0,
+  "originalPaidLedgerModified": false
+}

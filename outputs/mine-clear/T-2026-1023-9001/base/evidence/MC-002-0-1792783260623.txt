@@ -1,0 +1,13 @@
+
+ RUN  v4.1.11 /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime
+
+
+ Test Files  4 passed (4)
+      Tests  56 passed (56)
+   Start at  03:21:04
+   Duration  19.97s (transform 8.04s, setup 0ms, import 15.54s, tests 3.04s, environment 0ms)
+
+
+
+exit_code=0 signal=none error=none
+assertion_validation={"ok":true,"errors":[]}

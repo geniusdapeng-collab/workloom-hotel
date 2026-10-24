@@ -1,0 +1,35 @@
+{
+  "schema": "workloom.evidence-run/v1",
+  "id": "MC-001-0-1792782536960",
+  "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-model-pool-regression.sh",
+  "exec": {
+    "file": "bash",
+    "args": [
+      "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-model-pool-regression.sh"
+    ]
+  },
+  "actor": "/root/model_verify",
+  "role": "repair",
+  "subject": {
+    "card_id": "MC-001",
+    "assertion_index": 0
+  },
+  "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+  "working_tree_dirty": false,
+  "started_at": "2026-10-23T19:08:56.961Z",
+  "finished_at": "2026-10-23T19:09:09.217Z",
+  "exit_code": 0,
+  "signal": null,
+  "validation": {
+    "ok": true,
+    "errors": []
+  },
+  "result": "pass",
+  "outputs": [
+    {
+      "path": "evidence/MC-001-0-1792782536960.txt",
+      "sha256": "b64b20614f8d0dbf6ca711fa9b8d0d100b967b72da84dc7ea4e403ef63cb9d61",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+    }
+  ]
+}

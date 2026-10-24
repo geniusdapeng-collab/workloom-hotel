@@ -1,0 +1,35 @@
+{
+  "schema": "workloom.evidence-run/v1",
+  "id": "MC-010-0-1792782764467",
+  "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-ui-regression.sh",
+  "exec": {
+    "file": "bash",
+    "args": [
+      "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-ui-regression.sh"
+    ]
+  },
+  "actor": "/root",
+  "role": "repair",
+  "subject": {
+    "card_id": "MC-010",
+    "assertion_index": 0
+  },
+  "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+  "working_tree_dirty": false,
+  "started_at": "2026-10-23T19:12:44.467Z",
+  "finished_at": "2026-10-23T19:12:48.679Z",
+  "exit_code": 0,
+  "signal": null,
+  "validation": {
+    "ok": true,
+    "errors": []
+  },
+  "result": "pass",
+  "outputs": [
+    {
+      "path": "evidence/MC-010-0-1792782764467.txt",
+      "sha256": "47305e0455574a077a540aaf04c6d5bea34549053801cc859d342608a7727917",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+    }
+  ]
+}

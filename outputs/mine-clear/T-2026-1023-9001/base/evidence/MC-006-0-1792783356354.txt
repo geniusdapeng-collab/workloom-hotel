@@ -1,0 +1,5 @@
+✅ 行业包契约、兼容范围、资产、导航与完整性门禁通过（base 0.1.0 / ui 0.1.19）
+
+
+exit_code=0 signal=none error=none
+assertion_validation={"ok":true,"errors":[]}

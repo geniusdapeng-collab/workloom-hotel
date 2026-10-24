@@ -1,0 +1,35 @@
+{
+  "schema": "workloom.evidence-run/v1",
+  "id": "MC-004-0-1792782577233",
+  "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-hotel-delivery-regression.sh",
+  "exec": {
+    "file": "bash",
+    "args": [
+      "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-hotel-delivery-regression.sh"
+    ]
+  },
+  "actor": "/root/model_verify",
+  "role": "repair",
+  "subject": {
+    "card_id": "MC-004",
+    "assertion_index": 0
+  },
+  "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+  "working_tree_dirty": false,
+  "started_at": "2026-10-23T19:09:37.233Z",
+  "finished_at": "2026-10-23T19:10:24.414Z",
+  "exit_code": 0,
+  "signal": null,
+  "validation": {
+    "ok": true,
+    "errors": []
+  },
+  "result": "pass",
+  "outputs": [
+    {
+      "path": "evidence/MC-004-0-1792782577233.txt",
+      "sha256": "f87cc1154487515ab8194c8e6aac6b34615e46e4fb89f0d18f744b7fb5c4dec7",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+    }
+  ]
+}

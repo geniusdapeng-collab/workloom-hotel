@@ -1,0 +1,35 @@
+{
+  "schema": "workloom.evidence-run/v1",
+  "id": "MC-002-0-1792782865743",
+  "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-fence-regression.sh",
+  "exec": {
+    "file": "bash",
+    "args": [
+      "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-fence-regression.sh"
+    ]
+  },
+  "actor": "/root/runtime_setup",
+  "role": "repair",
+  "subject": {
+    "card_id": "MC-002",
+    "assertion_index": 0
+  },
+  "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+  "working_tree_dirty": false,
+  "started_at": "2026-10-23T19:14:25.743Z",
+  "finished_at": "2026-10-23T19:14:29.710Z",
+  "exit_code": 0,
+  "signal": null,
+  "validation": {
+    "ok": true,
+    "errors": []
+  },
+  "result": "pass",
+  "outputs": [
+    {
+      "path": "evidence/MC-002-0-1792782865743.txt",
+      "sha256": "c14ee6fa2062aa35e5bca72129339f641588fb00ddb4a082e435be4ddec338d8",
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+    }
+  ]
+}
