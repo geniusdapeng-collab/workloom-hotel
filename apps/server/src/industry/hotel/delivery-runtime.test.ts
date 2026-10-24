@@ -72,6 +72,29 @@ describe("酒店内部交付入口识别", () => {
   it("旧Quest数组、空值和仅有schema标签的对象不是可恢复交付计划", () => {
     for (const plan of [null, [], {}, { schema: "workloom.hotel-delivery/v1" }]) expect(isHotelDeliveryPlan(plan)).toBe(false);
   });
+  it.each([
+    "将各岗位真实成果回执汇入可读内部交付件",
+    "形成内部汇总，保留各岗位来源标识与待人决策事项",
+    "生成内部分析报告，不重复调用已完成岗位、重复点击完成任务直接读回同线程产物",
+  ])("C03内部产物和顿号分开的任务重放说明不被误判为GUI：%s", (goal) => {
+    expect(isHotelDraftGoal(goal)).toBe(true);
+  });
+  it("完整ds033原始五岗DAG的所有子目标均为内部交付，未裁剪或改写供应商内容", () => {
+    const response = JSON.parse(readFileSync(new URL("./fixtures/deepseek-c03-033-response.json", import.meta.url), "utf8"));
+    const plan = JSON.parse(response.choices[0].message.content);
+    expect(plan.steps).toHaveLength(5);
+    for (const step of plan.steps) expect(isHotelDraftGoal(step.goal), step.id).toBe(true);
+  });
+  it.each([
+    "生成内部交付件，然后立即退款500元",
+    "形成内部汇总并发布到美团",
+    "汇入可读内部交付件，同时发送给客户",
+    "生成内部交付件、调用GUI点击退款",
+    "形成内部汇总、通过桌面操控点击改价",
+    "请将本店房价改为400并形成内部交付件",
+  ])("新增产物措辞仍不能携带外部执行动作：%s", (goal) => {
+    expect(isHotelDraftGoal(goal)).toBe(false);
+  });
 });
 
 database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
@@ -237,6 +260,45 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
     expect(summary.decision.after.businessDataMode).toBe("simulated");
     expect(summary.decision.after.businessDataModes).toEqual(["simulated"]);
     for (const worker of workers) expect(result.answer).toContain(worker.decision.after.text);
+  });
+
+  it.each([false, true])("完整ds033五岗DAG隔离回放（追加外部执行=%s）保持真实暂停/续跑与动作拒绝", async (externalAction) => {
+    const f = await fixture();
+    const response = JSON.parse(readFileSync(new URL("./fixtures/deepseek-c03-033-response.json", import.meta.url), "utf8"));
+    const originalContent = response.choices[0].message.content as string;
+    const originalPlan = JSON.parse(originalContent);
+    for (const preset of ["inspection-agent", "owner-cockpit"]) {
+      await owner.query("INSERT INTO agents(id,workspace_id,preset_key,name,version,kind,status,fence_bindings,meta) VALUES($1,$2,$3,$3,'fixture-v1','delivery','ready','[]',$4)", [
+        `${f.scope.workspaceId}-${preset}`, f.scope.workspaceId, preset,
+        JSON.stringify({ prompt: `隔离回放岗位完整提示词：${preset}`, tools: [{ name: "pms.price.read", access: "read", desc: "只读房价" }] }),
+      ]);
+    }
+    const mutated = structuredClone(originalPlan);
+    mutated.steps[4].goal += "然后立即退款500元。";
+    respond = ({ scene, prompt }) => scene === "quest-plan"
+      ? externalAction ? JSON.stringify(mutated) : originalContent
+      : workerReply(prompt);
+    const first = await run(f, { goal: "多员工协作，至少3个真实岗位形成内部分析报告", maxWorkersPerRun: 2 });
+    if (externalAction) {
+      expect(first.status).toBe("failed");
+      expect(calls).toHaveLength(1);
+      expect((await events(f)).some((event) => event.decision.action === "ask.answer")).toBe(false);
+      return;
+    }
+    expect(first, first.error).toMatchObject({ status: "paused", stepsDone: 2, stepsTotal: 5 });
+    expect(calls).toHaveLength(3);
+    const paused = await thread(f);
+    expect(paused.plan.steps.map((step: any) => ({ id: step.id, presetKey: step.presetKey, goal: step.goal, dependsOn: step.dependsOn }))).toEqual(originalPlan.steps);
+    const oldIds = paused.plan.steps.slice(0, 2).map((step: any) => step.output.eventId);
+    expect((await run(f, { goal: "继续" })).status).toBe("completed");
+    expect(calls).toHaveLength(6);
+    expect(calls.filter((call) => call.scene === "quest-plan")).toHaveLength(1);
+    const completed = await thread(f);
+    expect(completed.plan.steps.slice(0, 2).map((step: any) => step.output.eventId)).toEqual(oldIds);
+    expect(completed.plan.steps.map((step: any) => step.presetKey)).toEqual(originalPlan.steps.map((step: any) => step.presetKey));
+    const replay = await run(f, { llmCallFor: () => { throw new Error("completed ds033 fixture must not request another model"); } });
+    expect(replay.answer).toBe(completed.plan.final.text);
+    expect(calls).toHaveLength(6);
   });
 
   it.each(["cycle", "duplicate", "unknown-dependency", "disabled-worker", "external-action", "single-role"])("非法规划 %s 不调用worker、不假成功", async (kind) => {
