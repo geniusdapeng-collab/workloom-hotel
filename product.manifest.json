@@ -4,7 +4,7 @@
   "role": "industry",
   "displayName": "WorkLoom 酒店行业版",
   "packageName": "workloom-hotel",
-  "repository": "workloom-ai/workloom-hotel",
+  "repository": "geniusdapeng-collab/workloom-hotel",
   "defaultBundle": "hotel",
   "demoWorkspaceSlug": "yunqi-hotel",
   "demoMemberNo": "MEM-001",
@@ -18,8 +18,17 @@
     "portOffset": 210
   },
   "clients": {
-    "bPc": { "enabled": true, "entry": "apps/web" },
-    "bMobile": { "enabled": true, "entry": "apps/webb" },
-    "cMobile": { "enabled": true, "entry": "apps/webc" }
+    "bPc": {
+      "enabled": true,
+      "entry": "apps/web"
+    },
+    "bMobile": {
+      "enabled": true,
+      "entry": "apps/webb"
+    },
+    "cMobile": {
+      "enabled": true,
+      "entry": "apps/webc"
+    }
   }
 }
