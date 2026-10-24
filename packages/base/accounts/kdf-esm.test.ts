@@ -25,7 +25,7 @@ describe("accounts in the packaged server's native ESM runtime", () => {
       assert.notEqual(minted.hash, minted.plain);
 
       const identityRow = { member_id: "mem-esm-fixture", member_no: "MEM-ESM", name: "ESM regression fixture", role: "manager", tenant_id: "tenant-esm-fixture", workspace_id: "ws-esm-fixture", plan: "pro" };
-      const passwordHash = kdf.hashPassword("Only-A-Synthetic-Fixture-Password");
+      const passwordHash = kdf.hashPassword("test-only-synthetic-fixture-password");
       let sessionInserts = 0;
       let storedRefreshHash;
       let loginEvents = 0;
@@ -41,13 +41,13 @@ describe("accounts in the packaged server's native ESM runtime", () => {
           throw new Error("unregistered synthetic SQL: " + sql);
         },
       };
-      const login = await service.loginWithPassword(deps, { email: "esm-fixture@example.invalid", password: "Only-A-Synthetic-Fixture-Password", workspaceSlug: "esm-fixture" });
+      const login = await service.loginWithPassword(deps, { email: "esm-fixture@example.invalid", password: "test-only-synthetic-fixture-password", workspaceSlug: "esm-fixture" });
       assert.equal(sessionInserts, 1);
       assert.equal(login.identity.role, "manager");
       assert.equal(login.identity.workspaceId, "ws-esm-fixture");
       assert.equal(tokens.hashRefreshToken(login.refreshToken), storedRefreshHash);
       assert.equal((await verifyToken(login.accessToken)).memberId, "mem-esm-fixture");
-      await assert.rejects(service.loginWithPassword(deps, { email: "esm-fixture@example.invalid", password: "incorrect", workspaceSlug: "esm-fixture" }), /邮箱或密码不正确/);
+      await assert.rejects(service.loginWithPassword(deps, { email: "esm-fixture@example.invalid", password: "test-only-incorrect", workspaceSlug: "esm-fixture" }), /邮箱或密码不正确/);
       assert.equal(sessionInserts, 1, "a rejected password must not issue another session");
       assert.equal(loginEvents, 2);
       process.stdout.write(JSON.stringify({ nativeEsm: true, compatibleHashVectors: 3, refreshRoundTrip: true, passwordLogin: true, rejectedPassword: true, sessionInserts }));

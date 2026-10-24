@@ -136,27 +136,39 @@ describe.runIf(RUN_DB)("技能/意识 PG 集成（M8 铁律）", async () => {
     const revenue = skills.find((s) => s.name === "revenue-manager");
     expect(revenue).toBeTruthy();
 
-    // seed 已预装官方技能套件 → 先卸载清理，保证从「未安装」态开始断言
-    await uninstallSkill(app, gw, scope, { skillId: revenue!.id, by: "MEM-001" }).catch(() => undefined);
-
-    const i1 = await installSkill(app, gw, scope, { skillId: revenue!.id, by: "MEM-001" });
-    expect(i1).toMatchObject({ installed: true, deduped: false, bindings: ["R1", "R2"] });
+    const declaredBindings = revenue!.fence_bindings;
+    expect(declaredBindings.length).toBeGreaterThan(0);
+    // seed 的绑定声明会随正式技能演进；断言安装快照和运行时并集，不能把旧规则清单当规范。
+    const initialInstalls = await listInstalls(app, scope);
+    if (initialInstalls.some((x) => x.skill_id === revenue!.id)) {
+      await uninstallSkill(app, gw, scope, { skillId: revenue!.id, by: "MEM-001" });
+    }
 
     const agent = await qApp<{ id: string }>(`SELECT id FROM agents WHERE workspace_id=$1 AND preset_key='pricing-agent'`, [scope.workspaceId]);
+    expect(agent.rows).toHaveLength(1);
+    const baseline = await resolveAgentFenceBindings(app, scope, agent.rows[0]!.id);
+
+    const i1 = await installSkill(app, gw, scope, { skillId: revenue!.id, by: "MEM-001" });
+    expect(i1).toEqual({ installed: true, deduped: false, bindings: declaredBindings });
+    const snapshot = await qApp<{ fence_bindings_snapshot: string[]; installed_version: string }>(
+      `SELECT fence_bindings_snapshot, installed_version FROM skill_installs WHERE skill_id=$1 AND workspace_id=$2`,
+      [revenue!.id, scope.workspaceId],
+    );
+    expect(snapshot.rows).toEqual([{ fence_bindings_snapshot: declaredBindings, installed_version: revenue!.version }]);
+
     const bindings = await resolveAgentFenceBindings(app, scope, agent.rows[0]!.id);
-    expect(bindings).toContain("R1");
-    expect(bindings).toContain("R2");
+    expect(bindings).toEqual([...new Set([...baseline, ...declaredBindings])].sort());
 
     const i2 = await installSkill(app, gw, scope, { skillId: revenue!.id, by: "MEM-001" });
-    expect(i2.deduped).toBe(true); // 重复安装不报错不重复留痕
+    expect(i2).toEqual({ installed: true, deduped: true, bindings: declaredBindings });
+    expect((await listInstalls(app, scope)).filter((x) => x.skill_id === revenue!.id)).toHaveLength(1);
 
     const u = await uninstallSkill(app, gw, scope, { skillId: revenue!.id, by: "MEM-001" });
-    expect(u.revokedBindings).toEqual(["R1", "R2"]); // L8.3 卸载即撤销
+    expect(u).toEqual({ uninstalled: true, revokedBindings: declaredBindings }); // L8.3 撤销安装快照中的每条绑定
     const installs = await listInstalls(app, scope);
     expect(installs.find((x) => x.skill_id === revenue!.id)).toBeUndefined();
     const bindingsAfter = await resolveAgentFenceBindings(app, scope, agent.rows[0]!.id);
-    // preset 自身声明仍在，技能绑定已收缩
-    expect(bindingsAfter.length).toBeLessThanOrEqual(bindings.length);
+    expect(bindingsAfter).toEqual(baseline); // preset 和其他在装技能的并集精确恢复
   });
 
   it("seed 与运行时双路径安装快照同构：快照=实时绑定、版本对齐、并集一致（#17 口径回归）", async () => {
@@ -201,18 +213,30 @@ describe.runIf(RUN_DB)("技能/意识 PG 集成（M8 铁律）", async () => {
     await expect(installSkill(app, gw, scope, { skillId: "skill-ind-raw", by: "MEM-001" }))
       .rejects.toMatchObject({ code: "NOT_DESENSITIZED" });
 
+    const conflictSkillId = `skill-conflict-${RUN}`;
+    const missingRuleId = `R-missing-${RUN}`;
+    const active = await qApp<{ rule_id: string }>(
+      `SELECT DISTINCT rule_id FROM fence_rules WHERE (workspace_id=$1 OR workspace_id='*') AND status='active' AND rule_id=ANY($2)`,
+      [scope.workspaceId, ["R1", missingRuleId]],
+    );
+    expect(active.rows.map((r) => r.rule_id)).toEqual(["R1"]); // 先用真实 SQL 证明本轮缺失规则不存在
     await qApp(
       `INSERT INTO skills (id, level, bundle, name, version, description, fence_bindings, body, desensitized)
-       VALUES ('skill-conflict','official','hotel','conflict-skill','1.0.0','', '["R1","R9"]', '', false)
-       ON CONFLICT (id) DO UPDATE SET fence_bindings='["R1","R9"]'`,
+       VALUES ($1,'official','hotel','conflict-skill','1.0.0','', $2, '', false)`,
+      [conflictSkillId, JSON.stringify(["R1", missingRuleId])],
     );
-    await expect(installSkill(app, gw, scope, { skillId: "skill-conflict", by: "MEM-001" }))
+    await expect(installSkill(app, gw, scope, { skillId: conflictSkillId, by: "MEM-001" }))
       .rejects.toMatchObject({ code: "FENCE_CONFLICT" });
-    const ap = await qApp(
-      `SELECT status, snapshot->>'kind' AS kind FROM approvals WHERE workspace_id=$1 AND snapshot->>'skillId'='skill-conflict'`,
-      [scope.workspaceId],
+    const ap = await qApp<{ status: string; snapshot: Record<string, unknown> }>(
+      `SELECT status, snapshot FROM approvals WHERE workspace_id=$1 AND snapshot->>'skillId'=$2`,
+      [scope.workspaceId, conflictSkillId],
     );
-    expect(ap.rows[0]).toMatchObject({ status: "pending", kind: "skill_fence_conflict" }); // 冲突项进审批
+    expect(ap.rows).toEqual([{
+      status: "pending",
+      snapshot: { kind: "skill_fence_conflict", skillId: conflictSkillId, missingBindings: [missingRuleId], high_risk: true },
+    }]); // 冲突只能进入逐条人审，不能被批量采纳
+    const installs = await qApp(`SELECT skill_id FROM skill_installs WHERE workspace_id=$1 AND skill_id=$2`, [scope.workspaceId, conflictSkillId]);
+    expect(installs.rows).toEqual([]); // 创建审批不等于安装成功
   });
 
   it("F8.3 三要素草稿 → 未 dry-run 拒装 → dry-run 预览 → 安装放行", async () => {
