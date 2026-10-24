@@ -10,5 +10,14 @@
     "scripts/ui-governance-rules.mjs": {
       "sha256": "2164c1acdc97653da5fbb04fb50437a4f107129cc81dfff58d1b38ce8b95c99c"
     }
-  }
+  },
+  "industryExtensionPaths": [
+    "apps/web/src/components/SimBanner.tsx",
+    "apps/web/src/components/hud/messages.tsx",
+    "apps/web/src/pages/p2/P2.tsx",
+    "apps/web/vite.config.ts",
+    "apps/web/src/pages/p2/DeliveryArtifact.tsx",
+    "apps/web/src/pages/p2/DeliveryArtifact.test.tsx"
+  ],
+  "tolerateExtensionSnapshotOverlap": true
 }
