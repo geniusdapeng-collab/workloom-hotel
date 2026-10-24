@@ -1,0 +1,20 @@
+{
+  "schema": "workloom.runtime-preview-preflight/v1",
+  "status": "passed",
+  "runtimeNode": "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/desktop-payload/node/bin/node",
+  "cwd": "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/desktop-payload/runtime/apps/web",
+  "runtimeVitestPresent": false,
+  "externalIO": false,
+  "port": 28119,
+  "httpStatus": 200,
+  "clientBytes": 762,
+  "clientSha256": "e5d055bd9eb42893a9ffe99bb2774f9aba898de1d289a7b512bd2e0eafb6c4b3",
+  "pid": 41504,
+  "configSha256": "b2c7a7fa8ca69978143400aba7a51d2fa0e343271865670c8f3c4e61fb731182",
+  "shutdownExitCode": 143
+}
+{"pass":true,"sourceConfigSha256":"b2c7a7fa8ca69978143400aba7a51d2fa0e343271865670c8f3c4e61fb731182","productionOnlyDependencies":true,"httpStatus":200}
+
+
+exit_code=0 signal=none error=none
+assertion_validation={"ok":true,"errors":[]}

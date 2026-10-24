@@ -435,9 +435,9 @@
   },
   "integrity": {
     "algorithm": "sha256",
-    "digest": "88e791c8265b9ed2439dd4515aa061352e6aad64141ce5e992eda4d690d03fd6",
+    "digest": "075e80e08372815ff65acc61dafbb2ba53543aaf942e0566230650237d982340",
     "assets": {
-      "agent-capabilities.json": "25e57337fa975c79e18430f3f7f106f982cd306bc0f64c9bcc8677bf990771e9",
+      "agent-capabilities.json": "9d12f8f5296988f30451384cc49dbf1a0d1b8ed7b5314a11c7e000550f99e98f",
       "eval/questions.json": "c51d1b0f1053f60431da9be3e817d30d2a885861a5a0af8fe459a05641ec207a",
       "fences/hotel-baseline.yml": "6f18209c72c1a2d9383dada5054860f3da4e526704251c74ad10adfb47ca3f99",
       "fences/patches/audit-only-patch.yml": "d16e0a3c4a6d1ddb919d48abfbcdaeb33db2a0fe614cf02f95d6a59977b0d514",
@@ -487,7 +487,7 @@
       "skills/room-service-dispatch/SKILL.md": "525e99df350fc3d0d28990f62788a197bbf1ad5c3c02c8ffc76f8fa8f61eb7c0",
       "skills/safety-compliance/SKILL.md": "d1dcf82d3797a3cad43d237a9185a2df5d0d5330857f52f04865e37a0940385b",
       "skills/staff-scheduler/SKILL.md": "33f8ef3e108f3a2afc99f52b54ae1692b80ed876e7ea5a4a3324e0112411aa94",
-      "ui/cases.json": "a59884cc3ccdc15d7833eda56c0337b6d8e9c88d80e2849bb2a74729c18c837d"
+      "ui/cases.json": "f0b41c5fd1b91231cfe99032e17940d0e19870751899ee0554c38f50b826ec3c"
     }
   }
 }

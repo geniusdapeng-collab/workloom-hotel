@@ -1,0 +1,264 @@
+{
+  "schema": "workloom.mine-clear/ledger@1",
+  "task_id": "T-2026-1023-9001",
+  "repo": "runtime",
+  "repo_path": "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime",
+  "title": "Incremental real-model quality and long-goal routing regressions",
+  "created_at": "2026-10-23T16:01:25.910Z",
+  "updated_at": "2026-10-23T19:29:26.475Z",
+  "baseline": {
+    "audit": {
+      "commit": "69cd1f1b8fea6e0e61d163c657032a9271ba0516",
+      "branch": "task/T-2026-1023-9001",
+      "remote": "origin",
+      "fetched_at": "2026-10-23T16:01:25.873Z",
+      "fetch_status": "skipped",
+      "notes": "Local committed incremental audit baseline; initial new Hotel delivery code. Remote ancestry remains initial GitHub main5a."
+    },
+    "repair": {
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "reverified_problem_ids": []
+    },
+    "acceptance": {
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "is_descendant_of_repair": true
+    }
+  },
+  "environment": {
+    "kind": "local-preview",
+    "notes": "New isolated source-built PostgreSQL and three web surfaces, synthetic seed data; actual DeepSeek calls are model evidence and do not make this a customer-installed production environment."
+  },
+  "invariants": [
+    {
+      "id": "INV-1",
+      "text": "租户边界覆盖数据库 RLS、运行时上下文、事件、缓存和外部连接器。",
+      "source": "AGENTS.md#4.1"
+    },
+    {
+      "id": "INV-2",
+      "text": "经营事件、审批和关键回执只增不改；纠正通过新事件表达，不静默覆盖证据。",
+      "source": "AGENTS.md#4.2"
+    },
+    {
+      "id": "INV-3",
+      "text": "所有外部或变更性动作及其子调用，统一经过权限、PII、围栏和审批链路。",
+      "source": "AGENTS.md#4.3"
+    },
+    {
+      "id": "INV-4",
+      "text": "涉钱、敏感数据、群发、公开发布、交易和破坏性变更必须按高风险处理并由人审批。",
+      "source": "AGENTS.md#4.4"
+    },
+    {
+      "id": "INV-5",
+      "text": "没有真实回执就不能标记完成；mock、模拟和体验模式在数据结构与界面上都要明确区分。",
+      "source": "AGENTS.md#4.5"
+    },
+    {
+      "id": "INV-6",
+      "text": "客户原始经营数据不得上行；蜂群只接受白名单化、最小化、匿名化且可审计的元数据或派生经验。",
+      "source": "AGENTS.md#4.6"
+    },
+    {
+      "id": "INV-7",
+      "text": "租户覆盖层只能收紧围栏，不能放宽平台不可变红线。",
+      "source": "AGENTS.md#4.7"
+    },
+    {
+      "id": "INV-8",
+      "text": "模型、提示词、技能、bundle、策略和热更新必须先评测再灰度，且始终可回滚。",
+      "source": "AGENTS.md#4.8"
+    },
+    {
+      "id": "INV-9",
+      "text": "platform-ops、平台账户运营和平台秘密只属于 Andromeda。",
+      "source": "AGENTS.md#4.9"
+    },
+    {
+      "id": "INV-10",
+      "text": "Tiger 在获得单独的合规审查和用户明确授权前，只能模拟或纸面交易。",
+      "source": "AGENTS.md#4.10"
+    },
+    {
+      "id": "INV-11",
+      "text": "令牌、密码、API key、私钥、客户凭证和私密客户数据不得进入源码、文档、上下文、提示词、日志或提交。",
+      "source": "AGENTS.md#4.11"
+    },
+    {
+      "id": "INV-12",
+      "text": "个性化与行业扩展不得形成公共机制的第二事实源。",
+      "source": "AGENTS.md#4.12"
+    }
+  ],
+  "cards": [
+    {
+      "id": "MC-011",
+      "kind": "problem",
+      "level": "L3",
+      "severity": "P1",
+      "batch": 3,
+      "state": "verified",
+      "title": "实际模型草稿政策矛盾未被校验，后续否定及缺材料陈述又被误拒",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "apps/server/src/industry/hotel/delivery-runtime.ts:473@69cd1f1b8fea6e0e61d163c657032a9271ba0516",
+          "sha256": "5d5e07aaa3a1cfed329eef74a39d1bad3d704b32ee012457eb6897aa615f56a3",
+          "note": "Root final repair with model_verify initial repair. Exact supplier fixtures preserved. Only source IDs of ds024 are mapped for controlled PG replay; real provenance is separately verified from live case evidence."
+        }
+      ],
+      "root_cause": {
+        "file": "apps/server/src/industry/hotel/delivery-runtime.ts",
+        "line": 473,
+        "commit": "69cd1f1b8fea6e0e61d163c657032a9271ba0516",
+        "symbol": "parseArtifact/assertPricePolicy"
+      },
+      "trigger_path": "Original real supplier outputs ds003/ds012/ds022/ds024 and historical approval data gaps",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "Original real supplier outputs ds003/ds012/ds022/ds024 and historical approval data gaps",
+          "expect": "Reject ordinary approval of below-floor quotes and gross/net mixing; accept explicit prohibition and no-policy-change discussion; provide deterministic difference",
+          "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-policy-regression.sh",
+          "exec": {
+            "file": "bash",
+            "args": [
+              "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-policy-regression.sh"
+            ]
+          },
+          "last_result": "pass",
+          "run": {
+            "path": "runs/MC-011-0-1792783518134.json",
+            "sha256": "55b3785140f59ad55c70901a0a7ed18bf430df63af1e6ec4cfc6dd540e4cf8b1",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          },
+          "evidence": {
+            "path": "evidence/MC-011-0-1792783518134.txt",
+            "sha256": "89f29a622a0d3cd73bba39f3d923ec4addabe3def2cb741498341c04ffa56298",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        }
+      ],
+      "regression": {
+        "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-policy-regression.sh"
+      },
+      "notes": "Root final repair with model_verify initial repair. Exact supplier fixtures preserved. Only source IDs of ds024 are mapped for controlled PG replay; real provenance is separately verified from live case evidence.",
+      "verified_by": "/root/repo_compare",
+      "verified_at": "2026-10-23T19:25:21.798Z",
+      "verification_evidence": {
+        "path": "runs/MC-011-0-1792783518134.json",
+        "sha256": "55b3785140f59ad55c70901a0a7ed18bf430df63af1e6ec4cfc6dd540e4cf8b1",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+      },
+      "last_assertion_attempt": {
+        "actor": "/root/repo_compare",
+        "role": "acceptance",
+        "result": "pass",
+        "at": "2026-10-23T19:25:18.129Z",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+        "finished_at": "2026-10-23T19:25:21.799Z"
+      },
+      "fixed_by": "/root",
+      "last_verification_attempt": {
+        "actor": "/root/repo_compare",
+        "result": "pass",
+        "at": "2026-10-23T19:25:21.798Z",
+        "runs": [
+          {
+            "path": "runs/MC-011-0-1792783518134.json",
+            "sha256": "55b3785140f59ad55c70901a0a7ed18bf430df63af1e6ec4cfc6dd540e4cf8b1",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MC-012",
+      "kind": "problem",
+      "level": "L3",
+      "severity": "P1",
+      "batch": 3,
+      "state": "verified",
+      "title": "长目标中的调用岗位与重复点击跨分句被误识别成GUI操作",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "apps/server/src/industry/hotel/delivery-runtime.ts:132@69cd1f1b8fea6e0e61d163c657032a9271ba0516",
+          "sha256": "5d5e07aaa3a1cfed329eef74a39d1bad3d704b32ee012457eb6897aa615f56a3",
+          "note": "Root repair. Actual failed original C03 hit generic classifier/Quest (ds030/ds031); prior failure and unknown reservation are preserved."
+        }
+      ],
+      "root_cause": {
+        "file": "apps/server/src/industry/hotel/delivery-runtime.ts",
+        "line": 132,
+        "commit": "69cd1f1b8fea6e0e61d163c657032a9271ba0516",
+        "symbol": "isHotelDraftGoal"
+      },
+      "trigger_path": "Full 862-character goalRef with 不重新调用已经完成的岗位，重复点击",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "Full 862-character goalRef with 不重新调用已经完成的岗位，重复点击",
+          "expect": "Draft intent remains Hotel collaboration; same-clause GUI/refund requests retain original guarded execution route; full goal and restart resume tests pass",
+          "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-draft-routing-regression.sh",
+          "exec": {
+            "file": "bash",
+            "args": [
+              "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-draft-routing-regression.sh"
+            ]
+          },
+          "last_result": "pass",
+          "run": {
+            "path": "runs/MC-012-0-1792783549879.json",
+            "sha256": "1e6d16da56496318e81d17e4543f0e92cc95d39a5475f11b0e2a8e34b9816489",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          },
+          "evidence": {
+            "path": "evidence/MC-012-0-1792783549879.txt",
+            "sha256": "ecae1b294b4571f256fd8b3d7beb763a2f866f7c4ccb77b5de331a577cab7c1c",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        }
+      ],
+      "regression": {
+        "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-draft-routing-regression.sh"
+      },
+      "notes": "Root repair. Actual failed original C03 hit generic classifier/Quest (ds030/ds031); prior failure and unknown reservation are preserved.",
+      "verified_by": "/root/repo_compare",
+      "verified_at": "2026-10-23T19:25:56.272Z",
+      "verification_evidence": {
+        "path": "runs/MC-012-0-1792783549879.json",
+        "sha256": "1e6d16da56496318e81d17e4543f0e92cc95d39a5475f11b0e2a8e34b9816489",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+      },
+      "last_assertion_attempt": {
+        "actor": "/root/repo_compare",
+        "role": "acceptance",
+        "result": "pass",
+        "at": "2026-10-23T19:25:49.877Z",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+        "finished_at": "2026-10-23T19:25:56.274Z"
+      },
+      "fixed_by": "/root",
+      "last_verification_attempt": {
+        "actor": "/root/repo_compare",
+        "result": "pass",
+        "at": "2026-10-23T19:25:56.272Z",
+        "runs": [
+          {
+            "path": "runs/MC-012-0-1792783549879.json",
+            "sha256": "1e6d16da56496318e81d17e4543f0e92cc95d39a5475f11b0e2a8e34b9816489",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        ]
+      }
+    }
+  ],
+  "gates": [],
+  "notes": "Final exact-source rerun on f8710155dd517d1606dc64f7c07ade8fa0e1a1b7; earlier 01a3345 red/green receipts retained unchanged in sibling directories; test-only synchronization fix changes no product behavior.",
+  "handoff": {
+    "generated_at": "2026-10-23T19:29:26.383Z",
+    "acceptance_command": "node scripts/acceptance/fleet-run.mjs --repo runtime --env local-preview",
+    "open_problem_ids": []
+  }
+}

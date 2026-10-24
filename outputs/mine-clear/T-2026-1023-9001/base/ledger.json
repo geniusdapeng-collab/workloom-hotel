@@ -1,0 +1,914 @@
+{
+  "schema": "workloom.mine-clear/ledger@1",
+  "task_id": "T-2026-1023-9001",
+  "repo": "runtime",
+  "repo_path": "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime",
+  "title": "Hotel repository parity and DeepSeek employee task evaluation",
+  "created_at": "2026-10-23T16:01:25.910Z",
+  "updated_at": "2026-10-23T19:29:11.869Z",
+  "baseline": {
+    "audit": {
+      "commit": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+      "branch": "task/T-2026-1023-9001",
+      "remote": "origin",
+      "fetched_at": "2026-10-23T16:01:25.873Z",
+      "fetch_status": "success",
+      "notes": "工作树不干净（1 项未提交改动）：排雷结论只对已提交内容成立"
+    },
+    "repair": {
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "reverified_problem_ids": []
+    },
+    "acceptance": {
+      "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+      "is_descendant_of_repair": true
+    }
+  },
+  "environment": {
+    "kind": "local-preview",
+    "notes": "New isolated source-built PostgreSQL and three web surfaces, synthetic seed data; actual DeepSeek calls are model evidence and do not make this a customer-installed production environment."
+  },
+  "invariants": [
+    {
+      "id": "INV-1",
+      "text": "租户边界覆盖数据库 RLS、运行时上下文、事件、缓存和外部连接器。",
+      "source": "AGENTS.md#4.1"
+    },
+    {
+      "id": "INV-2",
+      "text": "经营事件、审批和关键回执只增不改；纠正通过新事件表达，不静默覆盖证据。",
+      "source": "AGENTS.md#4.2"
+    },
+    {
+      "id": "INV-3",
+      "text": "所有外部或变更性动作及其子调用，统一经过权限、PII、围栏和审批链路。",
+      "source": "AGENTS.md#4.3"
+    },
+    {
+      "id": "INV-4",
+      "text": "涉钱、敏感数据、群发、公开发布、交易和破坏性变更必须按高风险处理并由人审批。",
+      "source": "AGENTS.md#4.4"
+    },
+    {
+      "id": "INV-5",
+      "text": "没有真实回执就不能标记完成；mock、模拟和体验模式在数据结构与界面上都要明确区分。",
+      "source": "AGENTS.md#4.5"
+    },
+    {
+      "id": "INV-6",
+      "text": "客户原始经营数据不得上行；蜂群只接受白名单化、最小化、匿名化且可审计的元数据或派生经验。",
+      "source": "AGENTS.md#4.6"
+    },
+    {
+      "id": "INV-7",
+      "text": "租户覆盖层只能收紧围栏，不能放宽平台不可变红线。",
+      "source": "AGENTS.md#4.7"
+    },
+    {
+      "id": "INV-8",
+      "text": "模型、提示词、技能、bundle、策略和热更新必须先评测再灰度，且始终可回滚。",
+      "source": "AGENTS.md#4.8"
+    },
+    {
+      "id": "INV-9",
+      "text": "platform-ops、平台账户运营和平台秘密只属于 Andromeda。",
+      "source": "AGENTS.md#4.9"
+    },
+    {
+      "id": "INV-10",
+      "text": "Tiger 在获得单独的合规审查和用户明确授权前，只能模拟或纸面交易。",
+      "source": "AGENTS.md#4.10"
+    },
+    {
+      "id": "INV-11",
+      "text": "令牌、密码、API key、私钥、客户凭证和私密客户数据不得进入源码、文档、上下文、提示词、日志或提交。",
+      "source": "AGENTS.md#4.11"
+    },
+    {
+      "id": "INV-12",
+      "text": "个性化与行业扩展不得形成公共机制的第二事实源。",
+      "source": "AGENTS.md#4.12"
+    }
+  ],
+  "cards": [
+    {
+      "id": "MC-001",
+      "kind": "problem",
+      "level": "L2",
+      "severity": "P1",
+      "batch": 1,
+      "state": "verified",
+      "title": "显式 LLM_MODEL 未进入模型池，真实请求使用过期目录 ID",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/base/model-router/pool.ts:72@5a04120a225dc3734415c8cc23e9c5f9474170c0",
+          "sha256": "b174dc06387fffdd3612a927ff5075bd822a9ef997dce20e0bd057f722a14d1f",
+          "note": "poolFromEnv 构造 provider 时只传 m.id，没有读取 LLM_MODEL"
+        }
+      ],
+      "root_cause": {
+        "file": "packages/base/model-router/pool.ts",
+        "line": 63,
+        "commit": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "symbol": "poolFromEnv"
+      },
+      "trigger_path": "配置 LLM_PROVIDER=deepseek, LLM_MODEL=deepseek-flash, LLM_BASE_URL 后经 routeSmart 调用",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "显式单模型 deepseek-flash + 本地HTTP捕获上游body",
+          "expect": "所有实际请求 model 为 deepseek-flash，trace记录实际模型",
+          "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-model-pool-regression.sh",
+          "exec": {
+            "file": "bash",
+            "args": [
+              "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-model-pool-regression.sh"
+            ]
+          },
+          "last_result": "pass",
+          "run": {
+            "path": "runs/MC-001-0-1792783211510.json",
+            "sha256": "4bdc57ac73d7a96073aa536fe0c2f66c05f5cf0dfd732c430af1ca08f921322c",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          },
+          "evidence": {
+            "path": "evidence/MC-001-0-1792783211510.txt",
+            "sha256": "cde5adebbbbf07f86fb07b6a2d58ea263dde5c2981e3374d2e8808bc7577bd57",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        }
+      ],
+      "notes": "配置真实驱动模型为本任务必要修复；本地修复副本，不做未授权舰队同步。保留 mock、多提供方兼容和 noDowngrade 守卫。",
+      "regression": {
+        "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-model-pool-regression.sh"
+      },
+      "verified_by": "/root/repo_compare",
+      "verified_at": "2026-10-23T19:20:32.905Z",
+      "verification_evidence": {
+        "path": "runs/MC-001-0-1792783211510.json",
+        "sha256": "4bdc57ac73d7a96073aa536fe0c2f66c05f5cf0dfd732c430af1ca08f921322c",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+      },
+      "last_assertion_attempt": {
+        "actor": "/root/repo_compare",
+        "role": "acceptance",
+        "result": "pass",
+        "at": "2026-10-23T19:20:10.331Z",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+        "finished_at": "2026-10-23T19:20:32.906Z"
+      },
+      "fixed_by": "/root/model_verify",
+      "last_verification_attempt": {
+        "actor": "/root/repo_compare",
+        "result": "pass",
+        "at": "2026-10-23T19:20:32.905Z",
+        "runs": [
+          {
+            "path": "runs/MC-001-0-1792783211510.json",
+            "sha256": "4bdc57ac73d7a96073aa536fe0c2f66c05f5cf0dfd732c430af1ca08f921322c",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MC-002",
+      "kind": "problem",
+      "level": "L2",
+      "severity": "P1",
+      "batch": 1,
+      "state": "verified",
+      "title": "Fence proposal version binding is stale and breaks typecheck and activation",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "apps/server/src/trpc/router.ts:2221@5a04120a225dc3734415c8cc23e9c5f9474170c0",
+          "sha256": "29e80b5ac1aa4fa5ed408150ba9185ec969c68bc29dc643bd5de53ea61a415e9",
+          "note": "fenceRuleRowId now requires version; router still calls with 2 arguments and omits proposal version identity. Actual typecheck-all.log has TS2554."
+        }
+      ],
+      "root_cause": {
+        "file": "apps/server/src/trpc/router.ts",
+        "line": 2221,
+        "commit": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "symbol": "fence.confirmDryRun"
+      },
+      "trigger_path": "Typecheck server and submit/approve a dry-run fence proposal",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "A validated dry-run fence proposal in a tenant workspace",
+          "expect": "Atomic confirmation binds exact row ID and version; approval activates only that version; typecheck succeeds",
+          "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-fence-regression.sh",
+          "exec": {
+            "file": "bash",
+            "args": [
+              "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-fence-regression.sh"
+            ]
+          },
+          "last_result": "pass",
+          "run": {
+            "path": "runs/MC-002-0-1792783260623.json",
+            "sha256": "ad30b7c9069161c312babdc6ec12cf0c967d5941af25155f037275c8c2b88e6c",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          },
+          "evidence": {
+            "path": "evidence/MC-002-0-1792783260623.txt",
+            "sha256": "3978f4251932d26231174dca8fee669b3bfb88abb795cd6382e800238f9d222c",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        }
+      ],
+      "notes": "Do not weaken fence or approvals; repair matching API usage and add regression.",
+      "regression": {
+        "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-fence-regression.sh"
+      },
+      "verified_by": "/root/repo_compare",
+      "verified_at": "2026-10-23T19:21:25.637Z",
+      "verification_evidence": {
+        "path": "runs/MC-002-0-1792783260623.json",
+        "sha256": "ad30b7c9069161c312babdc6ec12cf0c967d5941af25155f037275c8c2b88e6c",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+      },
+      "last_assertion_attempt": {
+        "actor": "/root/repo_compare",
+        "role": "acceptance",
+        "result": "pass",
+        "at": "2026-10-23T19:21:00.229Z",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+        "finished_at": "2026-10-23T19:21:25.638Z"
+      },
+      "fixed_by": "/root/runtime_setup",
+      "last_verification_attempt": {
+        "actor": "/root/repo_compare",
+        "result": "pass",
+        "at": "2026-10-23T19:21:25.637Z",
+        "runs": [
+          {
+            "path": "runs/MC-002-0-1792783260623.json",
+            "sha256": "ad30b7c9069161c312babdc6ec12cf0c967d5941af25155f037275c8c2b88e6c",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MC-003",
+      "kind": "problem",
+      "level": "L3",
+      "severity": "P1",
+      "batch": 2,
+      "state": "verified",
+      "title": "Synchronous dispatch and manual resume bypass the configured execution assembly",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "apps/server/src/trpc/router.ts:1188@5a04120a225dc3734415c8cc23e9c5f9474170c0",
+          "sha256": "29e80b5ac1aa4fa5ed408150ba9185ec969c68bc29dc643bd5de53ea61a415e9",
+          "note": "Direct runQuest omits configured toolExecutor, industry fallback planner, vocabulary and entrypoint CAS; scheduler calls runQuestForThread."
+        }
+      ],
+      "root_cause": {
+        "file": "apps/server/src/trpc/router.ts",
+        "line": 1188,
+        "commit": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "symbol": "threads.dispatch/threads.run"
+      },
+      "trigger_path": "Configured bridge + dispatch(runImmediately=true), manual threads.run and scheduler execute different paths",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "The same assigned task and configured local tool bridge across entrypoints",
+          "expect": "Immediate dispatch and manual resume use runQuestForThread including bridge and CAS, and preserve plan/replay",
+          "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-entrypoint-regression.sh",
+          "exec": {
+            "file": "bash",
+            "args": [
+              "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-entrypoint-regression.sh"
+            ]
+          },
+          "last_result": "pass",
+          "run": {
+            "path": "runs/MC-003-0-1792783639578.json",
+            "sha256": "4b47a4a502751cb7aac8b67d23f69d75757b39236ef68ba0276fef93770701be",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          },
+          "evidence": {
+            "path": "evidence/MC-003-0-1792783639578.txt",
+            "sha256": "dd4fcf77d016f0a53f00c6040571d5675dceba7e0cc39b3a465de21cf0b87f5b",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        }
+      ],
+      "regression": {
+        "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-entrypoint-regression.sh"
+      },
+      "notes": "No changes to tenant boundary or business fences; unify existing approved assembly path.",
+      "verified_by": "/root",
+      "verified_at": "2026-10-23T19:27:30.858Z",
+      "verification_evidence": {
+        "path": "runs/MC-003-0-1792783639578.json",
+        "sha256": "4b47a4a502751cb7aac8b67d23f69d75757b39236ef68ba0276fef93770701be",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+      },
+      "last_assertion_attempt": {
+        "actor": "/root",
+        "role": "acceptance",
+        "result": "pass",
+        "at": "2026-10-23T19:27:19.575Z",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+        "finished_at": "2026-10-23T19:27:30.858Z"
+      },
+      "fixed_by": "/root/repo_compare",
+      "last_verification_attempt": {
+        "actor": "/root",
+        "result": "pass",
+        "at": "2026-10-23T19:27:30.858Z",
+        "runs": [
+          {
+            "path": "runs/MC-003-0-1792783639578.json",
+            "sha256": "4b47a4a502751cb7aac8b67d23f69d75757b39236ef68ba0276fef93770701be",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MC-004",
+      "kind": "problem",
+      "level": "L4",
+      "severity": "P1",
+      "batch": 2,
+      "state": "verified",
+      "title": "Complex hotel deliverables have no persisted multi-employee handoff or substantive artifact execution",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/runtime/src/loop.ts:643@5a04120a225dc3734415c8cc23e9c5f9474170c0",
+          "sha256": "10aaac0dd70f02d1f1e717d8a54e5ac85545b3cf1b8783915eae2b120d3a1dc4",
+          "note": "runQuest assembles only one preset; planQuestSmart whitelist only that employee tools, all who values use same preset. Generic simulated tools only echo params and receipt."
+        }
+      ],
+      "root_cause": {
+        "file": "packages/runtime/src/loop.ts",
+        "line": 643,
+        "commit": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "symbol": "runQuest/planQuestSmart"
+      },
+      "trigger_path": "User dispatches a complex analysis/draft deliverable requiring several ready hotel employees and resumable dependencies",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "A complex draft-only hotel task with at least 2 employees and dependencies",
+          "expect": "Persisted verified plan, distinct actual preset worker outputs, dependency artifacts passed forward, substantive final artifact, restart/replay skip completed work; no external writes",
+          "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-hotel-delivery-regression.sh",
+          "exec": {
+            "file": "bash",
+            "args": [
+              "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-hotel-delivery-regression.sh"
+            ]
+          },
+          "last_result": "pass",
+          "run": {
+            "path": "runs/MC-004-0-1792783311156.json",
+            "sha256": "cdba82240c3fbef1d02b3e8fcb2c90d185922b284c6442df6295074af3d0159a",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          },
+          "evidence": {
+            "path": "evidence/MC-004-0-1792783311156.txt",
+            "sha256": "d56d46f6cd460f3e6e9230de7537de2b68b06f0f68de764d4f96cb1e144379ab",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        }
+      ],
+      "regression": {
+        "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-hotel-delivery-regression.sh"
+      },
+      "notes": "Add hotel-specific bounded internal analysis/draft orchestration; do not represent this as PMS/OTA execution or change business write approvals. Compare generic runtime extension versus industry orchestration; choose industry seam to keep shared runtime semantics stable.",
+      "verified_by": "/root/repo_compare",
+      "verified_at": "2026-10-23T19:21:57.749Z",
+      "verification_evidence": {
+        "path": "runs/MC-004-0-1792783311156.json",
+        "sha256": "cdba82240c3fbef1d02b3e8fcb2c90d185922b284c6442df6295074af3d0159a",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+      },
+      "last_assertion_attempt": {
+        "actor": "/root/repo_compare",
+        "role": "acceptance",
+        "result": "pass",
+        "at": "2026-10-23T19:21:51.150Z",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+        "finished_at": "2026-10-23T19:21:57.750Z"
+      },
+      "fixed_by": "/root/model_verify",
+      "last_verification_attempt": {
+        "actor": "/root/repo_compare",
+        "result": "pass",
+        "at": "2026-10-23T19:21:57.750Z",
+        "runs": [
+          {
+            "path": "runs/MC-004-0-1792783311156.json",
+            "sha256": "cdba82240c3fbef1d02b3e8fcb2c90d185922b284c6442df6295074af3d0159a",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MC-005",
+      "kind": "problem",
+      "level": "L3",
+      "severity": "P1",
+      "batch": 2,
+      "state": "verified",
+      "title": "CEO 节拍缺少名册围栏绑定，真实写回被拒且已有回归测试无法导入",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/base/captain/loop.ts:23@5a04120a225dc3734415c8cc23e9c5f9474170c0",
+          "sha256": "e1c4f5580da696235d33bc6979b1687832511e14374c180c99f1564c1997eee8",
+          "note": "Actual full workspace regression failed; before log at outputs/runtime/workspace-tests-before-live.log"
+        }
+      ],
+      "root_cause": {
+        "file": "packages/base/captain/loop.ts",
+        "line": 23,
+        "commit": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "symbol": "emitCeoEvent"
+      },
+      "trigger_path": "node node_modules/vitest/vitest.mjs run packages/base/captain/ceo-actor.test.ts",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "Isolated local source and synthetic test data",
+          "expect": "Previously failing regression passes without weakening permissions or signatures",
+          "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-captain-regression.sh",
+          "exec": {
+            "file": "bash",
+            "args": [
+              "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-captain-regression.sh"
+            ]
+          },
+          "last_result": "pass",
+          "run": {
+            "path": "runs/MC-005-0-1792783337336.json",
+            "sha256": "004faa3651a2a2624f4c6a8e9eadc0a7d37d8cbd4605a3f039561ca848b67105",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          },
+          "evidence": {
+            "path": "evidence/MC-005-0-1792783337336.txt",
+            "sha256": "bbffd0856a94779a9b2f1e5c40ff4439bd432b9d906e2dd73fde0b1f12f35128",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        }
+      ],
+      "regression": {
+        "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-captain-regression.sh"
+      },
+      "notes": "Root repair; independently accepted by repo_compare. Local repair only, no fleet propagation or remote publishing.",
+      "verified_by": "/root/repo_compare",
+      "verified_at": "2026-10-23T19:22:18.594Z",
+      "verification_evidence": {
+        "path": "runs/MC-005-0-1792783337336.json",
+        "sha256": "004faa3651a2a2624f4c6a8e9eadc0a7d37d8cbd4605a3f039561ca848b67105",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+      },
+      "last_assertion_attempt": {
+        "actor": "/root/repo_compare",
+        "role": "acceptance",
+        "result": "pass",
+        "at": "2026-10-23T19:22:17.335Z",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+        "finished_at": "2026-10-23T19:22:18.594Z"
+      },
+      "fixed_by": "/root",
+      "last_verification_attempt": {
+        "actor": "/root/repo_compare",
+        "result": "pass",
+        "at": "2026-10-23T19:22:18.594Z",
+        "runs": [
+          {
+            "path": "runs/MC-005-0-1792783337336.json",
+            "sha256": "004faa3651a2a2624f4c6a8e9eadc0a7d37d8cbd4605a3f039561ca848b67105",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MC-006",
+      "kind": "problem",
+      "level": "L3",
+      "severity": "P1",
+      "batch": 2,
+      "state": "verified",
+      "title": "酒店候选包资产摘要陈旧导致完整性门禁与可装配校验失败",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "bundles/hotel/bundle.json:440@5a04120a225dc3734415c8cc23e9c5f9474170c0",
+          "sha256": "c99d0d1765d18f6860625993ff2cbbe92c5034d47dec1c669cde54784b483121",
+          "note": "Actual full workspace regression failed; before log at outputs/runtime/workspace-tests-before-live.log"
+        }
+      ],
+      "root_cause": {
+        "file": "bundles/hotel/bundle.json",
+        "line": 440,
+        "commit": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "symbol": "integrity.assets.agent-capabilities.json"
+      },
+      "trigger_path": "node --import tsx scripts/bundle-governance.mts",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "Isolated local source and synthetic test data",
+          "expect": "Previously failing regression passes without weakening permissions or signatures",
+          "command": "node --import tsx scripts/bundle-governance.mts",
+          "exec": {
+            "file": "node",
+            "args": [
+              "--import",
+              "tsx",
+              "scripts/bundle-governance.mts"
+            ]
+          },
+          "last_result": "pass",
+          "run": {
+            "path": "runs/MC-006-0-1792783356354.json",
+            "sha256": "c505a98b5158befd183a1eb5abf2f221a7a59d57a7cacf89148846c7c6d774b0",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          },
+          "evidence": {
+            "path": "evidence/MC-006-0-1792783356354.txt",
+            "sha256": "0356b7571cc7e431171ce21aec0566a13363a79ae9f274351a8b4c91bf2e636a",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        }
+      ],
+      "regression": {
+        "command": "node --import tsx scripts/bundle-governance.mts"
+      },
+      "notes": "Root repair; independently accepted by repo_compare. Local repair only, no fleet propagation or remote publishing.",
+      "verified_by": "/root/repo_compare",
+      "verified_at": "2026-10-23T19:22:36.790Z",
+      "verification_evidence": {
+        "path": "runs/MC-006-0-1792783356354.json",
+        "sha256": "c505a98b5158befd183a1eb5abf2f221a7a59d57a7cacf89148846c7c6d774b0",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+      },
+      "last_assertion_attempt": {
+        "actor": "/root/repo_compare",
+        "role": "acceptance",
+        "result": "pass",
+        "at": "2026-10-23T19:22:36.352Z",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+        "finished_at": "2026-10-23T19:22:36.790Z"
+      },
+      "fixed_by": "/root",
+      "last_verification_attempt": {
+        "actor": "/root/repo_compare",
+        "result": "pass",
+        "at": "2026-10-23T19:22:36.790Z",
+        "runs": [
+          {
+            "path": "runs/MC-006-0-1792783356354.json",
+            "sha256": "c505a98b5158befd183a1eb5abf2f221a7a59d57a7cacf89148846c7c6d774b0",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MC-007",
+      "kind": "problem",
+      "level": "L3",
+      "severity": "P1",
+      "batch": 2,
+      "state": "verified",
+      "title": "Verified hotel extension routes are rejected by stale base-only UI assembly registry",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "packages/base/bundles/assembly.ts:1023@5a04120a225dc3734415c8cc23e9c5f9474170c0",
+          "sha256": "ac09917eba0d36c17e83d5bb6f9b9693bfcd0a5f3d508f3065000848eaccedd8",
+          "note": "UI cases are checked only against fixed p1..p9; Hotel extension cases p10..p20 correspond to real semantic routes and activation fails."
+        }
+      ],
+      "root_cause": {
+        "file": "packages/base/bundles/assembly.ts",
+        "line": 1023,
+        "commit": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "symbol": "computeAssemblyScoped/checkUi"
+      },
+      "trigger_path": "Compute or activate the current verified Hotel bundle with real seeded staff and profile",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "Verified manifest declares PC industry navigation routes and the real UI cases reference those routes",
+          "expect": "Current Hotel assembly and activation pass; an undeclared route keeps UI check red and activation refused; candidate stays private",
+          "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-bundle-regression.sh",
+          "exec": {
+            "file": "bash",
+            "args": [
+              "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-bundle-regression.sh"
+            ]
+          },
+          "last_result": "pass",
+          "run": {
+            "path": "runs/MC-007-0-1792783651265.json",
+            "sha256": "19469d2d00863a00cfc695ee43fe68d6604b1b91de05f513a90609ab3c46cba6",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          },
+          "evidence": {
+            "path": "evidence/MC-007-0-1792783651265.txt",
+            "sha256": "95c621eebb9a567906c9118091eed973e5afb97a59dd24c3a3a7d2956409c5b4",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        }
+      ],
+      "regression": {
+        "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-bundle-regression.sh"
+      },
+      "notes": "Repair author /root/repo_compare; independent root acceptance. Derive industry routes from verified Bundle metadata and migrate Hotel legacy case page IDs using actual client registry; do not broaden base magic IDs or weaken integrity/signatures.",
+      "verified_by": "/root",
+      "verified_at": "2026-10-23T19:27:34.018Z",
+      "verification_evidence": {
+        "path": "runs/MC-007-0-1792783651265.json",
+        "sha256": "19469d2d00863a00cfc695ee43fe68d6604b1b91de05f513a90609ab3c46cba6",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+      },
+      "last_assertion_attempt": {
+        "actor": "/root",
+        "role": "acceptance",
+        "result": "pass",
+        "at": "2026-10-23T19:27:31.261Z",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+        "finished_at": "2026-10-23T19:27:34.018Z"
+      },
+      "fixed_by": "/root/repo_compare",
+      "last_verification_attempt": {
+        "actor": "/root",
+        "result": "pass",
+        "at": "2026-10-23T19:27:34.018Z",
+        "runs": [
+          {
+            "path": "runs/MC-007-0-1792783651265.json",
+            "sha256": "19469d2d00863a00cfc695ee43fe68d6604b1b91de05f513a90609ab3c46cba6",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MC-008",
+      "kind": "problem",
+      "level": "L3",
+      "severity": "P1",
+      "batch": 2,
+      "state": "verified",
+      "title": "派单目标中的误粘凭据在模型清洗前进入线程与派遣账本",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "apps/server/src/trpc/router.ts:1160@5a04120a225dc3734415c8cc23e9c5f9474170c0",
+          "sha256": "29e80b5ac1aa4fa5ed408150ba9185ec969c68bc29dc643bd5de53ea61a415e9",
+          "note": "Dispatch records raw input.title; later module cleaning does not retroactively sanitize the earlier dispatch event. Controlled synthetic provider-key fixture only; no actual supplied key leaked."
+        }
+      ],
+      "root_cause": {
+        "file": "apps/server/src/trpc/router.ts",
+        "line": 1160,
+        "commit": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "symbol": "threads.dispatch"
+      },
+      "trigger_path": "Hotel draft-only HTTP dispatch with a synthetic secret-shaped marker in title or goalRef",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "Synthetic secret-shaped marker and telephone in an explicit internal Hotel goal",
+          "expect": "Same sanitizer runs before thread title, dispatch title/full goal, plan and model request; normal long goal remains complete",
+          "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-hotel-delivery-regression.sh",
+          "exec": {
+            "file": "bash",
+            "args": [
+              "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-hotel-delivery-regression.sh"
+            ]
+          },
+          "last_result": "pass",
+          "run": {
+            "path": "runs/MC-008-0-1792783366184.json",
+            "sha256": "a1ee60d8e411b11e5815c54886a71867c33bfd9fa82d4af67b491e91032713bb",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          },
+          "evidence": {
+            "path": "evidence/MC-008-0-1792783366184.txt",
+            "sha256": "502c7e7e92d30247e0dcdee6bbfea5e8d3078729105eb8f21bb6ca2e944b7f34",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        }
+      ],
+      "regression": {
+        "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-hotel-delivery-regression.sh"
+      },
+      "notes": "Necessary dataflow repair for MC004 entrypoint; runtime_setup author, repo_compare independent acceptance. No real credentials used by tests.",
+      "verified_by": "/root/repo_compare",
+      "verified_at": "2026-10-23T19:23:17.174Z",
+      "verification_evidence": {
+        "path": "runs/MC-008-0-1792783366184.json",
+        "sha256": "a1ee60d8e411b11e5815c54886a71867c33bfd9fa82d4af67b491e91032713bb",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+      },
+      "last_assertion_attempt": {
+        "actor": "/root/repo_compare",
+        "role": "acceptance",
+        "result": "pass",
+        "at": "2026-10-23T19:22:45.923Z",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+        "finished_at": "2026-10-23T19:23:17.175Z"
+      },
+      "fixed_by": "/root/runtime_setup",
+      "last_verification_attempt": {
+        "actor": "/root/repo_compare",
+        "result": "pass",
+        "at": "2026-10-23T19:23:17.174Z",
+        "runs": [
+          {
+            "path": "runs/MC-008-0-1792783366184.json",
+            "sha256": "a1ee60d8e411b11e5815c54886a71867c33bfd9fa82d4af67b491e91032713bb",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MC-009",
+      "kind": "problem",
+      "level": "L3",
+      "severity": "P1",
+      "batch": 2,
+      "state": "verified",
+      "title": "正式桌面载荷的 Vite 配置运行时依赖未打包的测试框架，导致客户端无法启动",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "apps/web/vite.config.ts:4@5a04120a225dc3734415c8cc23e9c5f9474170c0",
+          "sha256": "df78fa7098772cb1e10d344a14461290c8005676e545491962a93f0e87e98307",
+          "note": "Production dependency payload lacks Vitest; actual startup returned ERR_MODULE_NOT_FOUND before fix. See outputs/runtime/macos-vite-runtime-red.log."
+        }
+      ],
+      "root_cause": {
+        "file": "apps/web/vite.config.ts",
+        "line": 4,
+        "commit": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "symbol": "defineConfig runtime import"
+      },
+      "trigger_path": "Boot self-contained desktop payload using its official production-only dependency set",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "Full production dependency payload with no vitest package and current source config hash",
+          "expect": "Vite preview starts, serves built PC client HTTP200 and source config hash matches; owned child is stopped",
+          "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-production-preview-regression.sh",
+          "exec": {
+            "file": "bash",
+            "args": [
+              "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-production-preview-regression.sh"
+            ]
+          },
+          "last_result": "pass",
+          "run": {
+            "path": "runs/MC-009-0-1792783654464.json",
+            "sha256": "0b6e206acb5d87c9949be4f0affd6d675f7f24ee8190ae83821511e9c3e58379",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          },
+          "evidence": {
+            "path": "evidence/MC-009-0-1792783654464.txt",
+            "sha256": "5cd9321e681cd4ad22b821c850c94f0a5d41f9292ce98bc6d5a5584bb526c14b",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        }
+      ],
+      "regression": {
+        "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-production-preview-regression.sh"
+      },
+      "notes": "Repair author runtime_setup. Type-only test configuration reference, runtime defineConfig imported from Vite. Independent root acceptance; no dependency added and no production signing change.",
+      "verified_by": "/root",
+      "verified_at": "2026-10-23T19:27:40.160Z",
+      "verification_evidence": {
+        "path": "runs/MC-009-0-1792783654464.json",
+        "sha256": "0b6e206acb5d87c9949be4f0affd6d675f7f24ee8190ae83821511e9c3e58379",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+      },
+      "last_assertion_attempt": {
+        "actor": "/root",
+        "role": "acceptance",
+        "result": "pass",
+        "at": "2026-10-23T19:27:34.461Z",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+        "finished_at": "2026-10-23T19:27:40.160Z"
+      },
+      "fixed_by": "/root/runtime_setup",
+      "last_verification_attempt": {
+        "actor": "/root",
+        "result": "pass",
+        "at": "2026-10-23T19:27:40.160Z",
+        "runs": [
+          {
+            "path": "runs/MC-009-0-1792783654464.json",
+            "sha256": "0b6e206acb5d87c9949be4f0affd6d675f7f24ee8190ae83821511e9c3e58379",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        ]
+      }
+    },
+    {
+      "id": "MC-010",
+      "kind": "problem",
+      "level": "L3",
+      "severity": "P2",
+      "batch": 3,
+      "state": "verified",
+      "title": "窄屏示例说明与岗位产物被横排控件挤窄，回执标题拆字",
+      "evidence": [
+        {
+          "type": "code",
+          "ref": "apps/web/src/components/SimBanner.tsx:52@5a04120a225dc3734415c8cc23e9c5f9474170c0",
+          "sha256": "068d845c135ee2f7cfd83fdc68d90b2940422559f09285a3eeddb57be477ede7",
+          "note": "Root repair. UI tests/TS are regression only; actual screenshot/DOM dimensions are in outputs/ui and independent-mobile-review.json; command alone does not claim visual proof."
+        }
+      ],
+      "root_cause": {
+        "file": "apps/web/src/components/SimBanner.tsx",
+        "line": 52,
+        "commit": "5a04120a225dc3734415c8cc23e9c5f9474170c0",
+        "symbol": "SimBanner/AgentActionMessage"
+      },
+      "trigger_path": "390x844 Chrome viewport on completed real task",
+      "assertions": [
+        {
+          "kind": "sample",
+          "given": "390x844 Chrome viewport on completed real task",
+          "expect": "Readable banner/document and wrapped header; UI6 and web TS pass; actual before/after screenshots separately independently reviewed",
+          "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-ui-regression.sh",
+          "exec": {
+            "file": "bash",
+            "args": [
+              "/Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-ui-regression.sh"
+            ]
+          },
+          "last_result": "pass",
+          "run": {
+            "path": "runs/MC-010-0-1792783439211.json",
+            "sha256": "34b756e9c0444d2eb719fd0c09537066fcd5aaa0ba3bf5d0e3bc1fb8edada94a",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          },
+          "evidence": {
+            "path": "evidence/MC-010-0-1792783439211.txt",
+            "sha256": "b25e7860a583c62f9d436bebb85ba6455aa3d10635370b9d9fda87d7c99e26a2",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        }
+      ],
+      "regression": {
+        "command": "bash /Users/mac/Documents/Codex/2026-10-23/workloomhotel-https-github-com-geniusdapeng-collab/work/runtime-tools/run-ui-regression.sh"
+      },
+      "notes": "Root repair. UI tests/TS are regression only; actual screenshot/DOM dimensions are in outputs/ui and independent-mobile-review.json; command alone does not claim visual proof.",
+      "verified_by": "/root/repo_compare",
+      "verified_at": "2026-10-23T19:24:20.392Z",
+      "verification_evidence": {
+        "path": "runs/MC-010-0-1792783439211.json",
+        "sha256": "34b756e9c0444d2eb719fd0c09537066fcd5aaa0ba3bf5d0e3bc1fb8edada94a",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+      },
+      "last_assertion_attempt": {
+        "actor": "/root/repo_compare",
+        "role": "acceptance",
+        "result": "pass",
+        "at": "2026-10-23T19:23:59.178Z",
+        "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7",
+        "finished_at": "2026-10-23T19:24:20.392Z"
+      },
+      "fixed_by": "/root",
+      "last_verification_attempt": {
+        "actor": "/root/repo_compare",
+        "result": "pass",
+        "at": "2026-10-23T19:24:20.392Z",
+        "runs": [
+          {
+            "path": "runs/MC-010-0-1792783439211.json",
+            "sha256": "34b756e9c0444d2eb719fd0c09537066fcd5aaa0ba3bf5d0e3bc1fb8edada94a",
+            "commit": "f8710155dd517d1606dc64f7c07ade8fa0e1a1b7"
+          }
+        ]
+      }
+    }
+  ],
+  "gates": [],
+  "notes": "Final exact-source rerun on f8710155dd517d1606dc64f7c07ade8fa0e1a1b7; earlier 01a3345 red/green receipts retained unchanged in sibling directories; test-only synchronization fix changes no product behavior.",
+  "handoff": {
+    "generated_at": "2026-10-23T19:29:11.774Z",
+    "acceptance_command": "node scripts/acceptance/fleet-run.mjs --repo runtime --env local-preview",
+    "open_problem_ids": []
+  }
+}

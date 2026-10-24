@@ -22,6 +22,21 @@ export interface Scope { tenantId: string; workspaceId: string }
 
 const CEO_ACTOR = { id: "company-ceo", type: "agent" as const };
 
+/** Read the current workspace declaration before every ledger write. Missing staff fail closed at the gateway. */
+export async function ceoActor(client: pg.PoolClient, scope: Scope) {
+  const result = await client.query<{ readonly: boolean; fence_bindings: string[] }>(
+    `SELECT readonly, fence_bindings FROM agents
+     WHERE workspace_id=$1 AND preset_key=$2 AND status='ready' ORDER BY id LIMIT 1`,
+    [scope.workspaceId, CEO_ACTOR.id],
+  );
+  const row = result.rows[0];
+  return {
+    ...CEO_ACTOR,
+    readonly: row?.readonly ?? false,
+    fenceBindings: Array.isArray(row?.fence_bindings) ? row.fence_bindings : [],
+  };
+}
+
 /* ================= 宪章读写 ================= */
 
 export async function loadCharter(app: pg.Pool, scope: Scope): Promise<Charter> {
@@ -29,6 +44,7 @@ export async function loadCharter(app: pg.Pool, scope: Scope): Promise<Charter> 
   try {
     await client.query("BEGIN");
     await client.query("SELECT set_config('app.workspace_id', $1, true)", [scope.workspaceId]);
+    await client.query("SELECT set_config('app.tenant_id', $1, true)", [scope.tenantId]);
     const r = await client.query<{ archive: Record<string, unknown> }>(
       `SELECT archive FROM profiles WHERE workspace_id=$1`, [scope.workspaceId],
     );
@@ -71,8 +87,9 @@ async function emitCeoEvent(
   decision: { params?: Record<string, unknown>; after?: Record<string, unknown>; basis: string[] },
   opts?: { dryRun?: boolean },
 ): Promise<string> {
+  const actor = await ceoActor(client, scope);
   const res = await gatewayAppendOnClient(client, {
-    ...scope, actor: CEO_ACTOR, sessionId: `ceo-${scope.workspaceId}`,
+    ...scope, actor, sessionId: `ceo-${scope.workspaceId}`,
   }, {
     who: { type: "agent", id: CEO_ACTOR.id },
     context: { tenant_id: scope.tenantId, workspace_id: scope.workspaceId, time: new Date().toISOString() },

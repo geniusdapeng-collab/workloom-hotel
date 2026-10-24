@@ -15,7 +15,8 @@ import YAML from "yaml";
 import { getAppPool, getGatewayPool } from "@workloom/db";
 import { bundlesRoot } from "@workloom/base/bundles";
 import { assemblePreset, runQuest, type AssembledPreset, type QuestPlanner, type QuestRunResult } from "@workloom/runtime";
-import { llmCall } from "../service/llm.js";
+import { routedLlmCall } from "../service/llm.js";
+import { resolveWorkspaceActiveBundle } from "../service/active-bundle.js";
 import { loadDeploymentToolExecutor, describeToolCoverage } from "./tool-executor.js";
 import { preferredDispatchPresets } from "./dispatch-routing.js";
 
@@ -36,6 +37,14 @@ let industryPlannerFactory: IndustryQuestPlannerFactory | null = null;
 /** 行业仓组合根调用：注册/清理行业规划器（传 null 取消注册）。 */
 export function registerIndustryQuestPlanner(factory: IndustryQuestPlannerFactory | null): void {
   industryPlannerFactory = factory;
+}
+
+/** Industry-owned execution formats register at the composition root, before the common Quest claim. */
+export type IndustryThreadRunner = (scope: Scope, input: ThreadQuestInput) => Promise<ThreadQuestOutcome | undefined>;
+let industryThreadRunner: IndustryThreadRunner | null = null;
+
+export function registerIndustryThreadRunner(runner: IndustryThreadRunner | null): void {
+  industryThreadRunner = runner;
 }
 
 /**
@@ -296,6 +305,7 @@ export async function loadGoalArchive(
       : "v1";
     return { text: text.trim(), version };
   } catch (error) {
+    await client.query("ROLLBACK").catch(() => undefined);
     console.warn(
       "[goal-archive] 档案读取失败（fail-closed：按无档案处理，不猜目标）",
       error instanceof Error ? error.message : String(error),
@@ -306,7 +316,11 @@ export async function loadGoalArchive(
   }
 }
 
-export interface ThreadQuestOutcome extends QuestRunResult {
+export interface ThreadQuestOutcome extends Omit<QuestRunResult, "status"> {
+  status: QuestRunResult["status"] | "cancelled" | "queued";
+  /** Internal document runners can return their durable artifact receipts without issuing a tool action. */
+  artifactEventIds?: string[];
+  answer?: string;
   /** GR-15：派遣/续跑前的连接器覆盖度提示 */
   warnings?: string[];
   /** 实际使用的岗位（复盘"派给了谁"） */
@@ -317,6 +331,9 @@ export interface ThreadQuestOutcome extends QuestRunResult {
  * 线程执行唯一装配点：dispatch(runImmediately) / threads.run / 审批自动续跑 / 调度器都走这里。
  */
 export async function runQuestForThread(scope: Scope, input: ThreadQuestInput): Promise<ThreadQuestOutcome> {
+  // Industry runners own their persisted plan and claim protocol. Do not first claim them as legacy Quest arrays.
+  const industryResult = await industryThreadRunner?.(scope, input);
+  if (industryResult) return industryResult;
   /**
    * A-03 修复（来源：WorkLoom-growth 排雷 T-2026-0929-0003）：执行前原子认领（queued/paused→running CAS）。
    * 此前 SELECT 取线程到 runQuest 置 running 之间有装配+LLM 规划窗口（最长 120s），
@@ -376,7 +393,13 @@ export async function runQuestForThread(scope: Scope, input: ThreadQuestInput): 
     ...(input.mode ? { mode: input.mode } : {}),
     ...(input.replan ? { replan: true, ...(input.replanReason ? { replanReason: input.replanReason } : {}) } : {}),
     // 视觉目标关掉 LLM 规划（空参步骤到桥侧必 bad_request），走行业确定性直译
-    ...(visualGoal ? {} : { llmCall: llmCall("quest-plan") }),
+    ...(visualGoal ? {} : { llmCall: routedLlmCall({
+      gateway: getGatewayPool(), scope, scene: "quest-plan",
+      industryResolver: async () => {
+        const active = await resolveWorkspaceActiveBundle(scope.workspaceId);
+        return active.state === "ready" ? active.bundleId : null;
+      },
+    }) }),
     ...(fallbackPlanner ? { fallbackPlanner } : {}),
     ...(toolExecutor ? { toolExecutor } : {}),
     ...(planVocabulary.objectTypes.length ? { planVocabulary } : {}),

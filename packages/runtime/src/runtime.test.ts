@@ -4,6 +4,7 @@
  * PG 集成仅 RUN_DB_TESTS=1 启用。
  */
 import { describe, expect, it } from "vitest";
+import { randomUUID } from "node:crypto";
 import { routeIntent, ruleBasedRoute, LlmIntentClassifier, type IntentClassifier } from "./intent.js";
 import type { QuestPlanner } from "./loop.js";
 // 注意：loop.js（经 tools.js 模块级常量读 TOOL_UNVERIFIED_RATE）禁止静态 import——
@@ -367,21 +368,45 @@ d("PG 集成 Quest 循环（种子库）", async () => {
   });
 
   it("#24 装配围栏并集：安装技能绑定进装配声明（F8.2/L8.3），卸载即收缩", async () => {
-    const { installSkill, uninstallSkill, listSkills } = await import("@workloom/base/skills");
-    const revenue = (await listSkills(app, scope, { level: "official" })).find((s) => s.name === "revenue-manager")!;
-    // 从「未安装」态开始（重跑安全）
-    await uninstallSkill(app, gw, scope, { skillId: revenue.id, by: "MEM-001" }).catch(() => undefined);
-    const before = await assemblePreset(app, scope, { workspaceId: scope.workspaceId, presetKey: "content-agent", goal: "装配并集探针" });
-    // 0013 契约：seed 安装行落真实快照——review-crisis(R6)、channel-reconciler(R4/R5) 在装，
-    // 并集 = content-agent 自身声明 R3 ∪ 全部在装技能快照
-    expect(before.fenceBindings).toEqual(["R3", "R4", "R5", "R6"]);
-    // 安装即绑定：装配声明并入技能 fence_bindings 快照
-    await installSkill(app, gw, scope, { skillId: revenue.id, by: "MEM-001" });
-    const after = await assemblePreset(app, scope, { workspaceId: scope.workspaceId, presetKey: "content-agent", goal: "装配并集探针" });
-    expect(after.fenceBindings).toEqual(["R1", "R2", "R3", "R4", "R5", "R6"]); // preset 声明 ∪ 技能快照
-    // 卸载即撤销：并集收缩
-    await uninstallSkill(app, gw, scope, { skillId: revenue.id, by: "MEM-001" });
-    const revoked = await assemblePreset(app, scope, { workspaceId: scope.workspaceId, presetKey: "content-agent", goal: "装配并集探针" });
-    expect(revoked.fenceBindings).toEqual(["R3", "R4", "R5", "R6"]);
+    const { installSkill, uninstallSkill } = await import("@workloom/base/skills");
+    // 全局种子会随行业包新增技能；本契约只测显式声明的岗位/技能，不改云栖安装态。
+    const suffix = randomUUID();
+    const fixtureScope = { tenantId: `rt-bind-tenant-${suffix}`, workspaceId: `rt-bind-ws-${suffix}` };
+    const skillId = `rt-bind-skill-${suffix}`;
+    const presetKey = "binding-fixture";
+    const c = await app.connect();
+    try {
+      await c.query("BEGIN");
+      await c.query("SELECT set_config('app.workspace_id', $1, true)", [fixtureScope.workspaceId]);
+      await c.query("SELECT set_config('app.tenant_id', $1, true)", [fixtureScope.tenantId]);
+      await c.query("INSERT INTO tenants(id,name) VALUES($1,'runtime binding fixture')", [fixtureScope.tenantId]);
+      await c.query("INSERT INTO workspaces(id,tenant_id,name,slug,industry,stage) VALUES($1,$2,'runtime binding fixture',$1,'hotel','stable')", [fixtureScope.workspaceId, fixtureScope.tenantId]);
+      await c.query("INSERT INTO profiles(workspace_id,tenant_id,industry,archive) VALUES($1,$2,'hotel',$3)", [fixtureScope.workspaceId, fixtureScope.tenantId, JSON.stringify({ fixture: true })]);
+      await c.query("INSERT INTO agents(id,workspace_id,preset_key,name,version,kind,fence_bindings,meta) VALUES($1,$2,$3,'runtime binding fixture','fixture-v1','fixture',$4,'{}')", [
+        `rt-bind-agent-${suffix}`, fixtureScope.workspaceId, presetKey, JSON.stringify(["R3"]),
+      ]);
+      for (const ruleId of ["R1", "R3"]) {
+        await c.query("INSERT INTO fence_rules(id,rule_id,version,workspace_id,name,level,match_spec,action,is_baseline,status,created_by) VALUES($1,$2,'fixture-v1',$3,'runtime binding fixture','auto',$4,'{}',false,'active','fixture')", [
+          `rt-bind-${ruleId}-${suffix}`, ruleId, fixtureScope.workspaceId, JSON.stringify({ object_types: ["fixture"], actions: ["fixture.read"], when: "true" }),
+        ]);
+      }
+      await c.query("INSERT INTO skills(id,level,name,version,fence_bindings) VALUES($1,'official','runtime binding fixture','fixture-v1',$2)", [skillId, JSON.stringify(["R1", "R3"])]);
+      await c.query("COMMIT");
+    } catch (error) {
+      await c.query("ROLLBACK");
+      throw error;
+    } finally { c.release(); }
+
+    const assemble = () => assemblePreset(app, fixtureScope, { workspaceId: fixtureScope.workspaceId, presetKey, goal: "装配并集探针" });
+    expect((await assemble()).fenceBindings).toEqual(["R3"]);
+    expect(await installSkill(app, gw, fixtureScope, { skillId, by: "MEM-FIXTURE" })).toEqual({ installed: true, deduped: false, bindings: ["R1", "R3"] });
+    // R1 是安装增量；R3 同时由岗位和技能声明，必须去重。
+    expect((await assemble()).fenceBindings).toEqual(["R1", "R3"]);
+    // 安装后目录发生变化也不能改写已绑定快照，卸载回执应撤销安装时的清单。
+    await app.query("UPDATE skills SET fence_bindings=$2,version='fixture-v2' WHERE id=$1", [skillId, JSON.stringify(["R2"])]);
+    expect((await assemble()).fenceBindings).toEqual(["R1", "R3"]);
+    expect(await uninstallSkill(app, gw, fixtureScope, { skillId, by: "MEM-FIXTURE" })).toEqual({ uninstalled: true, revokedBindings: ["R1", "R3"] });
+    expect((await assemble()).fenceBindings).toEqual(["R3"]);
+    // 独立夹具保留其 append-only 安装/卸载事件，不删除或重置种子库证据。
   });
 });

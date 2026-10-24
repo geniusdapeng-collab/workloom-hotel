@@ -177,6 +177,18 @@ export interface RouteResult {
   budgetExceeded?: boolean;
 }
 
+/** 同一物理提供方可绑定多个策略槽位；一次路由只尝试一次，避免别名造成重复付费调用。 */
+function distinctProviderChain(chain: string[], providers: Map<string, ModelProvider>): string[] {
+  const seen = new Set<ModelProvider>();
+  return chain.filter((slot) => {
+    const provider = providers.get(slot);
+    if (!provider) return true;
+    if (seen.has(provider)) return false;
+    seen.add(provider);
+    return true;
+  });
+}
+
 export async function route(
   task: RouteTask,
   providers: Map<string, ModelProvider>,
@@ -205,14 +217,16 @@ export async function route(
 
   const tier = classify(task);
   const window = currentWindow(now);
-  const chain = policy.chains[tier];
+  const chain = distinctProviderChain(policy.chains[tier], providers);
   const degraded: Array<{ from: string; to: string | null; reason: string }> = [];
 
   for (let i = 0; i < chain.length; i++) {
-    const modelId = chain[i]!;
-    const provider = providers.get(modelId);
+    const slotId = chain[i]!;
+    const provider = providers.get(slotId);
+    const modelId = provider?.modelId ?? slotId;
+    const nextSlot = chain[i + 1];
+    const to = nextSlot ? (providers.get(nextSlot)?.modelId ?? nextSlot) : null;
     if (!provider || !(await provider.healthy())) {
-      const to = chain[i + 1] ?? null;
       degraded.push({ from: modelId, to, reason: "unhealthy" });
       await sink.recordDegradation({ from: modelId, to, reason: "unhealthy", action: task.action }); // L6.1
       continue;
@@ -222,7 +236,7 @@ export async function route(
       const credits = window === "off-peak" && tier === "flagship"
         ? Math.max(1, Math.round(mockCredits(modelId, result) * OFF_PEAK_RATE_RATIO)) // G9/L6.5
         : mockCredits(modelId, result);
-      const trace = { model_id: modelId, tier, window, credits, action: task.action };
+      const trace = { model_id: provider.modelId, tier, window, credits, action: task.action };
       await sink.recordModelTrace(trace); // F6.5 逐事件计量
       // 熔断复检：本次消耗后超限 → 标记熔断但仍返回已产出答案（#12 修复：不丢弃已付费产出）
       if (used + credits >= policy.taskCreditLimit) {
@@ -231,7 +245,6 @@ export async function route(
       }
       return { kind: "answered", text: result.text, modelTrace: trace, degraded };
     } catch (err) {
-      const to = chain[i + 1] ?? null;
       const reason = err instanceof Error ? err.message : String(err);
       degraded.push({ from: modelId, to, reason });
       await sink.recordDegradation({ from: modelId, to, reason, action: task.action }); // L6.1
@@ -306,6 +319,7 @@ export function heuristicComplexity(text: string): "simple" | "medium" | "comple
 }
 
 export interface SmartModelTrace {
+  /** model_id 为实际调用模型；单模型部署时 tier 仅为策略/计费档，不代表更换物理模型。 */
   model_id: string; tier: Tier3; window: Window; credits: number;
   action?: string; scene?: string; bill_to?: "tenant" | "platform";
 }
@@ -398,14 +412,16 @@ export async function routeSmart(
 
   const window = currentWindow(now);
   // 降级链：noDowngrade（金融/体检等质量红线）截断跨档段，只允许同档互备
-  const chain = chainFor(tier, { longContext, allowCrossTier: !sp.noDowngrade });
+  const chain = distinctProviderChain(chainFor(tier, { longContext, allowCrossTier: !sp.noDowngrade }), providers);
   const degraded: Array<{ from: string; to: string | null; reason: string }> = [];
 
   for (let i = 0; i < chain.length; i++) {
-    const modelId = chain[i]!;
-    const provider = providers.get(modelId);
+    const slotId = chain[i]!;
+    const provider = providers.get(slotId);
+    const modelId = provider?.modelId ?? slotId;
+    const nextSlot = chain[i + 1];
+    const to = nextSlot ? (providers.get(nextSlot)?.modelId ?? nextSlot) : null;
     if (!provider || !(await provider.healthy())) {
-      const to = chain[i + 1] ?? null;
       degraded.push({ from: modelId, to, reason: "unhealthy" });
       await sink.recordDegradation({ from: modelId, to, reason: "unhealthy", action: task.action }); // L6.1
       continue;
@@ -419,7 +435,7 @@ export async function routeSmart(
         tier, promptTokens: result.promptTokens, completionTokens: result.completionTokens, window,
       });
       const trace = {
-        model_id: modelId, tier, window, credits, action: task.action,
+        model_id: provider.modelId, tier, window, credits, action: task.action,
         scene, bill_to: sp.billTo ?? "tenant" as "tenant" | "platform",
       };
       await sink.recordModelTrace(trace); // F6.5 逐事件真实计量
@@ -429,7 +445,6 @@ export async function routeSmart(
       }
       return { kind: "answered", text: result.text, modelTrace: trace, degraded, tier, scene, billTo: sp.billTo ?? "tenant" };
     } catch (err) {
-      const to = chain[i + 1] ?? null;
       const reason = err instanceof Error ? err.message : String(err);
       degraded.push({ from: modelId, to, reason });
       await sink.recordDegradation({ from: modelId, to, reason, action: task.action }); // L6.1

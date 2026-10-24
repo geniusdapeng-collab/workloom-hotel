@@ -54,6 +54,8 @@ export function routedLlmCall(deps: {
   gateway: pg.Pool;
   scope: { tenantId: string; workspaceId: string };
   scene: string;
+  /** Tie metering/degradation to the same task timeline as its worker artifacts. */
+  sessionId?: string;
   plan?: PlanId;
   industry?: string | null;
   /** 行业异步解析（工作区 industry 列查询有 IO；惰性求值并缓存） */
@@ -61,7 +63,7 @@ export function routedLlmCall(deps: {
 }): LlmCall | undefined {
   if ((process.env.LLM_PROVIDER ?? "mock") === "mock") return undefined;
   try {
-    const sink = new GatewayEventSink(deps.gateway, deps.scope);
+    const sink = new GatewayEventSink(deps.gateway, deps.scope, undefined, deps.sessionId);
     return async (prompt: string, signal?: AbortSignal) => {
       const industry = deps.industryResolver ? await deps.industryResolver() : deps.industry;
       const policy = modelPolicyFor(industry);

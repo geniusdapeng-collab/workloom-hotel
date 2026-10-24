@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "workloom.repository/v1",
+  "logicalId": "workloom-hotel",
+  "productId": "workloom-hotel",
+  "lane": "industry",
+  "primaryPlatform": "github",
+  "github": {
+    "repository": "geniusdapeng-collab/workloom-hotel",
+    "url": "https://github.com/geniusdapeng-collab/workloom-hotel",
+    "branch": "main"
+  },
+  "cnb": {
+    "repository": "workloom-ai/workloom-hotel",
+    "url": "https://cnb.cool/workloom-ai/workloom-hotel",
+    "branch": "main"
+  },
+  "mirrorPolicy": {
+    "platform": "cnb",
+    "mode": "deferred",
+    "automaticProductSync": false,
+    "configBackupBranchPrefix": "workloom/config-backup/"
+  },
+  "baseSync": {
+    "receive": "subscribed",
+    "reflux": "proposal-only",
+    "pathPrefix": "",
+    "extraExclude": [],
+    "uiRolloutWave": "W2",
+    "industryExtensionPaths": [
+      "apps/web/src/components/SimBanner.tsx",
+      "apps/web/src/components/hud/messages.tsx",
+      "apps/web/src/pages/p2/P2.tsx",
+      "apps/web/vite.config.ts",
+      "apps/web/src/pages/p2/DeliveryArtifact.tsx",
+      "apps/web/src/pages/p2/DeliveryArtifact.test.tsx"
+    ],
+    "tolerateExtensionSnapshotOverlap": true,
+    "clientForkReason": "酒店岗位成果页完整展示协作工件与资料引用，保留模拟经营标识和移动布局，包内预览使用生产 Vite 入口；六个精确路径由酒店仓独立维护，不向舰队回流。",
+    "strictUiConsumerContract": true
+  },
+  "registry": {
+    "repository": "geniusdapeng-collab/workloom-im",
+    "path": "sync/repository-registry.json"
+  }
+}

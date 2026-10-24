@@ -59,11 +59,26 @@ export function chainFor(tier: Tier3, opts: { longContext?: boolean; allowCrossT
   return chain;
 }
 
-/** 按 .env 装配模型池（mock → 全池 MockProvider；真实 → 按 vendor 环境变量装配 OpenAI 兼容 Provider） */
+/**
+ * 按 .env 装配模型池：mock → 全池 MockProvider；显式 LLM_MODEL → 单模型部署；
+ * 未指定模型 → 保留按 vendor 环境变量装配的目录池。
+ * 单模型部署的 L1/L2/L3 是路由策略槽位，共用同一物理提供方，不表示模型能力升级。
+ */
 export function poolFromEnv(opts: { mockOpts?: Record<string, { failFirst?: number; down?: boolean }> } = {}): Map<string, ModelProvider> {
   const pool = new Map<string, ModelProvider>();
   if ((process.env.LLM_PROVIDER ?? "mock") === "mock") {
     for (const m of MODEL_CATALOG) pool.set(m.id, new MockProvider(m.id, opts.mockOpts?.[m.id]));
+    return pool;
+  }
+  const modelId = process.env.LLM_MODEL?.trim();
+  if (modelId) {
+    // 显式模型只绑定统一 endpoint：不得把统一 key 随目录槽位送到其他 vendor。
+    const baseUrl = process.env.LLM_BASE_URL?.trim().replace(/\/+$/, "");
+    if (!baseUrl) throw new Error("配置 LLM_MODEL 时必须同时配置 LLM_BASE_URL");
+    const provider = new OpenAiCompatibleProvider(modelId, {
+      baseUrl, apiKey: process.env.LLM_API_KEY || undefined,
+    });
+    for (const m of MODEL_CATALOG) pool.set(m.id, provider);
     return pool;
   }
   for (const m of MODEL_CATALOG) {
