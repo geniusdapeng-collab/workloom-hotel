@@ -85,6 +85,28 @@ describe("酒店内部交付入口识别", () => {
     expect(plan.steps).toHaveLength(5);
     for (const step of plan.steps) expect(isHotelDraftGoal(step.goal), step.id).toBe(true);
   });
+  it("完整ds034原始五岗DAG中的禁止动作枚举不是外部执行请求", () => {
+    const response = JSON.parse(readFileSync(new URL("./fixtures/deepseek-c03-034-response.json", import.meta.url), "utf8"));
+    const plan = JSON.parse(response.choices[0].message.content);
+    expect(plan.steps).toHaveLength(5);
+    for (const step of plan.steps) expect(isHotelDraftGoal(step.goal), step.id).toBe(true);
+  });
+  it.each(["不要", "不得", "无需", "禁止", "不", "未"])("否定前缀%s与同一边界内的动作枚举不产生虚构执行词", (negation) => {
+    expect(isHotelDraftGoal(`生成内部分析报告，${negation}执行改价、退款、外发、发布或GUI操作。`)).toBe(true);
+  });
+  it.each([
+    "生成内部分析报告，不执行改价、退款、外发、发布或GUI操作，然后立即退款500元。",
+    "生成内部分析报告，不执行改价、退款、外发、发布或GUI操作，但同时发送给客户。",
+    "生成内部分析报告，不执行改价、退款、外发、发布或GUI操作，随后付款500元。",
+    "生成内部分析报告，不执行改价、退款、外发、发布或GUI操作，再发布到美团。",
+    "生成内部分析报告，不执行改价、退款、外发、发布或GUI操作，现在执行改价。",
+    "生成内部分析报告，不执行改价、退款、外发、发布或GUI操作，执行PMS改价。",
+    "生成内部分析报告，不执行改价、退款、外发、发布或GUI操作，使用GUI点击退款。",
+    "生成内部分析报告，不执行改价、退款、外发、发布或GUI操作，把房价改为400元。",
+    "生成内部分析报告，执行改价、退款、外发、发布或GUI操作。",
+  ])("否定动作枚举不能掩盖后续真实执行请求：%s", (goal) => {
+    expect(isHotelDraftGoal(goal)).toBe(false);
+  });
   it.each([
     "生成内部交付件，然后立即退款500元",
     "形成内部汇总并发布到美团",
@@ -262,9 +284,9 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
     for (const worker of workers) expect(result.answer).toContain(worker.decision.after.text);
   });
 
-  it.each([false, true])("完整ds033五岗DAG隔离回放（追加外部执行=%s）保持真实暂停/续跑与动作拒绝", async (externalAction) => {
+  it.each([["033", false], ["033", true], ["034", false], ["034", true]] as const)("完整ds%s五岗DAG隔离回放（追加外部执行=%s）保持真实暂停/续跑与动作拒绝", async (responseNumber, externalAction) => {
     const f = await fixture();
-    const response = JSON.parse(readFileSync(new URL("./fixtures/deepseek-c03-033-response.json", import.meta.url), "utf8"));
+    const response = JSON.parse(readFileSync(new URL(`./fixtures/deepseek-c03-${responseNumber}-response.json`, import.meta.url), "utf8"));
     const originalContent = response.choices[0].message.content as string;
     const originalPlan = JSON.parse(originalContent);
     for (const preset of ["inspection-agent", "owner-cockpit"]) {
@@ -296,7 +318,7 @@ database("酒店交付真实隔离PG/RLS + 自有HTTP模型夹具", () => {
     const completed = await thread(f);
     expect(completed.plan.steps.slice(0, 2).map((step: any) => step.output.eventId)).toEqual(oldIds);
     expect(completed.plan.steps.map((step: any) => step.presetKey)).toEqual(originalPlan.steps.map((step: any) => step.presetKey));
-    const replay = await run(f, { llmCallFor: () => { throw new Error("completed ds033 fixture must not request another model"); } });
+    const replay = await run(f, { llmCallFor: () => { throw new Error(`completed ds${responseNumber} fixture must not request another model`); } });
     expect(replay.answer).toBe(completed.plan.final.text);
     expect(calls).toHaveLength(6);
   });

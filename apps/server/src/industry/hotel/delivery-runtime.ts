@@ -125,7 +125,8 @@ function failureMessage(error: unknown): string {
 /** Recognizes an explicit internal deliverable; execution requests retain the original Quest path. */
 export function isHotelDraftGoal(goal: string): boolean {
   if (typeof goal !== "string" || !/(报告|分析|方案|清单|草稿|草案|起草|内部交付件|内部汇总)/.test(goal)) return false;
-  const executable = goal.replace(/(?:不要|不得|无需|禁止|不|未)(?:实际|直接|自动|立即)?(?:进行|执行|开展|实施)?(?:改价|调价|退款|发布|群发|外发|发送|写回|操控GUI|操作GUI|GUI操作|GUI操控|付款|下单|开锁)/gi, "[禁止执行]");
+  // Keep the marker free of action verbs: a negated first item must not turn the rest of its list into an execution request.
+  const executable = goal.replace(/(?:不要|不得|无需|禁止|不|未)(?:实际|直接|自动|立即)?(?:进行|执行|开展|实施)?(?:改价|调价|退款|发布|群发|外发|发送|写回|操控GUI|操作GUI|GUI操作|GUI操控|付款|下单|开锁)/gi, "[已否定]");
   return !/(?:实际|立即|直接|自动|立刻|现在|然后|再)(?:执行)?(?:改价|调价|退款|发布|群发|外发|发送|写回|付款|下单|转账|开锁)/i.test(executable)
     && !/(?:并且?|同时|随后|接着|顺便|之后|后)(?:请|帮我|替我)?(?:实际|立即|直接|自动|执行|进行|实施)?(?:改价|调价|退款|发布|群发|外发|发送|写回|付款|下单|转账|开锁)/i.test(executable)
     && !/(?:执行|落实|写回|写入).{0,16}(?:PMS|OTA|改价|调价|退款|发布|付款|群发)/i.test(executable)
