@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 1,
+  "baseRepository": "workloom-ai/workloom-im",
+  "releasePolicy": "base-first-stable-only",
+  "ui": {
+    "package": "@workloom/ui",
+    "contractVersion": "2.0.0",
+    "candidateVersion": "0.1.20",
+    "latestStableVersion": "0.1.20",
+    "requiredClientPackages": [
+      "apps/web/package.json",
+      "apps/webb/package.json",
+      "apps/webc/package.json"
+    ],
+    "allowedIndustryOverrides": [
+      "--wl-brand-primary",
+      "--wl-brand-on-primary",
+      "--wl-brand-accent"
+    ],
+    "sourceDirectory": "packages/ui",
+    "distribution": {
+      "type": "github-release-tarball",
+      "urlTemplate": "https://github.com/geniusdapeng-collab/workloom-im/releases/download/ui-v{version}/workloom-ui-{version}.tgz",
+      "assetNameTemplate": "workloom-ui-{version}.tgz",
+      "integrityByVersion": {
+        "0.1.0": "sha512-0O2dJkxvzNoRQcnVH6v8o7qyWW/yYmImrNhaaUWqR/FgovwJI3sHzugAaa4mHeCERWeMihxCRX/jIY93WHW8Vw==",
+        "0.1.1": "sha512-7OXEtRNRknpkd5VTb6SX4j7SZQ1cE1QGHqay7EDNpW40EXuyvJiC5wI6YLTZ4GleFP6lKKItbCLTjoc1SeTrAw==",
+        "0.1.2": "sha512-WAIB3xtbV32T2x7C88eA7z3/pRqY8fOHvS9ce6yMbyqGCsae1xNcF4dWr88T4DWHe/9R+qPjkgZMCw1z//rLgw==",
+        "0.1.3": "sha512-WKueOZJmP6eMhRljrq6vh45hy0ySsf+L3KIzl1L26bIi/gl2HA94/DoCad938zf2/06/R8y2fPXvjhFy0wnEEg==",
+        "0.1.4": "sha512-aUVu65XAxife5b3WcxO0S99o6sK4g1NrlI8kiZ/RCeSqvGLWUflUeKMnMjSuHM/sBbIpRB15wqoI2x9CDkoCoA==",
+        "0.1.5": "sha512-qJ8F36O64qClVn1i4mfsD2faViCtcLtmH0bghC2eAdS9xuSj8VO3sr91g1mhcoWBu4r0AW4kASA8BVMVxLnhrQ==",
+        "0.1.6": "sha512-FA5ZG2RVol0MLO6xgn499tZJi5M2M2Cnav8+4KqKyNWxtVJSNbBXFypre7sL1eaI4L6goQ6n6MeuRrj6FVv3Fw==",
+        "0.1.7": "sha512-g+XS3xYW4lhGlAVGMfwLdLcTKZ3cHxP3wN3+n9qE7xQczb+OnCJ6LTW0vaJw2DAh2B1qtopn3n489ZrmxfTgcQ==",
+        "0.1.8": "sha512-RUkSt59H1XPuHLPdsxGp/0VYtGnHqk1ZaSGG0euWnD2kXRoGOUXIksTuTQa9DPAFoS/ldD2KvBExQMeHO2SfGg==",
+        "0.1.9": "sha512-7OVDLNYwo+8snmDNhFHm4/yYU2Pye9vgqE//jflbemaxUiWouquSMR1y8K6S+zHcT3mm7rZl8Er4YsriyLx7KQ==",
+        "0.1.10": "sha512-uktUxD1J+svHFwAfq1dQxtJW2h55E9zYst0K2IZtv7eHq+qDX7g/OrZ12AjeklZKJMc45gawPsukhlXCE6zIVw==",
+        "0.1.11": "sha512-/I/KRbEIRWRiLXeHNwVWowJCNpUQgKy/9PX4B+Jy+TYYjHagocB7Ijkx2dEvLl6HN9/cf9DU8yyT3g9k+ivxYw==",
+        "0.1.12": "sha512-Gnik9XEeuCyyfO/y7rpMYveELqPkdV4nRK23+dyb+mM53euEhcHsU2GAaRwJZN95i15RHXMg/GH+ZSxaz5xinA==",
+        "0.1.13": "sha512-OMc/kgxi+z6Z1zZGJUf74zcJ7AI+TixWBDIetPDP6kl8X23lGaOhJJuEWAmP8H6ERmRt3v3ce6Fpx3jLh0eeJQ==",
+        "0.1.14": "sha512-RUZvMCyvVaqrSUMzBVwr3tK6K8NaT4LTVMnEcPpostX6yIW+cko1fRdLkNh2odeHihT9z8iAR5Yp7u5/qsLW7w==",
+        "0.1.15": "sha512-BSlGdzEftbC08qTOFPNeBO+4jHj2ybX5IoYkprt/SJzCipAAOtK7P4L0hTnfpkfTOrF7u6B+5//nxwgWbD0QXA==",
+        "0.1.16": "sha512-yyfv6ahfQ2QdDaq2/ZqT68C0EkHaCT3HK1rULVZteyAc/VdaD8HiXnQEDTFMXrm8reNxuk0pqfl4qKCBvQzjmg==",
+        "0.1.17": "sha512-iJolO8NyIDoEZlMsX3BPJba9/6LbAhjhCgW7Kw5W/dRkW3MOsZ14Odlm6azcSnnpY9HhqAtea1YiYLZi4utLsw==",
+        "0.1.18": "sha512-ZwUnPqIRsxbGnUKz16/e/ZJ5QarxTmBSa8JcbJlZxxlfDBoqedYxNx3il+OOEoc/7n17ZM5rtfN+G2KGU33FQA==",
+        "0.1.19": "sha512-kplOLAtovega6BLpBwtFM1DfBS3q4ZjLp9yA942o+v9QlbREm/VsYNK/Jz7f/9ytDWSFXCvmh10C3ZHrPHkcSA==",
+        "0.1.20": "sha512-Qi84gJKEXQA4EX8nSesCQumEn4H80LV9axcsxrbt7pkqNs4MtwKlTYFG/1XGd9ynW1jBI4yuCPgaW9BkF4FiPg=="
+      },
+      "comment": "2026-10-24 起 GitHub 为主制品地址。0.1.19/0.1.20 已按原 CNB tag SHA 和登记 SRI 逐字节镜像。baseRepository 保留稳定历史逻辑身份以保持 clientFoundation 同标签来源契约；platform 明确传输平台，旧未声明 platform 的 CNB consumer state 仅按固定 legacy 地址验证，不自动回退。",
+      "platform": "github"
+    }
+  },
+  "clientFoundation": {
+    "schemaVersion": "workloom.client-foundation/v1",
+    "stateFile": ".workloom-client-foundation.json",
+    "candidateVersion": "0.1.20",
+    "latestStableVersion": "0.1.20",
+    "stableSourceRefPattern": "refs/tags/ui-v{version}",
+    "distribution": "stable-tag-upgrade-pr",
+    "maxManagedFiles": 500,
+    "managedRoots": [
+      "apps/web",
+      "apps/webb",
+      "apps/webc"
+    ],
+    "requiredEntries": [
+      "apps/web/src/main.tsx",
+      "apps/webb/src/main.tsx",
+      "apps/webc/src/main.tsx",
+      "apps/webc/public/service-front.config.json"
+    ],
+    "allowedIndustryExtensionPaths": [
+      "apps/*/src/extensions/**",
+      "apps/*/src/projections/**",
+      "apps/*/src/config/industry/**",
+      "apps/*/src/theme/industry/**",
+      "apps/*/public/industry/**"
+    ],
+    "ignoredRuntimePaths": [
+      "apps/*/dist/**",
+      "apps/*/node_modules/**",
+      "apps/*/.vite/**",
+      "apps/*/.DS_Store"
+    ],
+    "protectedRootFiles": [
+      "product.manifest.json",
+      "electron-builder.yml"
+    ]
+  }
+}
