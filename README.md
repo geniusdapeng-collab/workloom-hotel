@@ -1,3 +1,29 @@
+# WorkLoom 酒店智能经营系统
+
+**让小型酒店和民宿在同一个工作台管理前台、收益、待办与夜班交接。**
+
+酒店经营者可以查看价格、渠道、订单和口碑变化，把客需与巡检问题分派给对应岗位。在经营剧场和日报里，团队可以知道有哪些任务正在推进、哪些异常需要决定，以及上一班已经处理了什么。
+
+## 一天的经营怎么安排
+
+| 时段或任务 | 可以看什么 |
+| --- | --- |
+| 开门前与交班 | 查看日报、夜间事件、待处理任务和需要人确认的事项 |
+| 白天经营 | 跟进前台服务、渠道和客房事件，核对价盘、订单和收益 |
+| 夜班值守 | 处理住客常见需求和规则允许的动作，把例外留在决策包里 |
+| 初次接入 | 先用「云栖酒店」模拟环境了解界面与流程，再配置实际门店数据和权限 |
+
+下图为仓内已有的「云栖酒店」价格健康模拟运行截图。实际门店的入口、试用方式与运行范围见技术和接入说明。
+
+![云栖酒店价格健康模拟演示](docs/images/running-state/p11-price-health.jpg)
+
+[酒店行业包](bundles/hotel/bundle.json) · [酒店业务围栏](bundles/hotel/fences/hotel-baseline.yml) · [能力导览](docs/capabilities.auto.md) · [Agent 接入](docs/AGENT-CLIENTS.md)
+
+## 原版说明与 Agent 指引
+
+<details>
+<summary>展开原版 README、运行和开发说明</summary>
+
 <div align="center">
 
 # WorkLoom 酒店智能经营系统
@@ -339,3 +365,5 @@ pnpm db:verify-chain          # 现场验证：全库哈希链逐条重算
 本仓内置桌面 Agent 入口：`node scripts/workloom-agent.mjs list`（能力清单）与
 `node scripts/workloom-agent-mcp.mjs`（stdio MCP）。接入步骤、本仓可用能力与安全边界见
 [`docs/AGENT-CLIENTS.md`](docs/AGENT-CLIENTS.md)。
+
+</details>
